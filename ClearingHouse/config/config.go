@@ -4,6 +4,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -24,4 +26,14 @@ func InitConfig() {
 		Scopes:       []string{"email", "profile", "openid"},
 		Endpoint:     google.Endpoint,
 	}
+}
+
+func NewSessionStore(secret string, maxAge int) cookie.Store {
+	store := cookie.NewStore([]byte(secret))
+	store.Options(sessions.Options{
+		Path:     "/",
+		MaxAge:   maxAge,
+		HttpOnly: true,
+	})
+	return store
 }

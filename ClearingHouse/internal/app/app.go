@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/ClearingHouse/config"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -29,6 +30,8 @@ func (s *App) Run() error {
 	}
 
 	config.InitConfig()
+	store := config.NewSessionStore("ClearingHouseSession", 3600)
+	s.gin.RouterGroup.Use(sessions.Sessions("ClearingHouseSession", store))
 
 	if err := s.MapHandlers(); err != nil {
 		return err

@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,7 +21,7 @@ type User struct {
 	UpdatedAt time.Time
 	DeletedAt *time.Time `sql:"index"`
 	Username  string     `gorm:"size:255;not null;uniqueIndex" json:"username" validate:"required,min=2,max=30"`
-	Email     string     `gorm:"unique;not null" json:"email" validate:"required,email"`
+	Email     string     `json:"email" validate:"required,email"`
 	Password  string     `gorm:"not null" json:"password" validate:"required,min=8"`
 	Role      UserRole   `gorm:"type:varchar(50);default:'user'" json:"role"`
 }
@@ -32,13 +31,6 @@ func (user *User) BeforeCreate(tx *gorm.DB) (err error) {
 		user.ID = uuid.New().String()
 	}
 	return
-}
-
-func (u *User) BeforeSave(tx *gorm.DB) error {
-	if !u.Role.IsValid() {
-		return fmt.Errorf("invalid role: %s", u.Role)
-	}
-	return nil
 }
 
 func (u *User) BeforeUpdate(tx *gorm.DB) (err error) {
@@ -53,6 +45,7 @@ func (u *User) BeforeUpdate(tx *gorm.DB) (err error) {
 
 	return nil
 }
+
 func (r UserRole) IsValid() bool {
 	switch r {
 	case UserRoleUser, UserRoleAdmin:

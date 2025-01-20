@@ -41,11 +41,11 @@ func (r *UsersRepository) GetUserGoogle(token *oauth2.Token) (map[string]interfa
 	return userInfo, nil
 }
 
-func (r *UsersRepository) Create(user *models.User) (*models.User, error) {
+func (r *UsersRepository) Create(user *models.User) error {
 	if err := r.db.Create(&user).Error; err != nil {
-		return nil, err
+		return err
 	}
-	return user, nil
+	return nil
 }
 
 func (r *UsersRepository) Delete(id uuid.UUID) error {
@@ -58,6 +58,14 @@ func (r *UsersRepository) Delete(id uuid.UUID) error {
 func (r *UsersRepository) GetUser(id uuid.UUID) (*models.User, error) {
 	var user *models.User
 	if err := r.db.First(&user, "id = ?", id).Error; err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (r *UsersRepository) GetByUsername(username string) (*models.User, error) {
+	var user *models.User
+	if err := r.db.First(&user, "username = ?", username).Error; err != nil {
 		return nil, err
 	}
 	return user, nil
