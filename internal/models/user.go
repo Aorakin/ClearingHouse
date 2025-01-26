@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type UserRole string
@@ -14,9 +15,16 @@ const (
 )
 
 type BaseModel struct {
-	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	ID        uuid.UUID `gorm:"type:uuid;primary_key" json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (base *BaseModel) BeforeCreate(tx *gorm.DB) (err error) {
+	if base.ID == uuid.Nil {
+		base.ID = uuid.New()
+	}
+	return
 }
 
 type User struct {
