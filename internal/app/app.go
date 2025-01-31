@@ -5,8 +5,11 @@ import (
 	"log"
 
 	"github.com/ClearingHouse/config"
+	"github.com/ClearingHouse/docs"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 )
 
@@ -33,9 +36,16 @@ func (s *App) Run() error {
 	store := config.NewSessionStore("ClearingHouseSession", 3600)
 	s.gin.RouterGroup.Use(sessions.Sessions("ClearingHouseSession", store))
 
+	docs.SwaggerInfo.Title = "ClearingHouse API"
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.BasePath = "/api/v1"
+
 	if err := s.MapHandlers(); err != nil {
 		return err
 	}
+
+	// Serve Swagger UI
+	s.gin.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	serverURL := fmt.Sprintf(":%s", "8080")
 	return s.gin.Run(serverURL)
