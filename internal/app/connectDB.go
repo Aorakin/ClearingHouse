@@ -30,7 +30,7 @@ func InitDataBase() (*gorm.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to the database: %v", err)
 	}
-	DB.AutoMigrate(&models.User{})
+	DB.AutoMigrate(&models.User{}, &models.Project{}, &models.Namespace{}, &models.Ticket{}, &models.Quota{})
 	return DB, nil
 }
 
