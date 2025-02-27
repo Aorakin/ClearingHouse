@@ -2,7 +2,7 @@ package interfaces
 
 import "github.com/gin-gonic/gin"
 
-type ProjectsHandlers interface {
+type QuotasHandlers interface {
 	GetAll() gin.HandlerFunc
 	GetByID() gin.HandlerFunc
 	Create() gin.HandlerFunc
