@@ -4,11 +4,11 @@ import "github.com/google/uuid"
 
 type Namespace struct {
 	BaseModel
-	Title     string    `json:"title"`
 	ProjectID uuid.UUID `json:"project_id"`
 	QuotaID   uuid.UUID `json:"quota_id"`
 	Project   Project   `gorm:"foreignKey:ProjectID"  json:"-"`
 	Quota     Quota     `gorm:"foreignKey:QuotaID"  json:"-"`
+	Members   []*User   `gorm:"many2many:namespace_members;" json:"members"`
 }
 
 type Ticket struct {

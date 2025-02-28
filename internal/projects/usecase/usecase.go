@@ -6,15 +6,20 @@ import (
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/projects/dto"
 	"github.com/ClearingHouse/internal/projects/interfaces"
+	userInterfaces "github.com/ClearingHouse/internal/users/interfaces"
 	"github.com/google/uuid"
 )
 
 type ProjectsUsecase struct {
 	projectsRepository interfaces.ProjectsRepository
+	usersRepository    userInterfaces.UsersRepository
 }
 
-func NewProjectsUsecase(projectsRepository interfaces.ProjectsRepository) interfaces.ProjectsUsecase {
-	return &ProjectsUsecase{projectsRepository: projectsRepository}
+func NewProjectsUsecase(projectsRepository interfaces.ProjectsRepository, usersRepository userInterfaces.UsersRepository) interfaces.ProjectsUsecase {
+	return &ProjectsUsecase{
+		projectsRepository: projectsRepository,
+		usersRepository:    usersRepository,
+	}
 }
 
 func (u *ProjectsUsecase) GetAll(userID uuid.UUID) ([]models.Project, error) {
@@ -47,9 +52,12 @@ func (u *ProjectsUsecase) GetByID(userID uuid.UUID, projectID uuid.UUID) (*model
 }
 
 func (u *ProjectsUsecase) Create(userID uuid.UUID, projectRequest *dto.CreateProjectRequest) (*models.Project, error) {
-	owners := []*models.User{
-		{BaseModel: models.BaseModel{ID: userID}},
+	var owners []*models.User
+	user, err := u.usersRepository.GetUser(userID)
+	if err != nil {
+		return nil, err
 	}
+	owners = append(owners, user)
 
 	project := models.Project{
 		Title:       projectRequest.Title,
