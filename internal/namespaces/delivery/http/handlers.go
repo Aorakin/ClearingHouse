@@ -28,12 +28,22 @@ func (h *NamespacesHandler) Create() gin.HandlerFunc {
 	}
 }
 
-func (h *NamespacesHandler) Update() gin.HandlerFunc {
+func (h *NamespacesHandler) AddMembers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 	}
 }
 
-func (h *NamespacesHandler) Delete() gin.HandlerFunc {
+func (h *NamespacesHandler) ChangeQuota() gin.HandlerFunc {
+	return func(c *gin.Context) {
+	}
+}
+
+func (h *NamespacesHandler) RequestTicket() gin.HandlerFunc {
+	return func(c *gin.Context) {
+	}
+}
+
+func (h *NamespacesHandler) TerminateTicket() gin.HandlerFunc {
 	return func(c *gin.Context) {
 	}
 }

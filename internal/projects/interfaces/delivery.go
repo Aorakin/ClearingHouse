@@ -4,8 +4,9 @@ import "github.com/gin-gonic/gin"
 
 type ProjectsHandlers interface {
 	GetAll() gin.HandlerFunc
-	GetByID() gin.HandlerFunc
 	Create() gin.HandlerFunc
-	Update() gin.HandlerFunc
-	Delete() gin.HandlerFunc
+	AddMembers() gin.HandlerFunc
+	// GetByID() gin.HandlerFunc
+	// Update() gin.HandlerFunc
+	// Delete() gin.HandlerFunc
 }

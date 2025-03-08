@@ -73,6 +73,10 @@ func (u *ProjectsUsecase) Create(userID uuid.UUID, projectRequest *dto.CreatePro
 	return createdProject, nil
 }
 
+func (u *ProjectsUsecase) AddMembers(userID uuid.UUID, projectID uuid.UUID, members *dto.Members) (*models.Project, error) {
+	return nil, nil
+}
+
 func (u *ProjectsUsecase) Update(userID uuid.UUID, projectID uuid.UUID, projectRequest *dto.CreateProjectRequest) (*models.Project, error) {
 	project, err := u.projectsRepository.GetByID(projectID)
 	if err != nil {

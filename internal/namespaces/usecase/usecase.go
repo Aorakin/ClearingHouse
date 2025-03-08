@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"github.com/ClearingHouse/internal/models"
+	"github.com/ClearingHouse/internal/namespaces/dto"
 	"github.com/ClearingHouse/internal/namespaces/interfaces"
 	"github.com/google/uuid"
 
@@ -22,7 +23,17 @@ func NewNamespacesUsecase(namespacesRepository interfaces.NamespacesRepository, 
 
 // ADD AUTHENTICATION AND AUTHORIZATION
 
-func (u *NamespacesUsecase) Create(projectID uuid.UUID) (*models.Namespace, error) {
+func (u *NamespacesUsecase) GetAll(projectID uuid.UUID) ([]models.Namespace, error) {
+	var namespaces []models.Namespace
+	return namespaces, nil
+}
+
+func (u *NamespacesUsecase) GetByID(namespaceID uuid.UUID) (*models.Namespace, error) {
+	var namespace *models.Namespace
+	return namespace, nil
+}
+
+func (u *NamespacesUsecase) Create(projectID uuid.UUID, request *dto.CreateNamespaceRequest) (*models.Namespace, error) {
 	namespace := models.Namespace{
 		ProjectID: projectID,
 	}
@@ -35,7 +46,7 @@ func (u *NamespacesUsecase) Create(projectID uuid.UUID) (*models.Namespace, erro
 	return createdNamespace, nil
 }
 
-func (u *NamespacesUsecase) AddMember(namespaceID uuid.UUID, memberIDs uuid.UUIDs) (*models.Namespace, error) {
+func (u *NamespacesUsecase) AddMembers(userID uuid.UUID, namespaceID uuid.UUID, memberIDs uuid.UUIDs) (*models.Namespace, error) {
 	namespace, err := u.namespacesRepository.GetById(namespaceID)
 	if err != nil {
 		return nil, err
@@ -60,7 +71,7 @@ func (u *NamespacesUsecase) AddMember(namespaceID uuid.UUID, memberIDs uuid.UUID
 	return updatedNamespace, nil
 }
 
-func (u *NamespacesUsecase) ChangeQuota(namespaceID uuid.UUID, quotaID uuid.UUID) (*models.Namespace, error) {
+func (u *NamespacesUsecase) ChangeQuota(userID uuid.UUID, namespaceID uuid.UUID, quotaID uuid.UUID) (*models.Namespace, error) {
 	namespace, err := u.namespacesRepository.GetById(namespaceID)
 	if err != nil {
 		return nil, err
@@ -76,4 +87,13 @@ func (u *NamespacesUsecase) ChangeQuota(namespaceID uuid.UUID, quotaID uuid.UUID
 	}
 
 	return updatedNamespace, nil
+}
+
+func (u *NamespacesUsecase) RequestTicket(userID uuid.UUID, namespaceID uuid.UUID, request *dto.CreateTicketRequest) (*models.Ticket, error) {
+	var ticket models.Ticket
+	return &ticket, nil
+}
+
+func (u *NamespacesUsecase) TerminateTicket(userID uuid.UUID, namespaceID uuid.UUID, ticketID uuid.UUID) error {
+	return nil
 }

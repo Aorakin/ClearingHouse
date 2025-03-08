@@ -7,8 +7,8 @@ import (
 
 func MapAnnouncementsRoutes(projectsGroup *gin.RouterGroup, projectsHandlers interfaces.ProjectsHandlers) {
 	projectsGroup.GET("/", projectsHandlers.GetAll())
-	projectsGroup.GET("/:id", projectsHandlers.GetByID())
 	projectsGroup.POST("/", projectsHandlers.Create())
-	projectsGroup.PUT("/:id", projectsHandlers.Update())
-	projectsGroup.DELETE("/:id", projectsHandlers.Delete())
+	// projectsGroup.GET("/:id", projectsHandlers.GetByID())
+	// projectsGroup.PUT("/:id", projectsHandlers.Update())
+	// projectsGroup.DELETE("/:id", projectsHandlers.Delete())
 }

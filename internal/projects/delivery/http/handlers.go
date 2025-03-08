@@ -18,14 +18,21 @@ func (h *ProjectHandler) GetAll() gin.HandlerFunc {
 	}
 }
 
-func (h *ProjectHandler) GetByID() gin.HandlerFunc {
+func (h *ProjectHandler) AddMembers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 	}
 }
+
 func (h *ProjectHandler) Create() gin.HandlerFunc {
 	return func(c *gin.Context) {
 	}
 }
+
+func (h *ProjectHandler) GetByID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+	}
+}
+
 func (h *ProjectHandler) Update() gin.HandlerFunc {
 	return func(c *gin.Context) {
 	}

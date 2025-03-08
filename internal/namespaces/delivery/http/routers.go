@@ -6,9 +6,14 @@ import (
 )
 
 func MapAnnouncementsRoutes(namespacesGroup *gin.RouterGroup, namespacesHandlers interfaces.NamespacesHandlers) {
-	namespacesGroup.GET("/", namespacesHandlers.GetAll())
-	namespacesGroup.GET("/:id", namespacesHandlers.GetByID())
+	namespacesGroup.GET("/all/:project_id", namespacesHandlers.GetAll())
 	namespacesGroup.POST("/", namespacesHandlers.Create())
-	namespacesGroup.PUT("/:id", namespacesHandlers.Update())
-	namespacesGroup.DELETE("/:id", namespacesHandlers.Delete())
+	namespacesGroup.GET("/:id", namespacesHandlers.GetByID())
+	namespacesGroup.PATCH("/:id/quota", namespacesHandlers.ChangeQuota())
+	namespacesGroup.POST("/:id/member", namespacesHandlers.AddMembers())
+	namespacesGroup.POST("/:id/ticket", namespacesHandlers.RequestTicket())
+	namespacesGroup.DELETE("/:id/ticket", namespacesHandlers.TerminateTicket())
+
+	// namespacesGroup.PUT("/:id", namespacesHandlers.Update())
+	// namespacesGroup.DELETE("/:id", namespacesHandlers.Delete())
 }

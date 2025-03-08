@@ -6,6 +6,8 @@ type NamespacesHandlers interface {
 	GetAll() gin.HandlerFunc
 	GetByID() gin.HandlerFunc
 	Create() gin.HandlerFunc
-	Update() gin.HandlerFunc
-	Delete() gin.HandlerFunc
+	AddMembers() gin.HandlerFunc
+	ChangeQuota() gin.HandlerFunc
+	RequestTicket() gin.HandlerFunc
+	TerminateTicket() gin.HandlerFunc
 }

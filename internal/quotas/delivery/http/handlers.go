@@ -18,20 +18,7 @@ func (h *QuotasHandler) GetAll() gin.HandlerFunc {
 	}
 }
 
-func (h *QuotasHandler) GetByID() gin.HandlerFunc {
-	return func(c *gin.Context) {
-	}
-}
 func (h *QuotasHandler) Create() gin.HandlerFunc {
-	return func(c *gin.Context) {
-	}
-}
-func (h *QuotasHandler) Update() gin.HandlerFunc {
-	return func(c *gin.Context) {
-	}
-}
-
-func (h *QuotasHandler) Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
 	}
 }
