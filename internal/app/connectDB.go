@@ -16,7 +16,7 @@ var DB *gorm.DB
 func InitDataBase() (*gorm.DB, error) {
 	err := godotenv.Load()
 	if err != nil {
-		return nil, fmt.Errorf("Error loading .env file :%v", err)
+		return nil, fmt.Errorf("error loading .env file :%v", err)
 	}
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		os.Getenv("DB_USER"),
@@ -30,7 +30,7 @@ func InitDataBase() (*gorm.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to the database: %v", err)
 	}
-	DB.AutoMigrate(&models.User{})
+	DB.AutoMigrate(&models.User{}, &models.Organization{}, &models.Project{}, &models.Namespace{}, &models.ResourcePool{}, &models.ResourceType{}, &models.Resource{}, &models.ResourceProperty{}, &models.OrganizationQuotaGroup{}, &models.ProjectQuotaGroup{}, &models.NamespaceQuotaGroup{}, &models.ResourceQuantity{}, &models.ResourceProperty{})
 	return DB, nil
 }
 

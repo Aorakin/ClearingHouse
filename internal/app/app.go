@@ -3,9 +3,11 @@ package app
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/ClearingHouse/config"
 	"github.com/ClearingHouse/docs"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -31,6 +33,15 @@ func (s *App) Run() error {
 	if err != nil {
 		log.Fatalf("Failed to set trusted proxies: %v", err)
 	}
+
+	s.gin.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"}, // your frontend URL
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	config.InitConfig()
 	store := config.NewSessionStore("ClearingHouseSession", 3600)
