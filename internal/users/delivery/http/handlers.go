@@ -3,7 +3,6 @@ package http
 import (
 	"net/http"
 
-	"github.com/ClearingHouse/internal/users/dtos"
 	"github.com/ClearingHouse/internal/users/interfaces"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -41,41 +40,6 @@ func (h *UsersHandlers) Callback() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, userInfo)
-	}
-}
-
-func (h *UsersHandlers) Register() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var registerInput dtos.RegisterInput
-		if err := c.ShouldBindJSON(&registerInput); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-			return
-		}
-
-		if err := h.usersUsecase.Register(registerInput); err != nil {
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusCreated, gin.H{"message": "registered successfully"})
-	}
-}
-
-func (h *UsersHandlers) Login() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		username := c.PostForm("username")
-		password := c.PostForm("password")
-		user, err := h.usersUsecase.Login(username, password)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid credentials"})
-			return
-		}
-
-		session := sessions.Default(c)
-		session.Set("userID", user.ID)
-		session.Save()
-
-		c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
-
 	}
 }
 

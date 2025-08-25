@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/ClearingHouse/internal/models"
@@ -55,7 +56,7 @@ func (r *UsersRepository) Delete(id uuid.UUID) error {
 	return nil
 }
 
-func (r *UsersRepository) GetUser(id uuid.UUID) (*models.User, error) {
+func (r *UsersRepository) GetByID(id uuid.UUID) (*models.User, error) {
 	var user *models.User
 	if err := r.db.First(&user, "id = ?", id).Error; err != nil {
 		return nil, err
@@ -69,4 +70,41 @@ func (r *UsersRepository) GetByUsername(username string) (*models.User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+func (r *UsersRepository) FindOrCreateUser(email, firstName, lastName string) (*models.User, error) {
+	var user models.User
+
+	err := r.db.Where("email = ?", email).First(&user).Error
+	if err == nil {
+		return &user, nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	user = models.User{
+		Email:     email,
+		FirstName: firstName,
+		LastName:  lastName,
+	}
+
+	if err := r.db.Create(&user).Error; err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *UsersRepository) GetByIDs(userIDs []uuid.UUID) ([]models.User, error) {
+	var users []models.User
+	if err := r.db.Where("id IN ?", userIDs).Find(&users).Error; err != nil {
+		return nil, err
+	}
+
+	if len(users) != len(userIDs) {
+		return nil, fmt.Errorf("some users not found")
+	}
+
+	return users, nil
 }

@@ -1,7 +1,6 @@
 package http
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/ClearingHouse/internal/organizations/dtos"
@@ -22,11 +21,19 @@ func NewOrganizationHandler(organizationUsecase interfaces.OrganizationUsecase) 
 
 func (h *OrganizationHandler) CreateOrganization() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+
 		var dto dtos.CreateOrganization
 		if err := c.ShouldBindJSON(&dto); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		dto.Creator = userID
 
 		org, err := h.organizationUsecase.CreateOrganization(&dto)
 		if err != nil {
@@ -39,19 +46,25 @@ func (h *OrganizationHandler) CreateOrganization() gin.HandlerFunc {
 }
 func (h *OrganizationHandler) GetOrganizationByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+
 		var uri dtos.OrganizationURI
 		if err := c.ShouldBindUri(&uri); err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
 
-		orgID, err := uuid.Parse(uri.ID)
+		orgID, err := uuid.Parse(uri.OrgID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		org, err := h.organizationUsecase.GetOrganizationByID(orgID)
+		org, err := h.organizationUsecase.GetOrganizationByID(orgID, userID)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Organization not found"})
 			return
@@ -68,13 +81,12 @@ func (h *OrganizationHandler) UpdateOrganization() gin.HandlerFunc {
 			return
 		}
 
-		orgID, err := uuid.Parse(uri.ID)
+		orgID, err := uuid.Parse(uri.OrgID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// 2. Bind JSON body
 		var body dtos.UpdateOrganization
 		if err := c.ShouldBindJSON(&body); err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
@@ -97,13 +109,11 @@ func (h *OrganizationHandler) DeleteOrganization() gin.HandlerFunc {
 			return
 		}
 
-		orgID, err := uuid.Parse(uri.ID)
+		orgID, err := uuid.Parse(uri.OrgID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-
-		log.Printf("%#v", uri)
 
 		if err := h.organizationUsecase.DeleteOrganization(orgID); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

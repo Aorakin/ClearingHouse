@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
@@ -16,6 +17,15 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		userUUID, err := uuid.Parse(id.(string))
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid session UUID"})
+			c.Abort()
+			return
+		}
+
+		c.Set("userID", userUUID)
 		c.Next()
 	}
 }

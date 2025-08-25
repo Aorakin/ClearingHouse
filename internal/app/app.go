@@ -44,8 +44,8 @@ func (s *App) Run() error {
 	}))
 
 	config.InitConfig()
-	store := config.NewSessionStore("ClearingHouseSession", 3600)
-	s.gin.RouterGroup.Use(sessions.Sessions("ClearingHouseSession", store))
+	store := config.NewSessionStore("session", 1800) // 30 min
+	s.gin.Use(sessions.Sessions("session", store))
 
 	docs.SwaggerInfo.Title = "ClearingHouse API"
 	docs.SwaggerInfo.Version = "1.0"

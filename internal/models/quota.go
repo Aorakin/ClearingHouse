@@ -15,20 +15,24 @@ type OrganizationQuotaGroup struct {
 
 type ProjectQuotaGroup struct {
 	BaseModel
-	Name           string             `json:"name"`
-	Description    string             `json:"description"`
-	Resources      []ResourceQuantity `gorm:"foreignKey:ProjectQuotaGroupID" json:"resources"`
-	OrganizationID uuid.UUID          `gorm:"type:uuid;not null" json:"organization_id"`
-	Organization   Organization       `gorm:"foreignKey:OrganizationID" json:"organization"`
+	Name                     string             `json:"name"`
+	Description              string             `json:"description"`
+	OrganizationID           uuid.UUID          `gorm:"type:uuid;not null" json:"organization_id"`
+	OrganizationQuotaGroupID uuid.UUID          `gorm:"type:uuid;not null" json:"organization_quota_group_id"`
+	Resources                []ResourceQuantity `gorm:"foreignKey:ProjectQuotaGroupID" json:"resources"`
+	Projects                 []Project          `gorm:"many2many:project_quotas;" json:"projects"`
+	Organization             Organization       `gorm:"foreignKey:OrganizationID" json:"organization"`
 }
 
 type NamespaceQuotaGroup struct {
 	BaseModel
-	Name        string             `json:"name"`
-	Description string             `json:"description"`
-	Resources   []ResourceQuantity `gorm:"foreignKey:NamespaceQuotaGroupID" json:"resources"`
-	ProjectID   uuid.UUID          `gorm:"type:uuid;not null" json:"project_id"`
-	Project     Project            `gorm:"foreignKey:ProjectID" json:"project"`
+	Name                string             `json:"name"`
+	Description         string             `json:"description"`
+	ProjectQuotaGroupID uuid.UUID          `gorm:"type:uuid;not null" json:"project_quota_group_id"`
+	Namespaces          []Namespace        `gorm:"foreignKey:QuotaGroupID" json:"namespaces"`
+	Resources           []ResourceQuantity `gorm:"foreignKey:NamespaceQuotaGroupID" json:"resources"`
+	ProjectID           uuid.UUID          `gorm:"type:uuid;not null" json:"project_id"`
+	Project             Project            `gorm:"foreignKey:ProjectID" json:"project"`
 }
 
 type ResourceQuantity struct {
