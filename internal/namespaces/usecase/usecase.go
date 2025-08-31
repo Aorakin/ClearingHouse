@@ -26,14 +26,25 @@ func NewNamespaceUsecase(namespaceRepo interfaces.NamespaceRepository, userRepo 
 	}
 }
 
-func (u *NamespaceUsecase) CreateNamespace(namespaceDto *dtos.CreateNamespaceRequest) error {
-	namespace := models.Namespace{
-		Name:        namespaceDto.Name,
-		Description: namespaceDto.Description,
-		Credit:      namespaceDto.Credit,
-		ProjectID:   namespaceDto.ProjectID,
+func (u *NamespaceUsecase) CreateNamespace(request *dtos.CreateNamespaceRequest) (*models.Namespace, error) {
+	proj, err := u.projRepo.FindProjectByID(request.ProjectID)
+	if err != nil {
+		return nil, err
 	}
-	return u.namespaceRepo.Create(&namespace)
+
+	if !helper.ContainsUserID(proj.Admins, request.Creator) {
+		return nil, fmt.Errorf("only project admins can create namespace")
+	}
+
+	namespace := models.Namespace{
+		Name:        request.Name,
+		Description: request.Description,
+		Credit:      request.Credit,
+		ProjectID:   request.ProjectID,
+	}
+
+	err = u.namespaceRepo.Create(&namespace)
+	return &namespace, err
 }
 
 func (u *NamespaceUsecase) GetAllNamespaces() ([]models.Namespace, error) {

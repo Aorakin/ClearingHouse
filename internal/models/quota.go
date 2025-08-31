@@ -52,4 +52,5 @@ type ResourceProperty struct {
 	ResourceID uuid.UUID `gorm:"type:uuid;not null" json:"resource_id"`
 	Resource   Resource  `gorm:"foreignKey:ResourceID" json:"resource"`
 	Price      float32   `gorm:"not null" json:"price"`
+	Duration   float32   `gorm:"not null" json:"duration"`
 }

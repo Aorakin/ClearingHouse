@@ -135,3 +135,29 @@ func (h *OrganizationHandler) GetOrganizations() gin.HandlerFunc {
 		c.JSON(http.StatusOK, orgs)
 	}
 }
+
+func (h *OrganizationHandler) AddMembers() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+
+		var request dtos.AddMembersRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		request.Creator = userID
+
+		org, err := h.organizationUsecase.AddMembers(&request)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, org)
+	}
+}

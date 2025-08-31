@@ -7,5 +7,5 @@ type CreateProjectRequest struct {
 	Description    string      `json:"description"`
 	OrganizationID uuid.UUID   `json:"organization_id" binding:"required"`
 	AdminIDs       []uuid.UUID `json:"admin_ids"`
-	CreatorID      uuid.UUID   `json:"creator_id"`
+	Creator        uuid.UUID
 }

@@ -23,7 +23,7 @@ func (r *OrganizationRepository) CreateOrganization(org *models.Organization) (*
 }
 func (r *OrganizationRepository) GetOrganizationByID(id uuid.UUID) (*models.Organization, error) {
 	var org models.Organization
-	if err := r.db.Preload("Members").First(&org, "id = ?", id).Error; err != nil {
+	if err := r.db.Preload("Members").Preload("Admins").First(&org, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &org, nil
@@ -47,4 +47,8 @@ func (r *OrganizationRepository) GetOrganizations() ([]models.Organization, erro
 		return nil, err
 	}
 	return organizations, nil
+}
+
+func (r *OrganizationRepository) UpdateMembers(org *models.Organization) error {
+	return r.db.Model(org).Association("Members").Replace(org.Members)
 }

@@ -10,4 +10,5 @@ func MapProjectRoutes(projectGroup *gin.RouterGroup, projectHandler interfaces.P
 	projectGroup.GET("/", projectHandler.GetAllProjects())
 	projectGroup.Use(middleware.AuthMiddleware())
 	projectGroup.POST("/", projectHandler.CreateProject())
+	projectGroup.POST("/members", projectHandler.AddMembers())
 }

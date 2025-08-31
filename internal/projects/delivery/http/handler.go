@@ -7,6 +7,7 @@ import (
 	"github.com/ClearingHouse/internal/projects/dtos"
 	"github.com/ClearingHouse/internal/projects/interfaces"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type ProjectHandler struct {
@@ -21,11 +22,19 @@ func NewProjectHandler(projUsecase interfaces.ProjectUsecase) interfaces.Project
 
 func (h *ProjectHandler) CreateProject() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+
 		var request dtos.CreateProjectRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		request.Creator = userID
 
 		if err := h.projUsecase.CreateProject(&request); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -46,5 +55,31 @@ func (h *ProjectHandler) GetAllProjects() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, projects)
+	}
+}
+
+func (h *ProjectHandler) AddMembers() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+
+		var request dtos.AddMembersRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		request.Creator = userID
+
+		project, err := h.projUsecase.AddMembers(&request)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, project)
 	}
 }

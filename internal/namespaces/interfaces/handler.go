@@ -7,4 +7,5 @@ import (
 type NamespaceHandler interface {
 	CreateNamespace() gin.HandlerFunc
 	GetAllNamespaces() gin.HandlerFunc
+	AddMembers() gin.HandlerFunc
 }

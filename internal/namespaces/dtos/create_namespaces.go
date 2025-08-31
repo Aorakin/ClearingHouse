@@ -8,4 +8,5 @@ type CreateNamespaceRequest struct {
 	Credit      float32     `json:"credit" binding:"required,gte=0"`
 	ProjectID   uuid.UUID   `json:"project_id" binding:"required,uuid"`
 	Members     []uuid.UUID `json:"members" binding:"dive,uuid"`
+	Creator     uuid.UUID
 }

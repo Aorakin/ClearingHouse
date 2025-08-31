@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/ClearingHouse/helper"
 	"github.com/ClearingHouse/internal/models"
@@ -32,11 +33,11 @@ func (u *ProjectUsecase) CreateProject(request *dtos.CreateProjectRequest) error
 		return err
 	}
 
-	if !helper.ContainsUserID(org.Admins, request.CreatorID) {
+	if !helper.ContainsUserID(org.Admins, request.Creator) {
 		return errors.New("unauthorized")
 	}
 
-	admin, err := u.userRepo.GetByID(request.CreatorID)
+	admin, err := u.userRepo.GetByID(request.Creator)
 	if err != nil {
 		return err
 	}
@@ -58,18 +59,18 @@ func (u *ProjectUsecase) GetAllProjects() ([]models.Project, error) {
 	return projects, nil
 }
 
-func (u *ProjectUsecase) AddMembers(projectID uuid.UUID, creator uuid.UUID, memberIDs []uuid.UUID) (*models.Project, error) {
-	project, err := u.projRepo.FindProjectByID(projectID)
+func (u *ProjectUsecase) AddMembers(request *dtos.AddMembersRequest) (*models.Project, error) {
+	project, err := u.projRepo.FindProjectByID(request.ProjectID)
 	if err != nil {
 		return nil, err
 	}
-
+	log.Println("asdasdasdasdads")
 	org, err := u.orgRepo.GetOrganizationByID(project.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
 
-	if !helper.ContainsUserID(project.Admins, creator) {
+	if !helper.ContainsUserID(project.Admins, request.Creator) {
 		return nil, fmt.Errorf("only project admins can add members")
 	}
 
@@ -79,7 +80,7 @@ func (u *ProjectUsecase) AddMembers(projectID uuid.UUID, creator uuid.UUID, memb
 	}
 
 	seenReq := make(map[uuid.UUID]struct{})
-	for _, memberID := range memberIDs {
+	for _, memberID := range request.Members {
 		// must be org member
 		if !helper.ContainsUserID(org.Members, memberID) {
 			return nil, fmt.Errorf("user %s is not a member of the organization", memberID)
@@ -96,7 +97,7 @@ func (u *ProjectUsecase) AddMembers(projectID uuid.UUID, creator uuid.UUID, memb
 		}
 	}
 
-	users, err := u.userRepo.GetByIDs(memberIDs)
+	users, err := u.userRepo.GetByIDs(request.Members)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/ClearingHouse/internal/namespaces/dtos"
 	"github.com/ClearingHouse/internal/namespaces/interfaces"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type NamespaceHandler struct {
@@ -20,12 +21,22 @@ func NewNamespaceHandler(usecase interfaces.NamespaceUsecase) interfaces.Namespa
 
 func (h *NamespaceHandler) CreateNamespace() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var namespace dtos.CreateNamespaceRequest
-		if err := c.ShouldBindJSON(&namespace); err != nil {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+
+		var request dtos.CreateNamespaceRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		if err := h.usecase.CreateNamespace(&namespace); err != nil {
+
+		request.Creator = userID
+
+		namespace, err := h.usecase.CreateNamespace(&request)
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -41,5 +52,31 @@ func (h *NamespaceHandler) GetAllNamespaces() gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, namespaces)
+	}
+}
+
+func (h *NamespaceHandler) AddMembers() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+
+		var request dtos.AddMembersRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		request.Creator = userID
+
+		namespace, err := h.usecase.AddMembers(&request)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, namespace)
 	}
 }

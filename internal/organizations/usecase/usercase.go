@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/ClearingHouse/helper"
 	"github.com/ClearingHouse/internal/models"
@@ -66,4 +67,46 @@ func (u *OrganizationUsecase) DeleteOrganization(id uuid.UUID) error {
 
 func (u *OrganizationUsecase) GetOrganizations() ([]models.Organization, error) {
 	return u.orgRepo.GetOrganizations()
+}
+
+func (u *OrganizationUsecase) AddMembers(request *dtos.AddMembersRequest) (*models.Organization, error) {
+	org, err := u.orgRepo.GetOrganizationByID(request.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !helper.ContainsUserID(org.Admins, request.Creator) {
+		return nil, fmt.Errorf("only organization admins can add members")
+	}
+
+	existing := make(map[uuid.UUID]struct{})
+	for _, m := range org.Members {
+		existing[m.ID] = struct{}{}
+	}
+
+	seenReq := make(map[uuid.UUID]struct{})
+	for _, memberID := range request.Members {
+		if _, found := existing[memberID]; found {
+			return nil, fmt.Errorf("user %s is already an organization member", memberID)
+		}
+		if _, found := seenReq[memberID]; found {
+			return nil, fmt.Errorf("duplicate user %s in request", memberID)
+		}
+		seenReq[memberID] = struct{}{}
+		if _, err := u.userRepo.GetByID(memberID); err != nil {
+			return nil, fmt.Errorf("user %s not found", memberID)
+		}
+	}
+
+	users, err := u.userRepo.GetByIDs(request.Members)
+	if err != nil {
+		return nil, err
+	}
+	org.Members = append(org.Members, users...)
+
+	if err := u.orgRepo.UpdateMembers(org); err != nil {
+		return nil, err
+	}
+
+	return org, nil
 }
