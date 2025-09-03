@@ -7,11 +7,9 @@ import (
 )
 
 func MapOrganizationRoutes(orgGroup *gin.RouterGroup, orgHandler interfaces.OrganizationHandler) {
-	orgGroup.GET("/", orgHandler.GetOrganizations())
+	orgGroup.GET("/", orgHandler.GetAllOrganizations())
 	orgGroup.Use(middleware.AuthMiddleware())
 	orgGroup.GET("/:id", orgHandler.GetOrganizationByID())
 	orgGroup.POST("/", orgHandler.CreateOrganization())
 	orgGroup.POST("/members", orgHandler.AddMembers())
-	// orgGroup.PUT("/:id", orgHandler.UpdateOrganization())
-	// orgGroup.DELETE("/:id", orgHandler.DeleteOrganization())
 }

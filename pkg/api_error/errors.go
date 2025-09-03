@@ -2,6 +2,7 @@ package apierror
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -18,8 +19,8 @@ var (
 
 type ApiErr interface {
 	Status() int
-	Message() string
-	Detail() interface{}
+	Error() string
+	Detail() string
 }
 
 type ApiError struct {
@@ -32,12 +33,12 @@ func (a ApiError) Status() int {
 	return a.ErrorStatus
 }
 
-func (a ApiError) Message() string {
+func (a ApiError) Error() string {
 	return a.ErrorMessage
 }
 
-func (a ApiError) Detail() interface{} {
-	return a.ErrorDetail
+func (a ApiError) Detail() string {
+	return fmt.Sprintf("%v", a.ErrorDetail)
 }
 
 func NewApiError(status int, message string, errorDetail interface{}) ApiErr {

@@ -27,7 +27,7 @@ func (r *NamespaceRepository) GetAll() ([]models.Namespace, error) {
 	return namespaces, err
 }
 
-func (r *NamespaceRepository) GetByID(namespaceID uuid.UUID) (*models.Namespace, error) {
+func (r *NamespaceRepository) GetNamespaceByID(namespaceID uuid.UUID) (*models.Namespace, error) {
 	var namespace models.Namespace
 	err := r.db.Preload("Members").First(&namespace, "id = ?", namespaceID).Error
 	if err != nil {

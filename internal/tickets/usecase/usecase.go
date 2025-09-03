@@ -35,7 +35,7 @@ func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest) (*models
 		return nil, fmt.Errorf("user is not a member of the namespace")
 	}
 
-	namespace, err := u.namespaceRepo.GetByID(request.NamespaceID)
+	namespace, err := u.namespaceRepo.GetNamespaceByID(request.NamespaceID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get namespace: %w", err)
 	}
@@ -136,7 +136,7 @@ func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest) (*models
 }
 
 func (u *TicketUsecase) IsNamespaceMember(userID uuid.UUID, namespaceID uuid.UUID) (bool, error) {
-	namespace, err := u.namespaceRepo.GetByID(namespaceID)
+	namespace, err := u.namespaceRepo.GetNamespaceByID(namespaceID)
 	if err != nil {
 		return false, err
 	}

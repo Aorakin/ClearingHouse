@@ -227,7 +227,7 @@ func (u *QuotaUsecase) FindProjectQuotaGroup(projectID uuid.UUID) ([]models.Proj
 }
 
 func (u *QuotaUsecase) CreateNamespaceQuotaGroup(request *dtos.CreateNamespaceQuotaRequest) (*models.NamespaceQuotaGroup, error) {
-	project, err := u.projRepo.FindProjectByID(request.ProjectID)
+	project, err := u.projRepo.GetProjectByID(request.ProjectID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find project: %w", err)
 	}
@@ -309,7 +309,7 @@ func (u *QuotaUsecase) GetNamespaceQuotaGroup(namespaceID uuid.UUID) (*models.Na
 }
 
 func (u *QuotaUsecase) AssignQuotaToNamespace(request *dtos.AssignQuotaToNamespaceRequest) error {
-	project, err := u.projRepo.FindProjectByID(request.ProjectID)
+	project, err := u.projRepo.GetProjectByID(request.ProjectID)
 	if err != nil {
 		return fmt.Errorf("failed to find project: %w", err)
 	}
@@ -379,7 +379,7 @@ func (u *QuotaUsecase) isOrgAdmin(userID uuid.UUID, orgID uuid.UUID) (bool, erro
 }
 
 func (u *QuotaUsecase) IsProjAdmin(userID uuid.UUID, projID uuid.UUID) (bool, error) {
-	proj, err := u.projRepo.FindProjectByID(projID)
+	proj, err := u.projRepo.GetProjectByID(projID)
 	if err != nil {
 		return false, err
 	}

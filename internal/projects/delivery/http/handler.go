@@ -1,11 +1,12 @@
 package http
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/ClearingHouse/internal/projects/dtos"
 	"github.com/ClearingHouse/internal/projects/interfaces"
+	apiError "github.com/ClearingHouse/pkg/api_error"
+	"github.com/ClearingHouse/pkg/response"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -24,33 +25,32 @@ func (h *ProjectHandler) CreateProject() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
 		if userID == uuid.Nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
 		}
 
 		var request dtos.CreateProjectRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
 			return
 		}
 
-		request.Creator = userID
-
-		if err := h.projUsecase.CreateProject(&request); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		err := h.projUsecase.CreateProject(&request, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
 
-		c.JSON(http.StatusCreated, gin.H{"message": "Project created successfully"})
+		c.JSON(http.StatusCreated, gin.H{"message": "project created successfully"})
 	}
 }
 
 func (h *ProjectHandler) GetAllProjects() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		projects, err := h.projUsecase.GetAllProjects()
-		log.Println("Fetching all projects with total count: ", len(projects))
+
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
 
@@ -62,21 +62,19 @@ func (h *ProjectHandler) AddMembers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
 		if userID == uuid.Nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
 		}
 
 		var request dtos.AddMembersRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err.Error())))
 			return
 		}
 
-		request.Creator = userID
-
-		project, err := h.projUsecase.AddMembers(&request)
+		project, err := h.projUsecase.AddMembers(&request, userID)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
 
@@ -88,13 +86,13 @@ func (h *ProjectHandler) GetAllUserProjects() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
 		if userID == uuid.Nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
 		}
 
 		projects, err := h.projUsecase.GetAllUserProjects(userID)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
 
@@ -106,25 +104,25 @@ func (h *ProjectHandler) GetProject() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
 		if userID == uuid.Nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
 		}
 
 		projectID := c.Param("id")
 		if projectID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project ID"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
 			return
 		}
 
 		projectUUID := uuid.MustParse(projectID)
 		if projectUUID == uuid.Nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project ID"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
 			return
 		}
 
 		project, err := h.projUsecase.GetProjectByID(projectUUID, userID)
 		if err != nil {
-			c.JSON(err.Status(), gin.H{"error": err.Message()})
+			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
 
@@ -136,25 +134,25 @@ func (h *ProjectHandler) GetProjectQuota() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
 		if userID == uuid.Nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
 		}
 
 		projectID := c.Param("id")
 		if projectID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project ID"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
 			return
 		}
 
 		projectUUID := uuid.MustParse(projectID)
 		if projectUUID == uuid.Nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project ID"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
 			return
 		}
 
 		project, err := h.projUsecase.GetProjectByID(projectUUID, userID)
 		if err != nil {
-			c.JSON(err.Status(), gin.H{"error": err.Message()})
+			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
 
@@ -166,25 +164,25 @@ func (h *ProjectHandler) GetProjectUsage() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
 		if userID == uuid.Nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
 		}
 
 		projectID := c.Param("id")
 		if projectID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project ID"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
 			return
 		}
 
 		projectUUID := uuid.MustParse(projectID)
 		if projectUUID == uuid.Nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project ID"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
 			return
 		}
 
 		project, err := h.projUsecase.GetProjectByID(projectUUID, userID)
 		if err != nil {
-			c.JSON(err.Status(), gin.H{"error": err.Message()})
+			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
 

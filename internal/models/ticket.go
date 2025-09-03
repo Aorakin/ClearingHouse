@@ -16,10 +16,10 @@ type Ticket struct {
 }
 
 type TicketResource struct {
-	QuotaID    uuid.UUID           `gorm:"type:uuid;not null" json:"quota_group_id"`
-	ResourceID uuid.UUID           `gorm:"type:uuid;not null" json:"resource_id"`
-	TicketID   uuid.UUID           `gorm:"type:uuid;not null" json:"ticket_id"`
-	Quantity   uint                `json:"quantity"`
-	Quota      NamespaceQuotaGroup `gorm:"foreignKey:QuotaID" json:"quota_group"`
-	Ticket     Ticket              `gorm:"foreignKey:TicketID" json:"ticket"`
+	QuotaID    uuid.UUID      `gorm:"type:uuid;not null" json:"quota_id"`
+	ResourceID uuid.UUID      `gorm:"type:uuid;not null" json:"resource_id"`
+	TicketID   uuid.UUID      `gorm:"type:uuid;not null" json:"ticket_id"`
+	Quantity   uint           `json:"quantity"`
+	Quota      NamespaceQuota `gorm:"foreignKey:QuotaID" json:"-"`
+	Ticket     Ticket         `gorm:"foreignKey:TicketID" json:"-"`
 }

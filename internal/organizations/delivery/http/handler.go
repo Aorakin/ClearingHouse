@@ -5,6 +5,8 @@ import (
 
 	"github.com/ClearingHouse/internal/organizations/dtos"
 	"github.com/ClearingHouse/internal/organizations/interfaces"
+	apiError "github.com/ClearingHouse/pkg/api_error"
+	"github.com/ClearingHouse/pkg/response"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -23,112 +25,31 @@ func (h *OrganizationHandler) CreateOrganization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
 		if userID == uuid.Nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
 		}
 
 		var dto dtos.CreateOrganization
 		if err := c.ShouldBindJSON(&dto); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
 			return
 		}
 
-		dto.Creator = userID
-
-		org, err := h.organizationUsecase.CreateOrganization(&dto)
+		org, err := h.organizationUsecase.CreateOrganization(&dto, userID)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
 
 		c.JSON(http.StatusCreated, org)
 	}
 }
-func (h *OrganizationHandler) GetOrganizationByID() gin.HandlerFunc {
+
+func (h *OrganizationHandler) GetAllOrganizations() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userID := c.MustGet("userID").(uuid.UUID)
-		if userID == uuid.Nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-			return
-		}
-
-		var uri dtos.OrganizationURI
-		if err := c.ShouldBindUri(&uri); err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
-
-		orgID, err := uuid.Parse(uri.OrgID)
+		orgs, err := h.organizationUsecase.GetAllOrganizations()
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		org, err := h.organizationUsecase.GetOrganizationByID(orgID, userID)
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Organization not found"})
-			return
-		}
-
-		c.JSON(http.StatusOK, org)
-	}
-}
-func (h *OrganizationHandler) UpdateOrganization() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var uri dtos.OrganizationURI
-		if err := c.ShouldBindUri(&uri); err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
-
-		orgID, err := uuid.Parse(uri.OrgID)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		var body dtos.UpdateOrganization
-		if err := c.ShouldBindJSON(&body); err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
-		org, err := h.organizationUsecase.UpdateOrganization(orgID, &body)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, org)
-	}
-}
-func (h *OrganizationHandler) DeleteOrganization() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var uri dtos.OrganizationURI
-		if err := c.ShouldBindUri(&uri); err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
-
-		orgID, err := uuid.Parse(uri.OrgID)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		if err := h.organizationUsecase.DeleteOrganization(orgID); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusNoContent, nil)
-	}
-}
-
-func (h *OrganizationHandler) GetOrganizations() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		orgs, err := h.organizationUsecase.GetOrganizations()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
 
@@ -136,25 +57,53 @@ func (h *OrganizationHandler) GetOrganizations() gin.HandlerFunc {
 	}
 }
 
+func (h *OrganizationHandler) GetOrganizationByID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		var uri dtos.OrganizationURI
+		if err := c.ShouldBindUri(&uri); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		orgID, err := uuid.Parse(uri.OrgID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		org, uErr := h.organizationUsecase.GetOrganizationByID(orgID, userID)
+		if uErr != nil {
+			c.JSON(response.ErrorResponseBuilder(uErr))
+			return
+		}
+
+		c.JSON(http.StatusOK, org)
+	}
+}
+
 func (h *OrganizationHandler) AddMembers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
 		if userID == uuid.Nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
 		}
 
 		var request dtos.AddMembersRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
 			return
 		}
 
-		request.Creator = userID
-
-		org, err := h.organizationUsecase.AddMembers(&request)
+		org, err := h.organizationUsecase.AddMembers(&request, userID)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
 
