@@ -9,6 +9,7 @@ import (
 	"github.com/ClearingHouse/internal/namespaces/interfaces"
 	projInterfaces "github.com/ClearingHouse/internal/projects/interfaces"
 	userInterfaces "github.com/ClearingHouse/internal/users/interfaces"
+	apiError "github.com/ClearingHouse/pkg/api_error"
 	"github.com/google/uuid"
 )
 
@@ -96,6 +97,26 @@ func (u *NamespaceUsecase) AddMembers(req *dtos.AddMembersRequest) (*models.Name
 
 	if err := u.namespaceRepo.UpdateMembers(namespace); err != nil {
 		return nil, err
+	}
+
+	return namespace, nil
+}
+
+func (u *NamespaceUsecase) GetAllUserNamespaces(userID uuid.UUID) ([]models.Namespace, apiError.ApiErr) {
+	namespaces, err := u.namespaceRepo.FindAllNamespacesByUserID(userID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+	return namespaces, nil
+}
+
+func (u *NamespaceUsecase) GetNamespace(namespaceID uuid.UUID, userID uuid.UUID) (*models.Namespace, apiError.ApiErr) {
+	namespace, err := u.namespaceRepo.GetByID(namespaceID)
+	if err != nil {
+		return nil, apiError.NewNotFoundError(err)
+	}
+	if !helper.ContainsUserID(namespace.Members, userID) {
+		return nil, apiError.NewUnauthorizedError("unauthorized access to namespace")
 	}
 
 	return namespace, nil

@@ -30,6 +30,7 @@ type CreateNamespaceQuotaRequest struct {
 	Description   string         `json:"description"`
 	ProjectID     uuid.UUID      `json:"project_id" binding:"required,uuid"`
 	ResourcePools []ResourcePool `json:"resource_pools" binding:"required"`
+	Creator       uuid.UUID
 }
 
 type ResourcePool struct {

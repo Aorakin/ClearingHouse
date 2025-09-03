@@ -10,6 +10,7 @@ type QuotaHandler interface {
 	CreateOrganizationQuotaGroup() gin.HandlerFunc
 	FindProjectQuotaGroup() gin.HandlerFunc
 	CreateProjectQuotaGroup() gin.HandlerFunc
+	FindNamespaceQuotaGroup() gin.HandlerFunc
 	CreateNamespaceQuotaGroup() gin.HandlerFunc
 	AssignQuotaToNamespace() gin.HandlerFunc
 }

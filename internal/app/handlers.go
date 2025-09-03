@@ -27,6 +27,10 @@ import (
 	UserHttp "github.com/ClearingHouse/internal/users/delivery/http"
 	UserRepository "github.com/ClearingHouse/internal/users/repository"
 	UserUsecase "github.com/ClearingHouse/internal/users/usecase"
+
+	TicketHttp "github.com/ClearingHouse/internal/tickets/delivery/http"
+	TicketRepository "github.com/ClearingHouse/internal/tickets/repository"
+	TicketUsecase "github.com/ClearingHouse/internal/tickets/usecase"
 )
 
 func (a *App) MapHandlers() error {
@@ -38,6 +42,7 @@ func (a *App) MapHandlers() error {
 	namespacesGroup := a.gin.Group("/namespaces")
 	authGroup := a.gin.Group("/auth")
 	userGroup := a.gin.Group("/users")
+	ticketGroup := a.gin.Group("/tickets")
 
 	orgRepo := OrganizationRepository.NewOrganizationRepository(a.postgresDB)
 	resourceRepo, resourcePoolRepo, resourceTypeRepo := ResourceRepository.NewResourceRepository(a.postgresDB)
@@ -45,6 +50,7 @@ func (a *App) MapHandlers() error {
 	projRepo := ProjectRepository.NewProjectRepository(a.postgresDB)
 	namespaceRepo := NamespaceRepository.NewNamespaceRepository(a.postgresDB)
 	userRepo := UserRepository.NewUsersRepository(a.postgresDB)
+	ticketRepo := TicketRepository.NewTicketRepository(a.postgresDB)
 
 	orgUsecase := OrganizationUsecase.NewOrganizationUsecase(orgRepo, userRepo)
 	resourceUsecase := ResourceUsecase.NewResourceUsecase(resourceRepo, resourcePoolRepo, resourceTypeRepo)
@@ -53,6 +59,7 @@ func (a *App) MapHandlers() error {
 	namespaceUsecase := NamespaceUsecase.NewNamespaceUsecase(namespaceRepo, userRepo, projRepo)
 	userUsecase := UserUsecase.NewUsersUsecase(userRepo)
 	authUsecase := AuthUsecase.NewAuthUsecase(userRepo)
+	ticketUsecase := TicketUsecase.NewTicketUsecase(namespaceRepo, ticketRepo, quotaRepo)
 
 	orgHandler := OrganizationHttp.NewOrganizationHandler(orgUsecase)
 	resourceHandler := ResourceHttp.NewResourceHandler(resourceUsecase)
@@ -61,6 +68,7 @@ func (a *App) MapHandlers() error {
 	namespaceHandler := NamespaceHttp.NewNamespaceHandler(namespaceUsecase)
 	userHandler := UserHttp.NewUsersHandler(userUsecase)
 	authHandler := AuthHttp.NewAuthHandler(authUsecase)
+	ticketHandler := TicketHttp.NewTicketHandler(ticketUsecase)
 
 	OrganizationHttp.MapOrganizationRoutes(organizationsGroup, orgHandler)
 	ResourceHttp.MapResourceRoutes(resourcesGroup, resourceHandler)
@@ -69,13 +77,7 @@ func (a *App) MapHandlers() error {
 	NamespaceHttp.MapNamespaceRoutes(namespacesGroup, namespaceHandler)
 	UserHttp.MapUsersRoutes(userGroup, userHandler)
 	AuthHttp.MapAuthRoutes(authGroup, authHandler)
-
-	// usersRepository := usersRepository.NewUsersRepository(a.postgresDB)
-	// usersUsecase := usersUsecase.NewUsersUsecase(usersRepository)
-
-	// usersHandlers := usersHttp.NewUsersHandler(usersUsecase)
-
-	// usersHttp.MapUsersRoutes(usersGroup, usersHandlers)
+	TicketHttp.MapTicketRoutes(ticketGroup, ticketHandler)
 
 	return nil
 }

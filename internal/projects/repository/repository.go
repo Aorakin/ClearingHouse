@@ -40,3 +40,11 @@ func (r *ProjectRepository) FindProjectByID(id uuid.UUID) (*models.Project, erro
 func (r *ProjectRepository) UpdateMembers(project *models.Project) error {
 	return r.db.Model(project).Association("Members").Replace(project.Members)
 }
+
+func (r *ProjectRepository) FindAllProjectsByUserID(userID uuid.UUID) ([]models.Project, error) {
+	var user models.User
+	if err := r.db.Debug().Preload("MemberProjects").First(&user, "id = ?", userID).Error; err != nil {
+		return nil, err
+	}
+	return user.MemberProjects, nil
+}

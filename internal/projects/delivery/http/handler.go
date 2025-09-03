@@ -83,3 +83,111 @@ func (h *ProjectHandler) AddMembers() gin.HandlerFunc {
 		c.JSON(http.StatusOK, project)
 	}
 }
+
+func (h *ProjectHandler) GetAllUserProjects() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+
+		projects, err := h.projUsecase.GetAllUserProjects(userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, projects)
+	}
+}
+
+func (h *ProjectHandler) GetProject() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+
+		projectID := c.Param("id")
+		if projectID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project ID"})
+			return
+		}
+
+		projectUUID := uuid.MustParse(projectID)
+		if projectUUID == uuid.Nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project ID"})
+			return
+		}
+
+		project, err := h.projUsecase.GetProjectByID(projectUUID, userID)
+		if err != nil {
+			c.JSON(err.Status(), gin.H{"error": err.Message()})
+			return
+		}
+
+		c.JSON(http.StatusOK, project)
+	}
+}
+
+func (h *ProjectHandler) GetProjectQuota() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+
+		projectID := c.Param("id")
+		if projectID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project ID"})
+			return
+		}
+
+		projectUUID := uuid.MustParse(projectID)
+		if projectUUID == uuid.Nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project ID"})
+			return
+		}
+
+		project, err := h.projUsecase.GetProjectByID(projectUUID, userID)
+		if err != nil {
+			c.JSON(err.Status(), gin.H{"error": err.Message()})
+			return
+		}
+
+		c.JSON(http.StatusOK, project)
+	}
+}
+
+func (h *ProjectHandler) GetProjectUsage() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+
+		projectID := c.Param("id")
+		if projectID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project ID"})
+			return
+		}
+
+		projectUUID := uuid.MustParse(projectID)
+		if projectUUID == uuid.Nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project ID"})
+			return
+		}
+
+		project, err := h.projUsecase.GetProjectByID(projectUUID, userID)
+		if err != nil {
+			c.JSON(err.Status(), gin.H{"error": err.Message()})
+			return
+		}
+
+		c.JSON(http.StatusOK, project)
+	}
+}

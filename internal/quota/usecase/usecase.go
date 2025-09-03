@@ -227,15 +227,26 @@ func (u *QuotaUsecase) FindProjectQuotaGroup(projectID uuid.UUID) ([]models.Proj
 }
 
 func (u *QuotaUsecase) CreateNamespaceQuotaGroup(request *dtos.CreateNamespaceQuotaRequest) (*models.NamespaceQuotaGroup, error) {
-	// Validate the request: make sure ProjectID is valid and resources belong to the right org
+	project, err := u.projRepo.FindProjectByID(request.ProjectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find project: %w", err)
+	}
 
-	// CHECK USER AUTHORIZATION
+	isProjAdmin, err := u.IsProjAdmin(request.Creator, project.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check project admin status: %w", err)
+	}
+	if !isProjAdmin {
+		return nil, fmt.Errorf("user is not a project admin")
+	}
 
 	for _, resourcePool := range request.ResourcePools {
 		projectQuotaGroup, err := u.quotaRepo.FindProjectQuotaGroupByID(resourcePool.QuotaGroupID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get project quota group: %w", err)
 		}
+
+		// check if project in Quota
 
 		var allowedResources uuid.UUIDs
 		for _, resource := range projectQuotaGroup.Resources {
@@ -265,7 +276,7 @@ func (u *QuotaUsecase) CreateNamespaceQuotaGroup(request *dtos.CreateNamespaceQu
 		ProjectID:   request.ProjectID,
 	}
 
-	err := u.quotaRepo.CreateNamespaceQuotaGroup(namespaceQuotaGroup)
+	err = u.quotaRepo.CreateNamespaceQuotaGroup(namespaceQuotaGroup)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create namespace quota group: %w", err)
 	}
@@ -291,6 +302,10 @@ func (u *QuotaUsecase) CreateNamespaceQuotaGroup(request *dtos.CreateNamespaceQu
 	}
 
 	return namespaceQuotaGroup, nil
+}
+
+func (u *QuotaUsecase) GetNamespaceQuotaGroup(namespaceID uuid.UUID) (*models.NamespaceQuotaGroup, error) {
+	return u.quotaRepo.FindNamespaceQuotaGroupByID(namespaceID)
 }
 
 func (u *QuotaUsecase) AssignQuotaToNamespace(request *dtos.AssignQuotaToNamespaceRequest) error {

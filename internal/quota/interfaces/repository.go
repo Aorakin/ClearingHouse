@@ -24,7 +24,9 @@ type QuotaRepository interface {
 	FindProjectQuotaGroupByProjectID(projectID uuid.UUID) ([]models.ProjectQuotaGroup, error)
 
 	FindNamespaceQuotaGroupByID(id uuid.UUID) (*models.NamespaceQuotaGroup, error)
+	GetNamespaceQuotaQuantity(namespaceQuotaGroupID uuid.UUID, resourceID uuid.UUID) (uint, error)
 	AssignQuotaToNamespace(namespaceID uuid.UUID, quotaGroupID uuid.UUID) error
+	GetResourcePropertyByNamespace(namespaceQuotaGroupID uuid.UUID, resourceID uuid.UUID) (*models.ResourceProperty, error)
 
 	GetProjectQuotaQuantity(projQuotaGroupID uuid.UUID, resourceID uuid.UUID) (uint, error)
 	GetResourcePropertyByProj(projQuotaGroupID uuid.UUID, resourceID uuid.UUID) (*models.ResourceProperty, error)

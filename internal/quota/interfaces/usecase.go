@@ -16,4 +16,5 @@ type QuotaUsecase interface {
 	CreateProjectQuotaGroup(request *dtos.CreateProjectQuotaRequest) (*models.ProjectQuotaGroup, error)
 	CreateNamespaceQuotaGroup(request *dtos.CreateNamespaceQuotaRequest) (*models.NamespaceQuotaGroup, error)
 	AssignQuotaToNamespace(request *dtos.AssignQuotaToNamespaceRequest) error
+	GetNamespaceQuotaGroup(namespaceID uuid.UUID) (*models.NamespaceQuotaGroup, error)
 }

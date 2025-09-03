@@ -181,3 +181,35 @@ func (r *QuotaRepository) FindNamespaceQuotaGroupByID(id uuid.UUID) (*models.Nam
 func (r *QuotaRepository) AssignQuotaToNamespace(namespaceID uuid.UUID, quotaGroupID uuid.UUID) error {
 	return r.db.Model(&models.Namespace{}).Where("id = ?", namespaceID).Update("quota_group_id", quotaGroupID).Error
 }
+
+func (r *QuotaRepository) GetNamespaceQuotaQuantity(namespaceQuotaGroupID uuid.UUID, resourceID uuid.UUID) (uint, error) {
+	var rq models.ResourceQuantity
+
+	err := r.db.
+		Joins("JOIN resource_properties rp ON rp.id = resource_quantities.resource_property_id").
+		Where("namespace_quota_group_id = ? AND rp.resource_id = ?", namespaceQuotaGroupID, resourceID).
+		First(&rq).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return rq.Quantity, nil
+}
+
+func (r *QuotaRepository) GetResourcePropertyByNamespace(namespaceQuotaGroupID uuid.UUID, resourceID uuid.UUID) (*models.ResourceProperty, error) {
+	var resourceProperty models.ResourceProperty
+	err := r.db.
+		Model(&models.ResourceProperty{}).
+		Joins(`
+			JOIN resource_quantities rq 
+				ON rq.resource_property_id = resource_properties.id
+		`).
+		Where("rq.namespace_quota_group_id = ? AND resource_properties.resource_id = ?", namespaceQuotaGroupID, resourceID).
+		First(&resourceProperty).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return &resourceProperty, nil
+}

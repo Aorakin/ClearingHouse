@@ -128,13 +128,45 @@ func (h *QuotaHandler) FindProjectQuotaGroup() gin.HandlerFunc {
 	}
 }
 
+func (h *QuotaHandler) FindNamespaceQuotaGroup() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		namespaceID := c.Param("id")
+		if namespaceID == "" {
+			c.JSON(400, gin.H{"error": "Namespace ID is required"})
+			return
+		}
+
+		namespaceUUID, err := uuid.Parse(namespaceID)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+
+		quotaGroup, err := h.quotaUsecase.GetNamespaceQuotaGroup(namespaceUUID)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(200, quotaGroup)
+	}
+}
+
 func (h *QuotaHandler) AssignQuotaToNamespace() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(400, gin.H{"error": "unauthorized"})
+			return
+		}
+
 		var request dtos.AssignQuotaToNamespaceRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
+
+		request.Creator = userID
 
 		if err := h.quotaUsecase.AssignQuotaToNamespace(&request); err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})

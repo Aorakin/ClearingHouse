@@ -11,6 +11,7 @@ import (
 	"github.com/ClearingHouse/internal/projects/dtos"
 	"github.com/ClearingHouse/internal/projects/interfaces"
 	userInterfaces "github.com/ClearingHouse/internal/users/interfaces"
+	apiError "github.com/ClearingHouse/pkg/api_error"
 	"github.com/google/uuid"
 )
 
@@ -27,6 +28,7 @@ func NewProjectUsecase(projRepo interfaces.ProjectRepository, orgRepo orgInterfa
 		userRepo: userRepo,
 	}
 }
+
 func (u *ProjectUsecase) CreateProject(request *dtos.CreateProjectRequest) error {
 	org, err := u.orgRepo.GetOrganizationByID(request.OrganizationID)
 	if err != nil {
@@ -51,6 +53,7 @@ func (u *ProjectUsecase) CreateProject(request *dtos.CreateProjectRequest) error
 
 	return u.projRepo.CreateProject(project)
 }
+
 func (u *ProjectUsecase) GetAllProjects() ([]models.Project, error) {
 	projects, err := u.projRepo.FindAllProjects()
 	if err != nil {
@@ -109,4 +112,51 @@ func (u *ProjectUsecase) AddMembers(request *dtos.AddMembersRequest) (*models.Pr
 	}
 
 	return project, nil
+}
+
+// SERIOUS
+func (u *ProjectUsecase) GetAllUserProjects(userID uuid.UUID) ([]models.Project, error) {
+	projects, err := u.projRepo.FindAllProjectsByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return projects, nil
+}
+
+func (u *ProjectUsecase) GetProjectByID(projectID uuid.UUID, userID uuid.UUID) (*models.Project, apiError.ApiErr) {
+	project, err := u.projRepo.FindProjectByID(projectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	if !helper.ContainsUserID(project.Members, userID) {
+		return nil, apiError.NewUnauthorizedError("unauthorized access to project")
+	}
+
+	return project, nil
+}
+
+func (u *ProjectUsecase) GetProjectQuota(projectID uuid.UUID) (*dtos.ProjectQuotaResponse, apiError.ApiErr) {
+	project, err := u.projRepo.FindProjectByID(projectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	return &dtos.ProjectQuotaResponse{
+		ProjectID: project.ID,
+		Quota:     1,
+	}, nil
+}
+
+func (u *ProjectUsecase) GetProjectUsage(projectID uuid.UUID) (*dtos.ProjectUsageResponse, apiError.ApiErr) {
+	project, err := u.projRepo.FindProjectByID(projectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	return &dtos.ProjectUsageResponse{
+		ProjectID: project.ID,
+		Usage:     1,
+	}, nil
 }

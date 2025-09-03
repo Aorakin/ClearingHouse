@@ -10,4 +10,8 @@ type ProjectRepository interface {
 	FindAllProjects() ([]models.Project, error)
 	FindProjectByID(id uuid.UUID) (*models.Project, error)
 	UpdateMembers(project *models.Project) error
+
+	FindAllProjectsByUserID(userID uuid.UUID) ([]models.Project, error)
+	// GetProjectQuota(projectID uuid.UUID) (*models.Project, error)
+	// GetProjectUsage(projectID uuid.UUID) (*models.Project, error)
 }

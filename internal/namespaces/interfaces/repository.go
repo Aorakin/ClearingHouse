@@ -8,7 +8,10 @@ import (
 type NamespaceRepository interface {
 	Create(namespace *models.Namespace) error
 	GetAll() ([]models.Namespace, error)
-	GetByID(id uuid.UUID) (*models.Namespace, error)
+	GetByID(namespaceID uuid.UUID) (*models.Namespace, error)
+	UpdateNamespace(namespace *models.Namespace) error
 	UpdateMembers(namespace *models.Namespace) error
 	FindAllNamespacesByProjectID(projectID uuid.UUID) ([]models.Namespace, error)
+
+	FindAllNamespacesByUserID(userID uuid.UUID) ([]models.Namespace, error)
 }

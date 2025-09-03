@@ -7,6 +7,7 @@ import (
 )
 
 func MapQuotaRoutes(quotaGroup *gin.RouterGroup, quotaHandler interfaces.QuotaHandler) {
+	quotaGroup.GET("/namespace/:id", quotaHandler.FindNamespaceQuotaGroup())
 	quotaGroup.Use(middleware.AuthMiddleware())
 	quotaGroup.POST("/organization", quotaHandler.CreateOrganizationQuotaGroup())
 	quotaGroup.GET("/organization", quotaHandler.FindOrganizationQuotaGroup())
