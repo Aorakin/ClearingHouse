@@ -10,6 +10,7 @@ type ResourcePoolRepository struct {
 	db *gorm.DB
 }
 
+
 func (r *ResourcePoolRepository) GetResourcePoolByOrgID(orgID uuid.UUID) ([]models.ResourcePool, error) {
 	var resourcePools []models.ResourcePool
 	err := r.db.

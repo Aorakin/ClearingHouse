@@ -11,6 +11,6 @@ type NamespaceHandler interface {
 
 	GetAllUserNamespaces() gin.HandlerFunc
 	GetNamespace() gin.HandlerFunc
-	// GetNamespaceQuota() gin.HandlerFunc
-	// GetNamespaceUsage() gin.HandlerFunc
+	GetNamespaceQuota() gin.HandlerFunc
+	GetNamespaceUsage() gin.HandlerFunc
 }

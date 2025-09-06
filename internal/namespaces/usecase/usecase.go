@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/ClearingHouse/helper"
 	"github.com/ClearingHouse/internal/models"
@@ -33,7 +34,7 @@ func (u *NamespaceUsecase) CreateNamespace(request *dtos.CreateNamespaceRequest,
 		return nil, apiError.NewInternalServerError(err)
 	}
 
-	if !helper.ContainsUserID(proj.Admins, request.Creator) {
+	if !helper.ContainsUserID(proj.Admins, userID) {
 		return nil, apiError.NewUnauthorizedError("user is not project admin")
 	}
 
@@ -107,7 +108,7 @@ func (u *NamespaceUsecase) AddMembers(req *dtos.AddMembersRequest, userID uuid.U
 }
 
 func (u *NamespaceUsecase) GetAllUserNamespaces(userID uuid.UUID) ([]models.Namespace, error) {
-	namespaces, err := u.namespaceRepo.FindAllNamespacesByUserID(userID)
+	namespaces, err := u.namespaceRepo.GetAllNamespacesByUserID(userID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}
@@ -119,9 +120,54 @@ func (u *NamespaceUsecase) GetNamespace(namespaceID uuid.UUID, userID uuid.UUID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}
+
 	if !helper.ContainsUserID(namespace.Members, userID) {
 		return nil, apiError.NewUnauthorizedError("user is not namespace member")
 	}
 
+	log.Printf("Namespace members: %+v", namespace.Members)
 	return namespace, nil
+}
+
+func (u *NamespaceUsecase) GetNamespaceQuotas(namespaceID uuid.UUID, userID uuid.UUID) ([]models.NamespaceQuota, error) {
+	namespace, err := u.namespaceRepo.GetNamespaceByID(namespaceID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+	if !helper.ContainsUserID(namespace.Members, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not namespace member")
+	}
+
+	quotas, err := u.namespaceRepo.GetNamespaceQuotas(namespaceID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	return quotas, nil
+}
+
+func (u *NamespaceUsecase) GetNamespaceUsages(namespaceID uuid.UUID, userID uuid.UUID) ([]dtos.ResourceUsage, error) {
+	namespace, err := u.namespaceRepo.GetNamespaceByID(namespaceID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+	if !helper.ContainsUserID(namespace.Members, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not namespace member")
+	}
+
+	quotas, err := u.namespaceRepo.GetNamespaceQuotas(namespaceID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	for _, quota := range quotas {
+		log.Printf("ResourcePoolID: %s", quota.ResourcePoolID.String())
+	}
+
+	// usages, err := u.namespaceRepo.GetNamespaceUsages(namespaceID)
+	// if err != nil {
+	// 	return nil, apiError.NewInternalServerError(err)
+	// }
+
+	return nil, nil
 }

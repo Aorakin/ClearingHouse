@@ -10,5 +10,5 @@ type Namespace struct {
 	ProjectID   uuid.UUID        `gorm:"type:uuid;not null" json:"project_id"`
 	Project     Project          `gorm:"foreignKey:ProjectID" json:"-"`
 	Quotas      []NamespaceQuota `gorm:"many2many:namespace_quotas;" json:"quotas"`
-	Members     []User           `gorm:"many2many:project_members;" json:"project_members"`
+	Members     []User           `gorm:"many2many:namespace_members;" json:"namespace_members"`
 }

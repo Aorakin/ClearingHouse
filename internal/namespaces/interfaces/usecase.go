@@ -13,4 +13,7 @@ type NamespaceUsecase interface {
 
 	GetAllUserNamespaces(userID uuid.UUID) ([]models.Namespace, error)
 	GetNamespace(namespaceID uuid.UUID, userID uuid.UUID) (*models.Namespace, error)
+
+	GetNamespaceQuotas(namespaceID uuid.UUID, userID uuid.UUID) ([]models.NamespaceQuota, error)
+	GetNamespaceUsages(namespaceID uuid.UUID, userID uuid.UUID) ([]dtos.ResourceUsage, error)
 }

@@ -126,3 +126,63 @@ func (h *NamespaceHandler) GetNamespace() gin.HandlerFunc {
 		c.JSON(http.StatusOK, namespace)
 	}
 }
+
+func (h *NamespaceHandler) GetNamespaceQuota() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		namespaceID := c.Param("id")
+		if namespaceID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid namespace ID")))
+			return
+		}
+
+		namespaceUUID := uuid.MustParse(namespaceID)
+		if namespaceUUID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid namespace ID")))
+			return
+		}
+
+		quotas, err := h.namespaceUsecase.GetNamespaceQuotas(namespaceUUID, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, quotas)
+	}
+}
+
+func (h *NamespaceHandler) GetNamespaceUsage() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		namespaceID := c.Param("id")
+		if namespaceID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid namespace ID")))
+			return
+		}
+
+		namespaceUUID := uuid.MustParse(namespaceID)
+		if namespaceUUID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid namespace ID")))
+			return
+		}
+
+		usages, err := h.namespaceUsecase.GetNamespaceUsages(namespaceUUID, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, usages)
+	}
+}

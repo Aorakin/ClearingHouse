@@ -11,7 +11,9 @@ type NamespaceRepository interface {
 	GetNamespaceByID(namespaceID uuid.UUID) (*models.Namespace, error)
 	UpdateNamespace(namespace *models.Namespace) error
 	UpdateMembers(namespace *models.Namespace) error
-	FindAllNamespacesByProjectID(projectID uuid.UUID) ([]models.Namespace, error)
 
-	FindAllNamespacesByUserID(userID uuid.UUID) ([]models.Namespace, error)
+	GetAllNamespacesByProjectID(projectID uuid.UUID) ([]models.Namespace, error)
+	GetAllNamespacesByUserID(userID uuid.UUID) ([]models.Namespace, error)
+
+	GetNamespaceQuotas(namespaceID uuid.UUID) ([]models.NamespaceQuota, error)
 }

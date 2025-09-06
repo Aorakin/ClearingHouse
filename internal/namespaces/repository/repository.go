@@ -36,7 +36,7 @@ func (r *NamespaceRepository) GetNamespaceByID(namespaceID uuid.UUID) (*models.N
 	return &namespace, nil
 }
 
-func (r *NamespaceRepository) FindAllNamespacesByProjectID(projectID uuid.UUID) ([]models.Namespace, error) {
+func (r *NamespaceRepository) GetAllNamespacesByProjectID(projectID uuid.UUID) ([]models.Namespace, error) {
 	var namespaces []models.Namespace
 	err := r.db.Where("project_id = ?", projectID).Find(&namespaces).Error
 	return namespaces, err
@@ -50,10 +50,19 @@ func (r *NamespaceRepository) UpdateNamespace(namespace *models.Namespace) error
 	return r.db.Save(namespace).Error
 }
 
-func (r *NamespaceRepository) FindAllNamespacesByUserID(userID uuid.UUID) ([]models.Namespace, error) {
+func (r *NamespaceRepository) GetAllNamespacesByUserID(userID uuid.UUID) ([]models.Namespace, error) {
 	var user models.User
 	if err := r.db.Debug().Preload("MemberNamespaces").First(&user, "id = ?", userID).Error; err != nil {
 		return nil, err
 	}
 	return user.MemberNamespaces, nil
+}
+
+func (r *NamespaceRepository) GetNamespaceQuotas(namespaceID uuid.UUID) ([]models.NamespaceQuota, error) {
+	var quotas []models.NamespaceQuota
+	err := r.db.Preload("Resources.ResourceProperties").Joins("JOIN namespace_quotas nq ON nq.namespace_id = ?", namespaceID).Find(&quotas).Error
+	if err != nil {
+		return nil, err
+	}
+	return quotas, nil
 }
