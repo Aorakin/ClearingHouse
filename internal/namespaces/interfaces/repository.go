@@ -14,6 +14,7 @@ type NamespaceRepository interface {
 
 	GetAllNamespacesByProjectID(projectID uuid.UUID) ([]models.Namespace, error)
 	GetAllNamespacesByUserID(userID uuid.UUID) ([]models.Namespace, error)
+	GetAllNamespacesByProjectAndUserID(projectID, userID uuid.UUID) ([]models.Namespace, error)
 
 	GetNamespaceQuotas(namespaceID uuid.UUID) ([]models.NamespaceQuota, error)
 	GetNamespaceTickets(namespaceID, resourcePoolID, quotaID uuid.UUID) ([]models.Ticket, error)

@@ -81,3 +81,11 @@ func (r *NamespaceRepository) GetNamespaceTickets(namespaceID, resourcePoolID, q
 
 	return tickets, nil
 }
+
+func (r *NamespaceRepository) GetAllNamespacesByProjectAndUserID(projectID, userID uuid.UUID) ([]models.Namespace, error) {
+	var namespaces []models.Namespace
+	err := r.db.Joins("JOIN namespace_members nm ON nm.namespace_id = namespaces.id").
+		Where("namespaces.project_id = ? AND nm.user_id = ?", projectID, userID).
+		Find(&namespaces).Error
+	return namespaces, err
+}

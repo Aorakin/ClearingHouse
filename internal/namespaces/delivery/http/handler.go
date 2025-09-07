@@ -87,7 +87,19 @@ func (h *NamespaceHandler) GetAllUserNamespaces() gin.HandlerFunc {
 			return
 		}
 
-		namespaces, err := h.namespaceUsecase.GetAllUserNamespaces(userID)
+		projID := c.Param("id")
+		if projID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
+			return
+		}
+
+		projectUUID := uuid.MustParse(projID)
+		if projectUUID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
+			return
+		}
+
+		namespaces, err := h.namespaceUsecase.GetAllUserNamespaces(projectUUID, userID)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
