@@ -17,10 +17,20 @@ type OrganizationResources struct {
 	Duration   float32   `json:"duration" binding:"gte=0"`
 }
 
-type CreateQuotaRequest struct {
+type CreateProjectQuotaRequest struct {
+	Name        string     `json:"name" binding:"required"`
+	Description string     `json:"description"`
+	ProjectID   uuid.UUID  `json:"project_id" binding:"required,uuid"`
+	OrgQuotaID  uuid.UUID  `json:"org_quota_id" binding:"required,uuid"`
+	OrgID       uuid.UUID  `json:"org_id" binding:"required,uuid"`
+	Resources   []Resource `json:"resources" binding:"required"`
+}
+
+type CreateNamespaceQuotaRequest struct {
 	Name           string     `json:"name" binding:"required"`
 	Description    string     `json:"description"`
-	OrganizationID uuid.UUID  `json:"organization_id" binding:"required,uuid"`
+	ProjectID      uuid.UUID  `json:"project_id" binding:"required,uuid"`
+	ProjectQuotaID uuid.UUID  `json:"project_quota_id" binding:"required,uuid"`
 	Resources      []Resource `json:"resources" binding:"required"`
 }
 

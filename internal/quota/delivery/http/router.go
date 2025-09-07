@@ -11,8 +11,9 @@ func MapQuotaRoutes(quotaGroup *gin.RouterGroup, quotaHandler interfaces.QuotaHa
 	quotaGroup.Use(middleware.AuthMiddleware())
 	quotaGroup.POST("/organization", quotaHandler.CreateOrganizationQuota())
 	quotaGroup.GET("/organization", quotaHandler.GetOrganizationQuota())
-	// quotaGroup.POST("/project", quotaHandler.CreateProjectQuotaGroup())
-	// quotaGroup.GET("/project/:id", quotaHandler.FindProjectQuotaGroup())
-	// quotaGroup.POST("/namespace", quotaHandler.CreateNamespaceQuotaGroup())
+	quotaGroup.POST("/project", quotaHandler.CreateProjectQuota())
+	quotaGroup.GET("/project/:id", quotaHandler.GetProjectQuota())
+	quotaGroup.POST("/namespace", quotaHandler.CreateNamespaceQuota())
+	quotaGroup.GET("/namespace/:id", quotaHandler.GetNamespaceQuota())
 	// quotaGroup.POST("/namespace/assign", quotaHandler.AssignQuotaToNamespace())
 }

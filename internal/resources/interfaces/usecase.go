@@ -13,4 +13,6 @@ type ResourceUsecase interface {
 	CreateResourceType(request *dtos.CreateResourceTypeRequest) (*models.ResourceType, error)
 	CreateResourcePool(request *dtos.CreateResourcePoolRequest) (*models.ResourcePool, error)
 	UpdateResource(resourceID uuid.UUID, request *dtos.UpdateResourceRequest) (*models.Resource, error)
+	GetResourceProperty(resourceID uuid.UUID) (*models.Resource, error)
+	GetResourcePool(resourcePoolID *uuid.UUID) (*models.ResourcePool, error)
 }

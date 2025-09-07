@@ -4,6 +4,7 @@ import (
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/resources/dtos"
 	"github.com/ClearingHouse/internal/resources/interfaces"
+	apiError "github.com/ClearingHouse/pkg/api_error"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -71,6 +72,7 @@ func (u *ResourceUsecase) CreateResourceType(request *dtos.CreateResourceTypeReq
 	}
 	return resourceType, nil
 }
+
 func (u *ResourceUsecase) CreateResource(request *dtos.CreateResourceRequest) (*models.Resource, error) {
 	resource := &models.Resource{
 		ResourcePoolID: request.ResourcePoolID,
@@ -99,4 +101,20 @@ func (u *ResourceUsecase) UpdateResource(resourceID uuid.UUID, request *dtos.Upd
 		return nil, err
 	}
 	return updatedResource, nil
+}
+
+func (u *ResourceUsecase) GetResourceProperty(resourceID uuid.UUID) (*models.Resource, error) {
+	resource, err := u.resourceRepo.GetResourceByID(resourceID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+	return resource, nil
+}
+
+func (u *ResourceUsecase) GetResourcePool(resourcePoolID *uuid.UUID) (*models.ResourcePool, error) {
+	resourcePool, err := u.poolRepo.GetResourcePoolByID(*resourcePoolID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+	return resourcePool, nil
 }

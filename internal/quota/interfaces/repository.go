@@ -10,6 +10,15 @@ type QuotaRepository interface {
 	CreateOrgQuota(quota *models.OrganizationQuota) error
 	GetOrganizationByRelationship(fromOrgID uuid.UUID, toOrgID uuid.UUID) ([]models.OrganizationQuota, error)
 	GetOrgQuotaByID(id uuid.UUID) (*models.OrganizationQuota, error)
+	GetOrgUsage(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)
+	GetOrgQuotaQuantity(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)
+
+	CreateProjectQuota(quota *models.ProjectQuota) error
+	GetProjectQuotaByProjectID(projectID uuid.UUID) ([]models.ProjectQuota, error)
+	GetProjectQuotaByID(id uuid.UUID) (*models.ProjectQuota, error)
+
+	CreateNamespaceQuota(quota *models.NamespaceQuota) error
+	GetNamespaceQuotaByNamespaceID(namespaceID uuid.UUID) ([]models.NamespaceQuota, error)
 
 	CreateResourceProperty(resourceProperty *models.ResourceProperty) error
 

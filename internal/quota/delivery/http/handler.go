@@ -15,7 +15,7 @@ type QuotaHandler struct {
 	quotaUsecase interfaces.QuotaUsecase
 }
 
-func NewQuotaHandler(quotaUsecase interfaces.QuotaUsecase) *interfaces.QuotaHandler {
+func NewQuotaHandler(quotaUsecase interfaces.QuotaUsecase) interfaces.QuotaHandler {
 	return &QuotaHandler{
 		quotaUsecase: quotaUsecase,
 	}
@@ -82,7 +82,7 @@ func (h *QuotaHandler) CreateProjectQuota() gin.HandlerFunc {
 			return
 		}
 
-		var request dtos.CreateQuotaRequest
+		var request dtos.CreateProjectQuotaRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
 			return
@@ -95,6 +95,79 @@ func (h *QuotaHandler) CreateProjectQuota() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusCreated, quota)
+	}
+}
+
+func (h *QuotaHandler) GetProjectQuota() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		projectID := c.Param("id")
+		if projectID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Project ID is required")))
+			return
+		}
+
+		projectUUID, err := uuid.Parse(projectID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		quota, err := h.quotaUsecase.GetProjectQuota(projectUUID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, quota)
+	}
+}
+
+func (h *QuotaHandler) CreateNamespaceQuota() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		var request dtos.CreateNamespaceQuotaRequest
+
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		quota, err := h.quotaUsecase.CreateNamespaceQuota(&request, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusCreated, quota)
+	}
+}
+
+func (h *QuotaHandler) GetNamespaceQuota() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		namespaceID := c.Param("id")
+		if namespaceID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Namespace ID is required")))
+			return
+		}
+
+		namespaceUUID, err := uuid.Parse(namespaceID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		quota, err := h.quotaUsecase.GetNamespaceQuota(namespaceUUID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, quota)
 	}
 }
 

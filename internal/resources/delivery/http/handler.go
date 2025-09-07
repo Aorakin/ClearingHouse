@@ -5,6 +5,8 @@ import (
 
 	"github.com/ClearingHouse/internal/resources/dtos"
 	"github.com/ClearingHouse/internal/resources/interfaces"
+	apiError "github.com/ClearingHouse/pkg/api_error"
+	"github.com/ClearingHouse/pkg/response"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -133,5 +135,51 @@ func (h *ResourceHandler) UpdateResource() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, resource)
+	}
+}
+
+func (h *ResourceHandler) GetResourceProperty() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		resourceID := c.Param("id")
+		if resourceID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Resource ID is required")))
+			return
+		}
+
+		resourceUUID, err := uuid.Parse(resourceID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		resource, err := h.ResourceUsecase.GetResourceProperty(resourceUUID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+		c.JSON(http.StatusOK, resource)
+	}
+}
+
+func (h *ResourceHandler) GetResourcePool() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		resourcePoolID := c.Param("id")
+		if resourcePoolID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Resource Pool ID is required")))
+			return
+		}
+
+		resourcePoolUUID, err := uuid.Parse(resourcePoolID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		resourcePool, err := h.ResourceUsecase.GetResourcePool(&resourcePoolUUID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+		c.JSON(http.StatusOK, resourcePool)
 	}
 }

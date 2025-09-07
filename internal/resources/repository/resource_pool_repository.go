@@ -10,7 +10,6 @@ type ResourcePoolRepository struct {
 	db *gorm.DB
 }
 
-
 func (r *ResourcePoolRepository) GetResourcePoolByOrgID(orgID uuid.UUID) ([]models.ResourcePool, error) {
 	var resourcePools []models.ResourcePool
 	err := r.db.
@@ -30,4 +29,14 @@ func (r *ResourcePoolRepository) CreateResourcePool(resourcePool *models.Resourc
 		return nil, err
 	}
 	return resourcePool, nil
+}
+
+func (r *ResourcePoolRepository) GetResourcePoolByID(id uuid.UUID) (*models.ResourcePool, error) {
+	var resourcePool models.ResourcePool
+	err := r.db.First(&resourcePool, "id = ?", id).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return &resourcePool, nil
 }
