@@ -19,7 +19,7 @@ func (r *ProjectRepository) CreateProject(project *models.Project) error {
 	return r.db.Create(project).Error
 }
 
-func (r *ProjectRepository) FindAllProjects() ([]models.Project, error) {
+func (r *ProjectRepository) GetAllProjects() ([]models.Project, error) {
 	var projects []models.Project
 	err := r.db.Find(&projects).Error
 	if err != nil {
@@ -28,7 +28,7 @@ func (r *ProjectRepository) FindAllProjects() ([]models.Project, error) {
 	return projects, nil
 }
 
-func (r *ProjectRepository) FindProjectByID(id uuid.UUID) (*models.Project, error) {
+func (r *ProjectRepository) GetProjectByID(id uuid.UUID) (*models.Project, error) {
 	var project models.Project
 	err := r.db.Preload("Admins").Preload("Members").First(&project, "id = ?", id).Error
 	if err != nil {
@@ -39,4 +39,12 @@ func (r *ProjectRepository) FindProjectByID(id uuid.UUID) (*models.Project, erro
 
 func (r *ProjectRepository) UpdateMembers(project *models.Project) error {
 	return r.db.Model(project).Association("Members").Replace(project.Members)
+}
+
+func (r *ProjectRepository) GetAllProjectsByUserID(userID uuid.UUID) ([]models.Project, error) {
+	var user models.User
+	if err := r.db.Preload("MemberProjects").First(&user, "id = ?", userID).Error; err != nil {
+		return nil, err
+	}
+	return user.MemberProjects, nil
 }

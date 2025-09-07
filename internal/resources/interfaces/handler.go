@@ -9,4 +9,7 @@ type ResourceHandler interface {
 	CreateResourceType() gin.HandlerFunc
 	CreateResource() gin.HandlerFunc
 	UpdateResource() gin.HandlerFunc
+
+	GetResourceProperty() gin.HandlerFunc
+	GetResourcePool() gin.HandlerFunc
 }

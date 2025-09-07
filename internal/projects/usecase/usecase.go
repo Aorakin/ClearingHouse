@@ -1,9 +1,7 @@
 package usecase
 
 import (
-	"errors"
 	"fmt"
-	"log"
 
 	"github.com/ClearingHouse/helper"
 	"github.com/ClearingHouse/internal/models"
@@ -11,6 +9,7 @@ import (
 	"github.com/ClearingHouse/internal/projects/dtos"
 	"github.com/ClearingHouse/internal/projects/interfaces"
 	userInterfaces "github.com/ClearingHouse/internal/users/interfaces"
+	apiError "github.com/ClearingHouse/pkg/api_error"
 	"github.com/google/uuid"
 )
 
@@ -27,19 +26,20 @@ func NewProjectUsecase(projRepo interfaces.ProjectRepository, orgRepo orgInterfa
 		userRepo: userRepo,
 	}
 }
-func (u *ProjectUsecase) CreateProject(request *dtos.CreateProjectRequest) error {
+
+func (u *ProjectUsecase) CreateProject(request *dtos.CreateProjectRequest, userID uuid.UUID) error {
 	org, err := u.orgRepo.GetOrganizationByID(request.OrganizationID)
 	if err != nil {
-		return err
+		return apiError.NewInternalServerError(err.Error())
 	}
 
-	if !helper.ContainsUserID(org.Admins, request.Creator) {
-		return errors.New("unauthorized")
+	if !helper.ContainsUserID(org.Admins, userID) {
+		return apiError.NewUnauthorizedError("user is not project admin")
 	}
 
-	admin, err := u.userRepo.GetByID(request.Creator)
+	admin, err := u.userRepo.GetByID(userID)
 	if err != nil {
-		return err
+		return apiError.NewInternalServerError(err.Error())
 	}
 
 	project := &models.Project{
@@ -49,29 +49,35 @@ func (u *ProjectUsecase) CreateProject(request *dtos.CreateProjectRequest) error
 		Admins:         []models.User{*admin},
 	}
 
-	return u.projRepo.CreateProject(project)
-}
-func (u *ProjectUsecase) GetAllProjects() ([]models.Project, error) {
-	projects, err := u.projRepo.FindAllProjects()
+	err = u.projRepo.CreateProject(project)
 	if err != nil {
-		return nil, err
+		return apiError.NewInternalServerError(err.Error())
+	}
+
+	return nil
+}
+
+func (u *ProjectUsecase) GetAllProjects() ([]models.Project, error) {
+	projects, err := u.projRepo.GetAllProjects()
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
 	}
 	return projects, nil
 }
 
-func (u *ProjectUsecase) AddMembers(request *dtos.AddMembersRequest) (*models.Project, error) {
-	project, err := u.projRepo.FindProjectByID(request.ProjectID)
+func (u *ProjectUsecase) AddMembers(request *dtos.AddMembersRequest, userID uuid.UUID) (*models.Project, error) {
+	project, err := u.projRepo.GetProjectByID(request.ProjectID)
 	if err != nil {
-		return nil, err
-	}
-	log.Println("asdasdasdasdads")
-	org, err := u.orgRepo.GetOrganizationByID(project.OrganizationID)
-	if err != nil {
-		return nil, err
+		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	if !helper.ContainsUserID(project.Admins, request.Creator) {
-		return nil, fmt.Errorf("only project admins can add members")
+	org, err := u.orgRepo.GetOrganizationByID(project.OrganizationID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	if !helper.ContainsUserID(project.Admins, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project admin")
 	}
 
 	existing := make(map[uuid.UUID]struct{})
@@ -83,30 +89,77 @@ func (u *ProjectUsecase) AddMembers(request *dtos.AddMembersRequest) (*models.Pr
 	for _, memberID := range request.Members {
 		// must be org member
 		if !helper.ContainsUserID(org.Members, memberID) {
-			return nil, fmt.Errorf("user %s is not a member of the organization", memberID)
+			return nil, apiError.NewBadRequestError(fmt.Sprintf("user %s is not a member of the organization", memberID))
 		}
 		if _, found := existing[memberID]; found {
-			return nil, fmt.Errorf("user %s is already a project member", memberID)
+			return nil, apiError.NewConflictError(fmt.Sprintf("user %s is already a project member", memberID))
 		}
 		if _, found := seenReq[memberID]; found {
-			return nil, fmt.Errorf("duplicate user %s in request", memberID)
+			return nil, apiError.NewBadRequestError(fmt.Sprintf("duplicate user %s in request", memberID))
 		}
 		seenReq[memberID] = struct{}{}
 		if _, err := u.userRepo.GetByID(memberID); err != nil {
-			return nil, fmt.Errorf("user %s not found", memberID)
+			return nil, apiError.NewNotFoundError(fmt.Sprintf("user %s not found", memberID))
 		}
 	}
 
 	users, err := u.userRepo.GetByIDs(request.Members)
 	if err != nil {
-		return nil, err
+		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
 	project.Members = append(project.Members, users...)
 
 	if err := u.projRepo.UpdateMembers(project); err != nil {
-		return nil, err
+		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
 	return project, nil
+}
+
+// SERIOUS
+func (u *ProjectUsecase) GetAllUserProjects(userID uuid.UUID) ([]models.Project, error) {
+	projects, err := u.projRepo.GetAllProjectsByUserID(userID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	return projects, nil
+}
+
+func (u *ProjectUsecase) GetProjectByID(projectID uuid.UUID, userID uuid.UUID) (*models.Project, error) {
+	project, err := u.projRepo.GetProjectByID(projectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	if !helper.ContainsUserID(project.Members, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project member")
+	}
+
+	return project, nil
+}
+
+func (u *ProjectUsecase) GetProjectQuota(projectID uuid.UUID) (*dtos.ProjectQuotaResponse, error) {
+	project, err := u.projRepo.GetProjectByID(projectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	return &dtos.ProjectQuotaResponse{
+		ProjectID: project.ID,
+		Quota:     1,
+	}, nil
+}
+
+func (u *ProjectUsecase) GetProjectUsage(projectID uuid.UUID) (*dtos.ProjectUsageResponse, error) {
+	project, err := u.projRepo.GetProjectByID(projectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	return &dtos.ProjectUsageResponse{
+		ProjectID: project.ID,
+		Usage:     1,
+	}, nil
 }

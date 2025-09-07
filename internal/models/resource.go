@@ -9,7 +9,7 @@ type Resource struct {
 	ResourceTypeID uuid.UUID    `gorm:"type:uuid;not null" json:"resource_type_id"`
 	ResourceType   ResourceType `gorm:"foreignKey:ResourceTypeID" json:"resource_type"`
 	ResourcePoolID uuid.UUID    `gorm:"type:uuid;not null" json:"resource_pool_id"`
-	ResourcePool   ResourcePool `gorm:"foreignKey:ResourcePoolID" json:"resource_pool"`
+	ResourcePool   ResourcePool `gorm:"foreignKey:ResourcePoolID" json:"-"`
 }
 
 type ResourceType struct {
@@ -22,6 +22,6 @@ type ResourcePool struct {
 	BaseModel
 	Name           string       `json:"name"`
 	OrganizationID uuid.UUID    `gorm:"type:uuid;not null" json:"organization_id"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID" json:"organization"`
-	Resources      []Resource   `gorm:"foreignKey:ResourcePoolID" json:"resources"`
+	Organization   Organization `gorm:"foreignKey:OrganizationID" json:"-"`
+	Resources      []Resource   `gorm:"foreignKey:ResourcePoolID" json:"-"`
 }
