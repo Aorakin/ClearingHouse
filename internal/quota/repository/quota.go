@@ -112,11 +112,18 @@ func (r *QuotaRepository) CreateNamespaceQuota(quota *models.NamespaceQuota) err
 
 func (r *QuotaRepository) GetNamespaceQuotaByNamespaceID(namespaceID uuid.UUID) ([]models.NamespaceQuota, error) {
 	var namespaceQuotas []models.NamespaceQuota
-	err := r.db.Debug().Preload("Resources.ResourceProp").Where("namespace_id = ?", namespaceID).
+
+	err := r.db.Debug().
+		Table("namespace_quota nq").
+		Joins("JOIN namespace_quotas nqs ON nqs.namespace_quota_id = nq.id").
+		Preload("Resources.ResourceProp").
+		Where("nqs.namespace_id = ?", namespaceID).
 		Find(&namespaceQuotas).Error
+
 	if err != nil {
 		return nil, err
 	}
+
 	return namespaceQuotas, nil
 }
 
@@ -126,6 +133,48 @@ func (r *QuotaRepository) CreateResourceProperty(resourceProperty *models.Resour
 
 func (r *QuotaRepository) CreateResourceQuantity(resourceQuantity *models.ResourceQuantity) error {
 	return r.db.Create(resourceQuantity).Error
+}
+
+func (r *QuotaRepository) GetNamespaceQuotaByID(id uuid.UUID) (*models.NamespaceQuota, error) {
+	var namespaceQuota models.NamespaceQuota
+	err := r.db.Preload("Resources.ResourceProp").First(&namespaceQuota, "id = ?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &namespaceQuota, nil
+}
+
+func (r *QuotaRepository) AssignQuotaToNamespace(namespaceID uuid.UUID, namespaceQuotaID uuid.UUID) error {
+	var nsQuota models.NamespaceQuota
+
+	if err := r.db.Preload("Namespaces").First(&nsQuota, "id = ?", namespaceQuotaID).Error; err != nil {
+		return err
+	}
+
+	for _, ns := range nsQuota.Namespaces {
+		if ns.ID == namespaceID {
+			return nil
+		}
+	}
+
+	ns := models.Namespace{BaseModel: models.BaseModel{ID: namespaceID}}
+	if err := r.db.Model(&nsQuota).Association("Namespaces").Append(&ns); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *QuotaRepository) IsAssigned(namespaceID uuid.UUID, quotaID uuid.UUID) (bool, error) {
+	var count int64
+	err := r.db.Table("namespace_quotas").
+		Where("namespace_id = ? AND namespace_quota_id = ?", namespaceID, quotaID).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 // func (r *QuotaRepository) FindExistingOrganizationQuotaGroup(fromOrgID uuid.UUID, toOrgID uuid.UUID, poolID uuid.UUID) (*models.OrganizationQuotaGroup, error) {

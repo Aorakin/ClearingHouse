@@ -9,6 +9,7 @@ import (
 func MapTicketRoutes(ticketGroup *gin.RouterGroup, ticketHandler interfaces.TicketHandler) {
 	ticketGroup.Use(middleware.AuthMiddleware())
 	ticketGroup.POST("/", ticketHandler.CreateTicket())
+	ticketGroup.GET("/namespace/:namespace_id", ticketHandler.GetNamespaceTickets())
 }
 
 // get all ticket in ns

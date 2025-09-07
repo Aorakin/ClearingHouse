@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/ClearingHouse/helper"
 	"github.com/ClearingHouse/internal/models"
@@ -9,6 +10,7 @@ import (
 	quotaInterfaces "github.com/ClearingHouse/internal/quota/interfaces"
 	"github.com/ClearingHouse/internal/tickets/dtos"
 	"github.com/ClearingHouse/internal/tickets/interfaces"
+	apiError "github.com/ClearingHouse/pkg/api_error"
 	"github.com/google/uuid"
 )
 
@@ -26,118 +28,138 @@ func NewTicketUsecase(namespaceRepo namespaceInterfaces.NamespaceRepository, tic
 	}
 }
 
-func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest) (*models.Ticket, error) {
-	isMember, err := u.IsNamespaceMember(request.Creator, request.NamespaceID)
+func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest, userID uuid.UUID) (*models.Ticket, error) {
+	if len(request.Resources) == 0 {
+		return nil, apiError.NewBadRequestError("at least one resource is required")
+	}
+
+	isMember, err := u.isNamespaceMember(userID, request.NamespaceID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to verify namespace membership: %w", err)
+		return nil, apiError.NewInternalServerError(err)
 	}
 	if !isMember {
-		return nil, fmt.Errorf("user is not a member of the namespace")
+		return nil, apiError.NewUnauthorizedError("user is not a member of the namespace")
 	}
 
-	// namespace, err := u.namespaceRepo.GetNamespaceByID(request.NamespaceID)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to get namespace: %w", err)
-	// }
+	isAssigned, err := u.quotaRepo.IsAssigned(request.NamespaceID, request.QuotaID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+	if !isAssigned {
+		return nil, apiError.NewUnauthorizedError("quota is not assigned to the namespace")
+	}
 
-	// if namespace.QuotaGroupID == nil {
-	// 	return nil, fmt.Errorf("namespace does not have a quota group assigned")
-	// }
+	quota, err := u.quotaRepo.GetNamespaceQuotaByID(request.QuotaID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
 
-	// quota, err := u.quotaRepo.FindNamespaceQuotaGroupByID(*namespace.QuotaGroupID)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to get namespace quota group: %w", err)
-	// }
+	quotaResources := make(map[uuid.UUID]models.ResourceQuantity)
+	for _, resource := range quota.Resources {
+		quotaResources[resource.ResourceProp.ResourceID] = resource
+	}
+	seenReq := make(map[uuid.UUID]struct{})
+	totalCredit := float32(0)
 
-	// // validate resources quantity
-	// allowedResources := make(map[uuid.UUID]struct{})
-	// for _, resource := range quota.Resources {
-	// 	allowedResources[resource.ResourceProperty.ResourceID] = struct{}{}
-	// }
+	for _, resource := range request.Resources {
+		if _, ok := quotaResources[resource.ResourceID]; !ok {
+			return nil, apiError.NewForbiddenError("resource is not allowed")
+		}
+		resourceQuantity := quotaResources[resource.ResourceID]
 
-	// totalCredit := float32(0)
-	// seen := make(map[uuid.UUID]struct{})
-	// for _, resource := range request.Resources {
-	// 	// check if resource exist in quota
-	// 	if _, ok := allowedResources[resource.ResourceID]; !ok {
-	// 		return nil, fmt.Errorf("resource %s is not allowed", resource.ResourceID)
-	// 	}
+		if _, ok := seenReq[resource.ResourceID]; ok {
+			return nil, apiError.NewBadRequestError("resource is duplicated")
+		}
+		seenReq[resource.ResourceID] = struct{}{}
 
-	// 	// check if resource is duplicated
-	// 	if _, ok := seen[resource.ResourceID]; ok {
-	// 		return nil, fmt.Errorf("resource %s is duplicated", resource.ResourceID)
-	// 	}
-	// 	seen[resource.ResourceID] = struct{}{}
+		usage, err := u.ticketRepo.GetResourceUsage(request.NamespaceID, request.QuotaID, resource.ResourceID)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(err)
+		}
 
-	// 	// check namespace usage
-	// 	namespaceUsage, err := u.ticketRepo.GetNamespaceUsage(request.NamespaceID, quota.ID, resource.ResourceID)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("failed to get namespace usage: %w", err)
-	// 	}
+		log.Printf("Resource ID: %s usage %d", resource.ResourceID, usage)
+		maxQuota := resourceQuantity.Quantity
+		if usage+resource.Quantity > maxQuota {
+			return nil, apiError.NewForbiddenError("namespace usage exceeds quota limit for resource")
+		}
 
-	// 	maxQuota, err := u.quotaRepo.GetNamespaceQuotaQuantity(quota.ID, resource.ResourceID)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("failed to get max quota for resource %s: %w", resource.ResourceID, err)
-	// 	}
+		if request.Duration <= 0 {
+			return nil, apiError.NewBadRequestError("duration must be greater than 0")
+		}
+		if request.Duration > resourceQuantity.ResourceProp.MaxDuration {
+			return nil, apiError.NewForbiddenError("duration exceeds max limit for resource")
+		}
 
-	// 	if namespaceUsage+resource.Quantity > maxQuota {
-	// 		return nil, fmt.Errorf("namespace usage exceeds quota limit for resource %s", resource.ResourceID)
-	// 	}
+		totalCredit += float32(resource.Quantity) * resourceQuantity.ResourceProp.Price * request.Duration
+	}
 
-	// 	resourceProperty, err := u.quotaRepo.GetResourcePropertyByNamespace(*namespace.QuotaGroupID, resource.ResourceID)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("failed to get resource property for resource %s: %w", resource.ResourceID, err)
-	// 	}
+	namespace, err := u.namespaceRepo.GetNamespaceByID(request.NamespaceID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
 
-	// 	totalCredit += float32(resource.Quantity) * resourceProperty.Price * float32(request.Duration)
-	// }
+	if totalCredit > namespace.Credit {
+		return nil, apiError.NewForbiddenError(fmt.Errorf("not enough credit want to use %.2f but only have %.2f", totalCredit, namespace.Credit))
+	}
+	namespace.Credit -= totalCredit
 
-	// if totalCredit > namespace.Credit {
-	// 	return nil, fmt.Errorf("not enough credit")
-	// }
+	err = u.namespaceRepo.UpdateNamespace(namespace)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
 
-	// namespace.Credit -= totalCredit
-	// err = u.namespaceRepo.UpdateNamespace(namespace)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to update namespace: %w", err)
-	// }
+	ticket := &models.Ticket{
+		NamespaceID:    request.NamespaceID,
+		Name:           request.Name,
+		OwnerID:        userID,
+		QuotaID:        request.QuotaID,
+		ResourcePoolID: quota.ResourcePoolID,
+		Status:         "created",
+	}
+	err = u.ticketRepo.CreateTicket(ticket)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
 
-	// ticket := &models.Ticket{
-	// 	NamespaceID: request.NamespaceID,
-	// 	Name:        request.Name,
-	// 	OwnerID:     request.Creator,
-	// 	Status:      "created",
-	// }
+	for _, resource := range request.Resources {
+		ticketResource := &models.TicketResource{
+			ResourceID: resource.ResourceID,
+			Quantity:   resource.Quantity,
+			TicketID:   ticket.ID,
+		}
+		err = u.ticketRepo.CreateTicketResource(ticketResource)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(err)
+		}
+	}
 
-	// err = u.ticketRepo.CreateTicket(ticket)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to create ticket: %w", err)
-	// }
+	// reload ticket with resources
+	ticket, err = u.ticketRepo.GetTicketByID(ticket.ID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
 
-	// for _, resource := range request.Resources {
-	// 	ticketResource := &models.TicketResource{
-	// 		QuotaID:    *namespace.QuotaGroupID,
-	// 		ResourceID: resource.ResourceID,
-	// 		Quantity:   resource.Quantity,
-	// 		TicketID:   ticket.ID,
-	// 	}
-	// 	err = u.ticketRepo.CreateTicketResource(ticketResource)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("failed to create ticket resource: %w", err)
-	// 	}
-	// }
-
-	// ticket, err = u.ticketRepo.GetTicketByID(ticket.ID)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to get created ticket: %w", err)
-	// }
-
-	// return ticket, nil
-
-	return nil, nil
+	return ticket, nil
 }
 
-func (u *TicketUsecase) IsNamespaceMember(userID uuid.UUID, namespaceID uuid.UUID) (bool, error) {
+func (u *TicketUsecase) GetNamespaceTickets(namespaceID uuid.UUID, userID uuid.UUID) ([]models.Ticket, error) {
+	isMember, err := u.isNamespaceMember(userID, namespaceID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+	if !isMember {
+		return nil, apiError.NewUnauthorizedError("user is not a member of the namespace")
+	}
+
+	tickets, err := u.ticketRepo.GetNamespaceTickets(namespaceID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	return tickets, nil
+}
+
+func (u *TicketUsecase) isNamespaceMember(userID uuid.UUID, namespaceID uuid.UUID) (bool, error) {
 	namespace, err := u.namespaceRepo.GetNamespaceByID(namespaceID)
 	if err != nil {
 		return false, err

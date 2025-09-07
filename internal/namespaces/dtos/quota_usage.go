@@ -12,3 +12,13 @@ type ResourceUsageDetail struct {
 	Used       uint      `json:"used"`
 	Total      uint      `json:"total"`
 }
+
+type QuotaUsageQuery struct {
+	ResourcePoolID string `form:"resource_pool_id" binding:"required,uuid"`
+	QuotaID        string `form:"quota_id" binding:"required,uuid"`
+}
+
+type QuotaUsageRequest struct {
+	ResourcePoolID uuid.UUID `json:"resource_pool_id"`
+	QuotaID        uuid.UUID `json:"quota_id"`
+}

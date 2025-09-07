@@ -9,6 +9,7 @@ import (
 	"github.com/ClearingHouse/internal/namespaces/dtos"
 	"github.com/ClearingHouse/internal/namespaces/interfaces"
 	projInterfaces "github.com/ClearingHouse/internal/projects/interfaces"
+	quotaInterfaces "github.com/ClearingHouse/internal/quota/interfaces"
 	userInterfaces "github.com/ClearingHouse/internal/users/interfaces"
 	apiError "github.com/ClearingHouse/pkg/api_error"
 	"github.com/google/uuid"
@@ -18,13 +19,15 @@ type NamespaceUsecase struct {
 	namespaceRepo interfaces.NamespaceRepository
 	userRepo      userInterfaces.UsersRepository
 	projRepo      projInterfaces.ProjectRepository
+	quotaRepo     quotaInterfaces.QuotaRepository
 }
 
-func NewNamespaceUsecase(namespaceRepo interfaces.NamespaceRepository, userRepo userInterfaces.UsersRepository, projRepo projInterfaces.ProjectRepository) interfaces.NamespaceUsecase {
+func NewNamespaceUsecase(namespaceRepo interfaces.NamespaceRepository, userRepo userInterfaces.UsersRepository, projRepo projInterfaces.ProjectRepository, quotaRepo quotaInterfaces.QuotaRepository) interfaces.NamespaceUsecase {
 	return &NamespaceUsecase{
 		namespaceRepo: namespaceRepo,
 		userRepo:      userRepo,
 		projRepo:      projRepo,
+		quotaRepo:     quotaRepo,
 	}
 }
 
@@ -138,7 +141,7 @@ func (u *NamespaceUsecase) GetNamespaceQuotas(namespaceID uuid.UUID, userID uuid
 		return nil, apiError.NewUnauthorizedError("user is not namespace member")
 	}
 
-	quotas, err := u.namespaceRepo.GetNamespaceQuotas(namespaceID)
+	quotas, err := u.quotaRepo.GetNamespaceQuotaByNamespaceID(namespaceID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}
@@ -146,7 +149,7 @@ func (u *NamespaceUsecase) GetNamespaceQuotas(namespaceID uuid.UUID, userID uuid
 	return quotas, nil
 }
 
-func (u *NamespaceUsecase) GetNamespaceUsages(namespaceID uuid.UUID, userID uuid.UUID) ([]dtos.ResourceUsage, error) {
+func (u *NamespaceUsecase) GetNamespaceUsages(request *dtos.QuotaUsageRequest, namespaceID uuid.UUID, userID uuid.UUID) ([]models.Ticket, error) {
 	namespace, err := u.namespaceRepo.GetNamespaceByID(namespaceID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
@@ -155,19 +158,10 @@ func (u *NamespaceUsecase) GetNamespaceUsages(namespaceID uuid.UUID, userID uuid
 		return nil, apiError.NewUnauthorizedError("user is not namespace member")
 	}
 
-	quotas, err := u.namespaceRepo.GetNamespaceQuotas(namespaceID)
+	tickets, err := u.namespaceRepo.GetNamespaceTickets(namespace.ID, request.ResourcePoolID, request.QuotaID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}
 
-	for _, quota := range quotas {
-		log.Printf("ResourcePoolID: %s", quota.ResourcePoolID.String())
-	}
-
-	// usages, err := u.namespaceRepo.GetNamespaceUsages(namespaceID)
-	// if err != nil {
-	// 	return nil, apiError.NewInternalServerError(err)
-	// }
-
-	return nil, nil
+	return tickets, nil
 }

@@ -10,4 +10,8 @@ type TicketRepository interface {
 	CreateTicket(ticket *models.Ticket) error
 	CreateTicketResource(resource *models.TicketResource) error
 	GetNamespaceUsage(namespaceID, quotaID, resourceID uuid.UUID) (uint, error)
+
+	GetResourceUsage(namespaceID, quotaID, resourceID uuid.UUID) (uint, error)
+
+	GetNamespaceTickets(namespaceID uuid.UUID) ([]models.Ticket, error)
 }

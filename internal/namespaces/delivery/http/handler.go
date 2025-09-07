@@ -176,8 +176,30 @@ func (h *NamespaceHandler) GetNamespaceUsage() gin.HandlerFunc {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid namespace ID")))
 			return
 		}
+		var request dtos.QuotaUsageQuery
+		if err := c.ShouldBindQuery(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
 
-		usages, err := h.namespaceUsecase.GetNamespaceUsages(namespaceUUID, userID)
+		resourcePoolUUID, err := uuid.Parse(request.ResourcePoolID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid resource pool ID")))
+			return
+		}
+
+		quotaUUID, err := uuid.Parse(request.QuotaID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid quota ID")))
+			return
+		}
+
+		requestUUID := dtos.QuotaUsageRequest{
+			ResourcePoolID: resourcePoolUUID,
+			QuotaID:        quotaUUID,
+		}
+
+		usages, err := h.namespaceUsecase.GetNamespaceUsages(&requestUUID, namespaceUUID, userID)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return

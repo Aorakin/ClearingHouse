@@ -49,3 +49,27 @@ func (r *TicketRepository) GetNamespaceUsage(namespaceID, quotaID, resourceID uu
 
 	return total, nil
 }
+
+func (r *TicketRepository) GetResourceUsage(namespaceID, quotaID, resourceID uuid.UUID) (uint, error) {
+	var total uint
+
+	err := r.db.Model(&models.TicketResource{}).
+		Select("COALESCE(SUM(quantity), 0)").
+		Joins("JOIN tickets ON tickets.id = ticket_resources.ticket_id").
+		Where("tickets.namespace_id = ? AND ticket_resources.resource_id = ? AND tickets.quota_id = ?", namespaceID, resourceID, quotaID).
+		Scan(&total).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+func (r *TicketRepository) GetNamespaceTickets(namespaceID uuid.UUID) ([]models.Ticket, error) {
+	var tickets []models.Ticket
+	err := r.db.Preload("Resources").Where("namespace_id = ?", namespaceID).Find(&tickets).Error
+	if err != nil {
+		return nil, err
+	}
+	return tickets, nil
+}

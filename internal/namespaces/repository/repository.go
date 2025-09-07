@@ -66,3 +66,18 @@ func (r *NamespaceRepository) GetNamespaceQuotas(namespaceID uuid.UUID) ([]model
 	}
 	return quotas, nil
 }
+
+func (r *NamespaceRepository) GetNamespaceTickets(namespaceID, resourcePoolID, quotaID uuid.UUID) ([]models.Ticket, error) {
+	var tickets []models.Ticket
+
+	err := r.db.Debug().
+		Preload("Resources").
+		Where("namespace_id = ? AND resource_pool_id = ? AND quota_id = ?", namespaceID, resourcePoolID, quotaID).
+		Find(&tickets).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tickets, nil
+}

@@ -5,6 +5,8 @@ import (
 
 	"github.com/ClearingHouse/internal/tickets/dtos"
 	"github.com/ClearingHouse/internal/tickets/interfaces"
+	apiError "github.com/ClearingHouse/pkg/api_error"
+	"github.com/ClearingHouse/pkg/response"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -23,23 +25,46 @@ func (h *TicketHandler) CreateTicket() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
 		if userID == uuid.Nil {
-			c.JSON(400, gin.H{"error": "unauthorized"})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
 		}
 		var request dtos.CreateTicketRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
 			return
 		}
 
-		request.Creator = userID
-
-		ticket, err := h.ticketUsecase.CreateTicket(&request)
+		ticket, err := h.ticketUsecase.CreateTicket(&request, userID)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
 
 		c.JSON(http.StatusCreated, ticket)
+	}
+}
+
+func (h *TicketHandler) GetNamespaceTickets() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		namespaceIDParam := c.Param("namespace_id")
+		namespaceID, err := uuid.Parse(namespaceIDParam)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid namespace ID")))
+			return
+		}
+
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		tickets, err := h.ticketUsecase.GetNamespaceTickets(namespaceID, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, tickets)
 	}
 }

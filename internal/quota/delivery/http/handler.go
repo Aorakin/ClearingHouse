@@ -171,6 +171,29 @@ func (h *QuotaHandler) GetNamespaceQuota() gin.HandlerFunc {
 	}
 }
 
+func (h *QuotaHandler) AssignQuotaToNamespace() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		var request dtos.AssignQuotaToNamespaceRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		if err := h.quotaUsecase.AssignQuotaToNamespace(&request, userID); err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusNoContent, nil)
+	}
+}
+
 // func (h *QuotaHandler) CreateOrganizationQuotaGroup() gin.HandlerFunc {
 // 	return func(c *gin.Context) {
 // 		userID := c.MustGet("userID").(uuid.UUID)

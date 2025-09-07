@@ -5,9 +5,9 @@ import "github.com/google/uuid"
 type CreateTicketRequest struct {
 	Name        string      `json:"name" binding:"required"`
 	NamespaceID uuid.UUID   `json:"namespace_id" binding:"required,uuid"`
-	Creator     uuid.UUID   `json:"creator"`
+	QuotaID     uuid.UUID   `json:"quota_id" binding:"required,uuid"`
 	Resources   []Resources `json:"resources" binding:"required"`
-	Duration    uint        `json:"duration" binding:"required,gte=1"`
+	Duration    float32     `json:"duration" binding:"required,gte=1"`
 }
 
 type Resources struct {
