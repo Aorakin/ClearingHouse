@@ -26,6 +26,15 @@ type CreateProjectQuotaRequest struct {
 	Resources   []Resource `json:"resources" binding:"required"`
 }
 
+type CreateOwnedProjectQuotaRequest struct {
+	Name           string     `json:"name" binding:"required"`
+	Description    string     `json:"description"`
+	ProjectID      uuid.UUID  `json:"project_id" binding:"required,uuid"`
+	OrgID          uuid.UUID  `json:"org_id" binding:"required,uuid"`
+	ResourcePoolID uuid.UUID  `json:"resource_pool_id" binding:"required,uuid"`
+	Resources      []Resource `json:"resources" binding:"required"`
+}
+
 type CreateNamespaceQuotaRequest struct {
 	Name           string     `json:"name" binding:"required"`
 	Description    string     `json:"description"`

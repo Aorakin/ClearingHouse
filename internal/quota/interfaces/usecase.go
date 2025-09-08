@@ -11,6 +11,7 @@ type QuotaUsecase interface {
 	GetOrganizationQuota(fromOrgID uuid.UUID, toOrgID uuid.UUID) ([]models.OrganizationQuota, error)
 
 	CreateProjectQuota(request *dtos.CreateProjectQuotaRequest, userID uuid.UUID) (*models.ProjectQuota, error)
+	CreateOwnedProjectQuota(request *dtos.CreateOwnedProjectQuotaRequest, userID uuid.UUID) (*models.ProjectQuota, error)
 	GetProjectQuota(projectID uuid.UUID) ([]models.ProjectQuota, error)
 
 	CreateNamespaceQuota(request *dtos.CreateNamespaceQuotaRequest, userID uuid.UUID) (*models.NamespaceQuota, error)

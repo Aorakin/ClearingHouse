@@ -225,6 +225,88 @@ func (u *QuotaUsecase) CreateProjectQuota(request *dtos.CreateProjectQuotaReques
 	return projectQuota, nil
 }
 
+func (u *QuotaUsecase) CreateOwnedProjectQuota(request *dtos.CreateOwnedProjectQuotaRequest, userID uuid.UUID) (*models.ProjectQuota, error) {
+	isOrgAdmin, err := u.isOrgAdmin(request.OrgID, userID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to check organization admin: %w", err))
+	}
+	if !isOrgAdmin {
+		return nil, apiError.NewForbiddenError(errors.New("user is not an admin of the organization"))
+	}
+
+	resourcePool, err := u.resourceRepo.GetResourcePoolByID(request.ResourcePoolID)
+	if err != nil {
+		return nil, apiError.NewNotFoundError(fmt.Errorf("failed to find resource pool: %w", err))
+	}
+	if resourcePool.OrganizationID != request.OrgID {
+		return nil, apiError.NewForbiddenError(errors.New("resource pool does not belong to the organization"))
+	}
+
+	_, err = u.projRepo.GetProjectByID(request.ProjectID)
+	if err != nil {
+		return nil, apiError.NewNotFoundError(fmt.Errorf("failed to find project: %w", err))
+	}
+
+	allowedResource := make(map[uuid.UUID]models.Resource)
+	for _, resource := range resourcePool.Resources {
+		allowedResource[resource.ID] = resource
+	}
+	seenResources := make(map[uuid.UUID]struct{})
+
+	orgQuotaRequest := &dtos.CreateOrganizationQuotaRequest{
+		Name:               fmt.Sprintf("Auto-generated quota for project %s", request.ProjectID),
+		Description:        "Auto-generated quota",
+		FromOrganizationID: request.OrgID,
+		ToOrganizationID:   request.OrgID,
+		Resources:          []dtos.OrganizationResources{},
+	}
+
+	for _, resource := range request.Resources {
+		if _, exists := seenResources[resource.ResourceID]; exists {
+			return nil, apiError.NewBadRequestError(fmt.Errorf("duplicate resource ID: %s", resource.ResourceID))
+		}
+		seenResources[resource.ResourceID] = struct{}{}
+
+		if _, exist := allowedResource[resource.ResourceID]; !exist {
+			return nil, apiError.NewBadRequestError(fmt.Errorf("resource %s is not in the resource pool", resource.ResourceID))
+		}
+
+		if resource.Quantity > allowedResource[resource.ResourceID].Quantity {
+			return nil, apiError.NewBadRequestError(fmt.Errorf("requested quantity %d exceeds available quantity %d for resource %s", resource.Quantity, allowedResource[resource.ResourceID].Quantity, resource.ResourceID))
+		}
+
+		orgResourcesRequest := &dtos.OrganizationResources{
+			Quantity:   resource.Quantity,
+			ResourceID: resource.ResourceID,
+			Price:      0,
+			Duration:   30000,
+		}
+
+		orgQuotaRequest.Resources = append(orgQuotaRequest.Resources, *orgResourcesRequest)
+	}
+
+	orgQuota, err := u.CreateOrganizationQuota(orgQuotaRequest, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	projQuotaRequest := &dtos.CreateProjectQuotaRequest{
+		Name:        request.Name,
+		Description: request.Description,
+		ProjectID:   request.ProjectID,
+		OrgQuotaID:  orgQuota.ID,
+		OrgID:       request.OrgID,
+		Resources:   request.Resources,
+	}
+
+	projectQuota, err := u.CreateProjectQuota(projQuotaRequest, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return projectQuota, nil
+}
+
 func (u *QuotaUsecase) GetProjectQuota(projectID uuid.UUID) ([]models.ProjectQuota, error) {
 	quotas, err := u.quotaRepo.GetProjectQuotaByProjectID(projectID)
 	if err != nil {
@@ -408,118 +490,3 @@ func (u *QuotaUsecase) isProjAdmin(projID uuid.UUID, userID uuid.UUID) (bool, er
 
 	return true, nil
 }
-
-// // SERIOUS
-
-// func (u *QuotaUsecase) CreateOrganizationQuota(request *dtos.CreateOrganizationQuotaRequest, userID uuid.UUID) (*models.OrganizationQuota, error) {
-// 	if len(request.Resources) == 0 {
-// 		return nil, apiError.NewBadRequestError(fmt.Errorf("at least one resource quota is required"))
-// 	}
-
-// 	err := u.isOrgAdmin(request.FromOrganizationID, userID)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	_, err = u.orgRepo.GetOrganizationByID(request.ToOrganizationID)
-// 	if err != nil {
-// 		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to find target organization: %w", err))
-// 	}
-
-// 	return nil, nil
-// }
-
-// func (u *QuotaUsecase) isOrgAdmin(orgID uuid.UUID, userID uuid.UUID) error {
-// 	org, err := u.orgRepo.GetOrganizationByID(orgID)
-// 	if err != nil {
-// 		return apiError.NewInternalServerError(fmt.Errorf("failed to find target organization: %w", err))
-// 	}
-
-// 	user, err := u.userRepo.GetByID(userID)
-// 	if err != nil {
-// 		return apiError.NewInternalServerError(fmt.Errorf("failed to find user: %w", err))
-// 	}
-
-// 	if !helper.ContainsUserID(org.Admins, user.ID) {
-// 		return apiError.NewForbiddenError(errors.New("user is not an admin of the organization"))
-// 	}
-
-// 	return nil
-// }
-
-// func (u *QuotaUsecase) CreateOrganizationQuotaGroup(request *dtos.CreateOrganizationQuotaRequest) (*models.OrganizationQuotaGroup, error) {
-// 	var resources []models.Resource
-// 	var resourceTypeCheck = map[string]bool{}
-// 	var poolID uuid.UUID
-
-// 	for i, r := range request.Resources {
-// 		resource, err := u.resourceRepo.GetResourceByID(r.ResourceID)
-// 		if err != nil {
-// 			return nil, fmt.Errorf("resource not found: %w", err)
-// 		}
-
-// 		if resource.ResourcePool.OrganizationID != request.FromOrganizationID {
-// 			return nil, errors.New("unauthorized: resource not owned by organization")
-// 		}
-
-// 		if i == 0 {
-// 			poolID = resource.ResourcePoolID
-// 		} else if resource.ResourcePoolID != poolID {
-// 			return nil, errors.New("all resources must be from the same pool")
-// 		}
-
-// 		rtName := resource.ResourceType.Name
-// 		if resourceTypeCheck[rtName] {
-// 			return nil, fmt.Errorf("duplicate resource type: %s", rtName)
-// 		}
-// 		resourceTypeCheck[rtName] = true
-
-// 		resources = append(resources, *resource)
-// 	}
-
-// 	existingQuotaGroup, err := u.quotaRepo.FindExistingOrganizationQuotaGroup(request.FromOrganizationID, request.ToOrganizationID, poolID)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to check existing quota: %w", err)
-// 	}
-
-// 	if existingQuotaGroup != nil {
-// 		return nil, fmt.Errorf("quota already exists between the organizations for this pool")
-// 	}
-
-// 	quotaGroup := &models.OrganizationQuotaGroup{
-// 		Name:               request.Name,
-// 		Description:        request.Description,
-// 		FromOrganizationID: request.FromOrganizationID,
-// 		ToOrganizationID:   request.ToOrganizationID,
-// 	}
-
-// 	err = u.quotaRepo.CreateOrganizationQuotaGroup(quotaGroup)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to create quota group: %w", err)
-// 	}
-
-// 	for _, resource := range request.Resources {
-// 		resourceProperty := models.ResourceProperty{
-// 			ResourceID: resource.ResourceID,
-// 			Price:      resource.Price,
-// 		}
-
-// 		err := u.quotaRepo.CreateResourceProperty(&resourceProperty)
-// 		if err != nil {
-// 			return nil, fmt.Errorf("failed to create resource property: %w", err)
-// 		}
-
-// 		resourceQuantity := models.ResourceQuantity{
-// 			OrganizationQuotaGroupID: &quotaGroup.BaseModel.ID,
-// 			ResourcePropertyID:       resourceProperty.ID,
-// 			Quantity:                 resource.Quantity,
-// 		}
-
-// 		err = u.quotaRepo.CreateResourceQuantity(&resourceQuantity)
-// 		if err != nil {
-// 			return nil, fmt.Errorf("failed to create resource quantity: %w", err)
-// 		}
-// 	}
-
-// 	return quotaGroup, nil
-// }

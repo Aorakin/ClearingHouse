@@ -23,5 +23,5 @@ type ResourcePool struct {
 	Name           string       `json:"name"`
 	OrganizationID uuid.UUID    `gorm:"type:uuid;not null" json:"organization_id"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID" json:"-"`
-	Resources      []Resource   `gorm:"foreignKey:ResourcePoolID" json:"-"`
+	Resources      []Resource   `gorm:"foreignKey:ResourcePoolID" json:"Resources"`
 }
