@@ -68,3 +68,39 @@ func (h *TicketHandler) GetNamespaceTickets() gin.HandlerFunc {
 		c.JSON(http.StatusOK, tickets)
 	}
 }
+
+func (h *TicketHandler) StartTicket() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var request dtos.StartTicketsRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		tickets, err := h.ticketUsecase.StartTicket(&request)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, tickets)
+	}
+}
+
+func (h *TicketHandler) StopTicket() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var request dtos.StopTicketsRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		tickets, err := h.ticketUsecase.StopTicket(&request)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, tickets)
+	}
+}

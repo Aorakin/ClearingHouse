@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/tickets/interfaces"
 	"github.com/google/uuid"
@@ -72,4 +74,19 @@ func (r *TicketRepository) GetNamespaceTickets(namespaceID uuid.UUID) ([]models.
 		return nil, err
 	}
 	return tickets, nil
+}
+
+func (r *TicketRepository) StartTicket(ticketID uuid.UUID, startTime time.Time) error {
+	return r.db.Model(&models.Ticket{}).Where("id = ?", ticketID).Updates(map[string]interface{}{
+		"status":     "running",
+		"start_time": startTime,
+	}).Error
+
+}
+
+func (r *TicketRepository) StopTicket(ticketID uuid.UUID, stopTime time.Time) error {
+	return r.db.Model(&models.Ticket{}).Where("id = ?", ticketID).Updates(map[string]interface{}{
+		"status":   "stopped",
+		"end_time": stopTime,
+	}).Error
 }

@@ -7,6 +7,8 @@ import (
 )
 
 func MapTicketRoutes(ticketGroup *gin.RouterGroup, ticketHandler interfaces.TicketHandler) {
+	ticketGroup.PATCH("/start", ticketHandler.StartTicket())
+	ticketGroup.PATCH("/stop", ticketHandler.StopTicket())
 	ticketGroup.Use(middleware.AuthMiddleware())
 	ticketGroup.POST("/", ticketHandler.CreateTicket())
 	ticketGroup.GET("/namespace/:namespace_id", ticketHandler.GetNamespaceTickets())

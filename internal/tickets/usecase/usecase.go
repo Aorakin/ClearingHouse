@@ -3,6 +3,7 @@ package usecase
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/ClearingHouse/helper"
 	"github.com/ClearingHouse/internal/models"
@@ -60,6 +61,7 @@ func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest, userID u
 	}
 	seenReq := make(map[uuid.UUID]struct{})
 	totalCredit := float32(0)
+	price := float32(0)
 
 	for _, resource := range request.Resources {
 		if _, ok := quotaResources[resource.ResourceID]; !ok {
@@ -89,7 +91,7 @@ func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest, userID u
 		if request.Duration > resourceQuantity.ResourceProp.MaxDuration {
 			return nil, apiError.NewForbiddenError("duration exceeds max limit for resource")
 		}
-
+		price = resourceQuantity.ResourceProp.Price * float32(resource.Quantity)
 		totalCredit += float32(resource.Quantity) * resourceQuantity.ResourceProp.Price * request.Duration
 	}
 
@@ -111,9 +113,11 @@ func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest, userID u
 	ticket := &models.Ticket{
 		NamespaceID:    request.NamespaceID,
 		Name:           request.Name,
+		Duration:       request.Duration,
 		OwnerID:        userID,
 		QuotaID:        request.QuotaID,
 		ResourcePoolID: quota.ResourcePoolID,
+		Price:          price,
 		Status:         "created",
 	}
 	err = u.ticketRepo.CreateTicket(ticket)
@@ -156,6 +160,70 @@ func (u *TicketUsecase) GetNamespaceTickets(namespaceID uuid.UUID, userID uuid.U
 		return nil, apiError.NewInternalServerError(err)
 	}
 
+	return tickets, nil
+}
+
+func (u *TicketUsecase) StartTicket(request *dtos.StartTicketsRequest) ([]models.Ticket, error) {
+	var tickets []models.Ticket
+	for _, ticket := range request.Tickets {
+		t, err := u.ticketRepo.GetTicketByID(ticket.TicketID)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(err)
+		}
+		if t.Status != "created" {
+			return nil, apiError.NewBadRequestError("ticket is not in created status")
+		}
+		err = u.ticketRepo.StartTicket(ticket.TicketID, ticket.StartTime)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(err)
+		}
+
+		t, err = u.ticketRepo.GetTicketByID(ticket.TicketID)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(err)
+		}
+		tickets = append(tickets, *t)
+	}
+	return tickets, nil
+}
+
+func (u *TicketUsecase) StopTicket(request *dtos.StopTicketsRequest) ([]models.Ticket, error) {
+	log.Printf("Stopping tickets: %+v", request.Tickets)
+	var tickets []models.Ticket
+	for _, ticket := range request.Tickets {
+		t, err := u.ticketRepo.GetTicketByID(ticket.TicketID)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(err)
+		}
+		if t.Status != "running" {
+			return nil, apiError.NewBadRequestError("ticket is not in running status")
+		}
+		endTime := time.Now()
+		err = u.ticketRepo.StopTicket(ticket.TicketID, endTime)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(err)
+		}
+
+		actualHours := endTime.Sub(*t.StartTime).Hours()
+		if actualHours < float64(t.Duration) {
+			namespace, err := u.namespaceRepo.GetNamespaceByID(t.NamespaceID)
+			if err != nil {
+				return nil, apiError.NewInternalServerError(err)
+			}
+
+			namespace.Credit += t.Duration - float32(actualHours)*t.Price
+			err = u.namespaceRepo.UpdateNamespace(namespace)
+			if err != nil {
+				return nil, apiError.NewInternalServerError(err)
+			}
+		}
+
+		t, err = u.ticketRepo.GetTicketByID(ticket.TicketID)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(err)
+		}
+		tickets = append(tickets, *t)
+	}
 	return tickets, nil
 }
 
