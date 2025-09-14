@@ -67,9 +67,18 @@ func (r *TicketRepository) GetResourceUsage(namespaceID, quotaID, resourceID uui
 	return total, nil
 }
 
-func (r *TicketRepository) GetNamespaceTickets(namespaceID uuid.UUID) ([]models.Ticket, error) {
+func (r *TicketRepository) GetTicketsByNamespaceID(namespaceID uuid.UUID) ([]models.Ticket, error) {
 	var tickets []models.Ticket
 	err := r.db.Preload("Resources").Where("namespace_id = ?", namespaceID).Find(&tickets).Error
+	if err != nil {
+		return nil, err
+	}
+	return tickets, nil
+}
+
+func (r *TicketRepository) GetTicketsByUserID(userID uuid.UUID) ([]models.Ticket, error) {
+	var tickets []models.Ticket
+	err := r.db.Preload("Resources").Where("owner_id = ?", userID).Find(&tickets).Error
 	if err != nil {
 		return nil, err
 	}

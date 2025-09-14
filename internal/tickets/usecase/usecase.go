@@ -155,7 +155,7 @@ func (u *TicketUsecase) GetNamespaceTickets(namespaceID uuid.UUID, userID uuid.U
 		return nil, apiError.NewUnauthorizedError("user is not a member of the namespace")
 	}
 
-	tickets, err := u.ticketRepo.GetNamespaceTickets(namespaceID)
+	tickets, err := u.ticketRepo.GetTicketsByNamespaceID(namespaceID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}
@@ -188,7 +188,6 @@ func (u *TicketUsecase) StartTicket(request *dtos.StartTicketsRequest) ([]models
 }
 
 func (u *TicketUsecase) StopTicket(request *dtos.StopTicketsRequest) ([]models.Ticket, error) {
-	log.Printf("Stopping tickets: %+v", request.Tickets)
 	var tickets []models.Ticket
 	for _, ticket := range request.Tickets {
 		t, err := u.ticketRepo.GetTicketByID(ticket.TicketID)
@@ -211,7 +210,7 @@ func (u *TicketUsecase) StopTicket(request *dtos.StopTicketsRequest) ([]models.T
 				return nil, apiError.NewInternalServerError(err)
 			}
 
-			namespace.Credit += t.Duration - float32(actualHours)*t.Price
+			namespace.Credit += (t.Duration - float32(actualHours)) * t.Price
 			err = u.namespaceRepo.UpdateNamespace(namespace)
 			if err != nil {
 				return nil, apiError.NewInternalServerError(err)
@@ -238,4 +237,13 @@ func (u *TicketUsecase) isNamespaceMember(userID uuid.UUID, namespaceID uuid.UUI
 	}
 
 	return true, nil
+}
+
+func (u *TicketUsecase) GetUserTickets(userID uuid.UUID) ([]models.Ticket, error) {
+	tickets, err := u.ticketRepo.GetTicketsByUserID(userID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	return tickets, nil
 }

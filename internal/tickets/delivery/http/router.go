@@ -12,9 +12,5 @@ func MapTicketRoutes(ticketGroup *gin.RouterGroup, ticketHandler interfaces.Tick
 	ticketGroup.Use(middleware.AuthMiddleware())
 	ticketGroup.POST("/", ticketHandler.CreateTicket())
 	ticketGroup.GET("/namespace/:namespace_id", ticketHandler.GetNamespaceTickets())
+	ticketGroup.GET("/user", ticketHandler.GetUserTickets())
 }
-
-// get all ticket in ns
-// get ticket detail
-// refund ticket
-// create ticket

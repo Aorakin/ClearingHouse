@@ -15,7 +15,8 @@ type TicketRepository interface {
 
 	GetResourceUsage(namespaceID, quotaID, resourceID uuid.UUID) (uint, error)
 
-	GetNamespaceTickets(namespaceID uuid.UUID) ([]models.Ticket, error)
+	GetTicketsByNamespaceID(namespaceID uuid.UUID) ([]models.Ticket, error)
+	GetTicketsByUserID(userID uuid.UUID) ([]models.Ticket, error)
 
 	StartTicket(ticketID uuid.UUID, startTime time.Time) error
 	StopTicket(ticketID uuid.UUID, stopTime time.Time) error
