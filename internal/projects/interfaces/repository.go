@@ -13,6 +13,7 @@ type ProjectRepository interface {
 	UpdateMembers(project *models.Project) error
 
 	GetAllProjectsByUserID(userID uuid.UUID) ([]models.Project, error)
-	// GetProjectQuota(projectID uuid.UUID) (*models.Project, error)
+	// GetProjectQuotaByType(projectID uuid.UUID) (*models.Project, error)
+	GetProjectQuotaByType(projectID uuid.UUID, userID uuid.UUID) (interface{}, error)
 	// GetProjectUsage(projectID uuid.UUID) (*models.Project, error)
 }

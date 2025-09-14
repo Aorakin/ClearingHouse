@@ -117,7 +117,6 @@ func (u *ProjectUsecase) AddMembers(request *dtos.AddMembersRequest, userID uuid
 	return project, nil
 }
 
-// SERIOUS
 func (u *ProjectUsecase) GetAllUserProjects(userID uuid.UUID) ([]models.Project, error) {
 	projects, err := u.projRepo.GetAllProjectsByUserID(userID)
 	if err != nil {
@@ -140,10 +139,14 @@ func (u *ProjectUsecase) GetProjectByID(projectID uuid.UUID, userID uuid.UUID) (
 	return project, nil
 }
 
-func (u *ProjectUsecase) GetProjectQuota(projectID uuid.UUID) (*dtos.ProjectQuotaResponse, error) {
+func (u *ProjectUsecase) GetProjectQuota(projectID uuid.UUID, userID uuid.UUID) (*dtos.ProjectQuotaResponse, error) {
 	project, err := u.projRepo.GetProjectByID(projectID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	if !helper.ContainsUserID(project.Members, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project member")
 	}
 
 	return &dtos.ProjectQuotaResponse{
@@ -152,14 +155,20 @@ func (u *ProjectUsecase) GetProjectQuota(projectID uuid.UUID) (*dtos.ProjectQuot
 	}, nil
 }
 
-func (u *ProjectUsecase) GetProjectUsage(projectID uuid.UUID) (*dtos.ProjectUsageResponse, error) {
+func (u *ProjectUsecase) GetProjectUsage(projectID uuid.UUID, userID uuid.UUID) (interface{}, error) {
 	project, err := u.projRepo.GetProjectByID(projectID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	return &dtos.ProjectUsageResponse{
-		ProjectID: project.ID,
-		Usage:     1,
-	}, nil
+	if !helper.ContainsUserID(project.Members, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project member")
+	}
+
+	namespaces, err := u.projRepo.GetProjectQuotaByType(projectID, userID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	return namespaces, nil
 }

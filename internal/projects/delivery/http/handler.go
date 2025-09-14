@@ -150,7 +150,7 @@ func (h *ProjectHandler) GetProjectQuota() gin.HandlerFunc {
 			return
 		}
 
-		project, err := h.projUsecase.GetProjectByID(projectUUID, userID)
+		project, err := h.projUsecase.GetProjectQuota(projectUUID, userID)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
@@ -180,7 +180,7 @@ func (h *ProjectHandler) GetProjectUsage() gin.HandlerFunc {
 			return
 		}
 
-		project, err := h.projUsecase.GetProjectByID(projectUUID, userID)
+		project, err := h.projUsecase.GetProjectUsage(projectUUID, userID)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
