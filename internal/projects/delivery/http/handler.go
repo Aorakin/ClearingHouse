@@ -130,36 +130,6 @@ func (h *ProjectHandler) GetProject() gin.HandlerFunc {
 	}
 }
 
-func (h *ProjectHandler) GetProjectQuota() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userID := c.MustGet("userID").(uuid.UUID)
-		if userID == uuid.Nil {
-			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
-			return
-		}
-
-		projectID := c.Param("id")
-		if projectID == "" {
-			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
-			return
-		}
-
-		projectUUID := uuid.MustParse(projectID)
-		if projectUUID == uuid.Nil {
-			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
-			return
-		}
-
-		project, err := h.projUsecase.GetProjectQuota(projectUUID, userID)
-		if err != nil {
-			c.JSON(response.ErrorResponseBuilder(err))
-			return
-		}
-
-		c.JSON(http.StatusOK, project)
-	}
-}
-
 func (h *ProjectHandler) GetProjectUsage() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)

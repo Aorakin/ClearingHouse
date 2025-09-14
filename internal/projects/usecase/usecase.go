@@ -139,7 +139,7 @@ func (u *ProjectUsecase) GetProjectByID(projectID uuid.UUID, userID uuid.UUID) (
 	return project, nil
 }
 
-func (u *ProjectUsecase) GetProjectQuota(projectID uuid.UUID, userID uuid.UUID) (*dtos.ProjectQuotaResponse, error) {
+func (u *ProjectUsecase) GetProjectUsage(projectID uuid.UUID, userID uuid.UUID) (*dtos.ProjectUsageResponse, error) {
 	project, err := u.projRepo.GetProjectByID(projectID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err.Error())
@@ -149,26 +149,30 @@ func (u *ProjectUsecase) GetProjectQuota(projectID uuid.UUID, userID uuid.UUID) 
 		return nil, apiError.NewUnauthorizedError("user is not project member")
 	}
 
-	return &dtos.ProjectQuotaResponse{
-		ProjectID: project.ID,
-		Quota:     1,
-	}, nil
-}
-
-func (u *ProjectUsecase) GetProjectUsage(projectID uuid.UUID, userID uuid.UUID) (interface{}, error) {
-	project, err := u.projRepo.GetProjectByID(projectID)
+	quotas, err := u.projRepo.GetProjectQuotaByType(projectID, userID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	if !helper.ContainsUserID(project.Members, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not project member")
-	}
-
-	namespaces, err := u.projRepo.GetProjectQuotaByType(projectID, userID)
+	usages, err := u.projRepo.GetProjectUsageByType(projectID, userID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	return namespaces, nil
+	var projectUsage dtos.ProjectUsageResponse
+
+	for _, q := range quotas.ResourceQuotas {
+		for _, u := range usages.ResourceUsages {
+			if q.TypeID == u.TypeID {
+				projectUsage.Usage = append(projectUsage.Usage, dtos.ProjectUsage{
+					TypeID: q.TypeID,
+					Type:   q.Type,
+					Quota:  q.Quota,
+					Usage:  u.Usage,
+				})
+			}
+		}
+	}
+
+	return &projectUsage, nil
 }

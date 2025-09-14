@@ -28,6 +28,7 @@ type TicketResource struct {
 	TicketID   uuid.UUID `gorm:"type:uuid;not null" json:"-"`
 	Quantity   uint      `json:"quantity"`
 	Ticket     Ticket    `gorm:"foreignKey:TicketID" json:"-"`
+	Resource   Resource  `gorm:"foreignKey:ResourceID" json:"-"`
 }
 
 type GliderTicket struct {

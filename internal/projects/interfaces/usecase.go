@@ -14,6 +14,5 @@ type ProjectUsecase interface {
 	GetAllUserProjects(userID uuid.UUID) ([]models.Project, error)
 	GetProjectByID(projectID uuid.UUID, userID uuid.UUID) (*models.Project, error)
 
-	GetProjectQuota(projectID uuid.UUID, userID uuid.UUID) (*dtos.ProjectQuotaResponse, error)
-	GetProjectUsage(projectID uuid.UUID, userID uuid.UUID) (interface{}, error)
+	GetProjectUsage(projectID uuid.UUID, userID uuid.UUID) (*dtos.ProjectUsageResponse, error)
 }
