@@ -21,7 +21,7 @@ func NewTicketRepository(db *gorm.DB) interfaces.TicketRepository {
 
 func (r *TicketRepository) GetTicketByID(ticketID uuid.UUID) (*models.Ticket, error) {
 	var ticket models.Ticket
-	err := r.db.Preload("Resources").First(&ticket, "id = ?", ticketID).Error
+	err := r.db.Preload("Resources.Resource.ResourceType").Preload("Namespace").First(&ticket, "id = ?", ticketID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -97,5 +97,12 @@ func (r *TicketRepository) StopTicket(ticketID uuid.UUID, stopTime time.Time) er
 	return r.db.Model(&models.Ticket{}).Where("id = ?", ticketID).Updates(map[string]interface{}{
 		"status":   "stopped",
 		"end_time": stopTime,
+	}).Error
+}
+
+func (r *TicketRepository) CancelTicket(ticketID uuid.UUID, cancelTime time.Time) error {
+	return r.db.Model(&models.Ticket{}).Where("id = ?", ticketID).Updates(map[string]interface{}{
+		"status":      "cancelled",
+		"cancel_time": cancelTime,
 	}).Error
 }

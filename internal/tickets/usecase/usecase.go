@@ -247,3 +247,93 @@ func (u *TicketUsecase) GetUserTickets(userID uuid.UUID) ([]models.Ticket, error
 
 	return tickets, nil
 }
+
+func (u *TicketUsecase) GetTicket(ticketID uuid.UUID, userID uuid.UUID) (*dtos.GliderTicketResponse, error) {
+	ticket, err := u.ticketRepo.GetTicketByID(ticketID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	isMember, err := u.isNamespaceMember(userID, ticket.NamespaceID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+	if !isMember && ticket.OwnerID != userID {
+		return nil, apiError.NewUnauthorizedError("user is not a member of the namespace or the owner of the ticket")
+	}
+
+	ticketResponse := u.FormatTicketResponse(ticket)
+
+	return ticketResponse, nil
+}
+
+func (u *TicketUsecase) FormatTicketResponse(ticket *models.Ticket) *dtos.GliderTicketResponse {
+	return &dtos.GliderTicketResponse{
+		Ticket: dtos.GliderTicket{
+			ID:                ticket.ID,
+			NamespaceURN:      ticket.Namespace.ID.String(),
+			GlideletURN:       ticket.ResourcePoolID.String(),
+			Spec:              u.FormatGliderSpec(ticket),
+			ReferenceTicketID: "",
+			RedeemTimeout:     ticket.RedeemTimeout,
+			Lease:             ticket.Duration,
+			CreatedAt:         ticket.CreatedAt,
+		},
+		Signature: "temp_signature",
+	}
+}
+
+func (u *TicketUsecase) FormatGliderSpec(ticket *models.Ticket) dtos.GliderSpec {
+	var resources []dtos.SpecResource
+	for _, r := range ticket.Resources {
+		resources = append(resources, dtos.SpecResource{
+			ResourceID: r.ResourceID.String(),
+			Name:       r.Resource.Name,
+			Quantity:   r.Quantity,
+			Unit:       r.Resource.ResourceType.Unit,
+		})
+	}
+
+	return dtos.GliderSpec{
+		Type:      dtos.ResourceUnitTypeCPU,
+		PoolID:    ticket.ResourcePoolID.String(),
+		Resources: resources,
+	}
+}
+
+func (u *TicketUsecase) CancelTicket(ticketID uuid.UUID, userID uuid.UUID) error {
+	ticket, err := u.ticketRepo.GetTicketByID(ticketID)
+	if err != nil {
+		return apiError.NewInternalServerError(err)
+	}
+
+	isMember, err := u.isNamespaceMember(userID, ticket.NamespaceID)
+	if err != nil {
+		return apiError.NewInternalServerError(err)
+	}
+	if !isMember && ticket.OwnerID != userID {
+		return apiError.NewUnauthorizedError("user is not a member of the namespace or the owner of the ticket")
+	}
+
+	if ticket.Status != "created" {
+		return apiError.NewBadRequestError("only tickets in created status can be cancelled")
+	}
+
+	err = u.ticketRepo.CancelTicket(ticketID, time.Now())
+	if err != nil {
+		return apiError.NewInternalServerError(err)
+	}
+
+	namespace, err := u.namespaceRepo.GetNamespaceByID(ticket.NamespaceID)
+	if err != nil {
+		return apiError.NewInternalServerError(err)
+	}
+
+	namespace.Credit += float32(ticket.Duration) * ticket.Price
+	err = u.namespaceRepo.UpdateNamespace(namespace)
+	if err != nil {
+		return apiError.NewInternalServerError(err)
+	}
+
+	return nil
+}
