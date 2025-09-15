@@ -49,3 +49,15 @@ type ResourceUnitType string
 const (
 	ResourceUnitTypeCPU ResourceUnitType = "compute"
 )
+
+type TicketTransaction struct {
+	ID        uuid.UUID    `json:"id"`
+	Status    StatusTicket `json:"status"`
+	Ticket    string       `json:"ticket"`
+	Signature string       `json:"signature"`
+}
+
+type Task struct {
+	ID      uuid.UUID           `json:"id"`
+	Tickets []TicketTransaction `json:"tickets"`
+}
