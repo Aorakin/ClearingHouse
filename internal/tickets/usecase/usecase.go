@@ -92,7 +92,7 @@ func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest, userID u
 			return nil, apiError.NewForbiddenError("duration exceeds max limit for resource")
 		}
 		price = resourceQuantity.ResourceProp.Price * float32(resource.Quantity)
-		totalCredit += float32(resource.Quantity) * resourceQuantity.ResourceProp.Price * request.Duration
+		totalCredit += float32(resource.Quantity) * resourceQuantity.ResourceProp.Price * float32(request.Duration)
 	}
 
 	namespace, err := u.namespaceRepo.GetNamespaceByID(request.NamespaceID)
@@ -203,14 +203,14 @@ func (u *TicketUsecase) StopTicket(request *dtos.StopTicketsRequest) ([]models.T
 			return nil, apiError.NewInternalServerError(err)
 		}
 
-		actualHours := endTime.Sub(*t.StartTime).Hours()
-		if actualHours < float64(t.Duration) {
+		actualSeconds := endTime.Sub(*t.StartTime).Seconds()
+		if actualSeconds < float64(t.Duration) {
 			namespace, err := u.namespaceRepo.GetNamespaceByID(t.NamespaceID)
 			if err != nil {
 				return nil, apiError.NewInternalServerError(err)
 			}
 
-			namespace.Credit += (t.Duration - float32(actualHours)) * t.Price
+			namespace.Credit += float32(float64(t.Duration)-actualSeconds) * t.Price
 			err = u.namespaceRepo.UpdateNamespace(namespace)
 			if err != nil {
 				return nil, apiError.NewInternalServerError(err)

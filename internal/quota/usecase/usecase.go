@@ -115,7 +115,7 @@ func (u *QuotaUsecase) CreateOrganizationQuota(request *dtos.CreateOrganizationQ
 		resourceProperty := models.ResourceProperty{
 			ResourceID:  r.ResourceID,
 			Price:       r.Price,
-			MaxDuration: float32(r.Duration),
+			MaxDuration: r.Duration,
 		}
 
 		err := u.quotaRepo.CreateResourceProperty(&resourceProperty)

@@ -14,7 +14,7 @@ type OrganizationResources struct {
 	Quantity   uint      `json:"quantity" binding:"required"`
 	ResourceID uuid.UUID `json:"resource_id" binding:"required,uuid"`
 	Price      float32   `json:"price" binding:"required,gte=0"`
-	Duration   float32   `json:"duration" binding:"gte=0"`
+	Duration   uint      `json:"duration" binding:"gte=1"` // in seconds
 }
 
 type CreateProjectQuotaRequest struct {
