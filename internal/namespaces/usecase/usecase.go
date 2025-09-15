@@ -110,8 +110,8 @@ func (u *NamespaceUsecase) AddMembers(req *dtos.AddMembersRequest, userID uuid.U
 	return namespace, nil
 }
 
-func (u *NamespaceUsecase) GetAllUserNamespaces(userID uuid.UUID) ([]models.Namespace, error) {
-	namespaces, err := u.namespaceRepo.GetAllNamespacesByUserID(userID)
+func (u *NamespaceUsecase) GetAllUserNamespaces(projID uuid.UUID, userID uuid.UUID) ([]models.Namespace, error) {
+	namespaces, err := u.namespaceRepo.GetAllNamespacesByProjectAndUserID(projID, userID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}

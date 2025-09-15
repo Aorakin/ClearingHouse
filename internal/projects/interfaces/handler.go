@@ -12,12 +12,5 @@ type ProjectHandler interface {
 
 	GetAllUserProjects() gin.HandlerFunc
 	GetProject() gin.HandlerFunc
-	GetProjectQuota() gin.HandlerFunc
 	GetProjectUsage() gin.HandlerFunc
-
-	// get all user's available projects
-	// get project detail
-	// get quota of project
-	// get current usage of project
-
 }

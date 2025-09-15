@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"github.com/ClearingHouse/internal/models"
+	"github.com/ClearingHouse/internal/projects/dtos"
 	"github.com/google/uuid"
 )
 
@@ -13,6 +14,6 @@ type ProjectRepository interface {
 	UpdateMembers(project *models.Project) error
 
 	GetAllProjectsByUserID(userID uuid.UUID) ([]models.Project, error)
-	// GetProjectQuota(projectID uuid.UUID) (*models.Project, error)
-	// GetProjectUsage(projectID uuid.UUID) (*models.Project, error)
+	GetProjectQuotaByType(projectID uuid.UUID, userID uuid.UUID) (*dtos.ResourceQuotaResponse, error)
+	GetProjectUsageByType(projectID uuid.UUID, userID uuid.UUID) (*dtos.ResourceUsageResponse, error)
 }

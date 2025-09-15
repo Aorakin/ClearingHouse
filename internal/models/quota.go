@@ -7,7 +7,7 @@ type ResourceProperty struct {
 	ResourceID  uuid.UUID `gorm:"type:uuid;not null" json:"resource_id"`
 	Resource    Resource  `gorm:"foreignKey:ResourceID" json:"-"`
 	Price       float32   `gorm:"not null" json:"price"`
-	MaxDuration float32   `json:"max_duration"`
+	MaxDuration uint      `json:"max_duration"`
 }
 
 type ResourceQuantity struct {

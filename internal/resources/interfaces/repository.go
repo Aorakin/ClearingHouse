@@ -9,6 +9,7 @@ type ResourceRepository interface {
 	CreateResource(resource *models.Resource) (*models.Resource, error)
 	UpdateResource(resource *models.Resource) (*models.Resource, error)
 	GetResourceByID(id uuid.UUID) (*models.Resource, error)
+	GetResourcePoolByID(id uuid.UUID) (*models.ResourcePool, error)
 }
 
 type ResourceTypeRepository interface {

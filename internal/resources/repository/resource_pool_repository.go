@@ -33,7 +33,7 @@ func (r *ResourcePoolRepository) CreateResourcePool(resourcePool *models.Resourc
 
 func (r *ResourcePoolRepository) GetResourcePoolByID(id uuid.UUID) (*models.ResourcePool, error) {
 	var resourcePool models.ResourcePool
-	err := r.db.First(&resourcePool, "id = ?", id).Error
+	err := r.db.Preload("Resources.ResourceType").First(&resourcePool, "id = ?", id).Error
 
 	if err != nil {
 		return nil, err

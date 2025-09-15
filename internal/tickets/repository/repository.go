@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/tickets/interfaces"
 	"github.com/google/uuid"
@@ -19,7 +21,7 @@ func NewTicketRepository(db *gorm.DB) interfaces.TicketRepository {
 
 func (r *TicketRepository) GetTicketByID(ticketID uuid.UUID) (*models.Ticket, error) {
 	var ticket models.Ticket
-	err := r.db.Preload("Resources").First(&ticket, "id = ?", ticketID).Error
+	err := r.db.Preload("Resources.Resource.ResourceType").Preload("Namespace").First(&ticket, "id = ?", ticketID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -65,11 +67,42 @@ func (r *TicketRepository) GetResourceUsage(namespaceID, quotaID, resourceID uui
 	return total, nil
 }
 
-func (r *TicketRepository) GetNamespaceTickets(namespaceID uuid.UUID) ([]models.Ticket, error) {
+func (r *TicketRepository) GetTicketsByNamespaceID(namespaceID uuid.UUID) ([]models.Ticket, error) {
 	var tickets []models.Ticket
 	err := r.db.Preload("Resources").Where("namespace_id = ?", namespaceID).Find(&tickets).Error
 	if err != nil {
 		return nil, err
 	}
 	return tickets, nil
+}
+
+func (r *TicketRepository) GetTicketsByUserID(userID uuid.UUID) ([]models.Ticket, error) {
+	var tickets []models.Ticket
+	err := r.db.Preload("Resources").Where("owner_id = ?", userID).Find(&tickets).Error
+	if err != nil {
+		return nil, err
+	}
+	return tickets, nil
+}
+
+func (r *TicketRepository) StartTicket(ticketID uuid.UUID, startTime time.Time) error {
+	return r.db.Model(&models.Ticket{}).Where("id = ?", ticketID).Updates(map[string]interface{}{
+		"status":     "running",
+		"start_time": startTime,
+	}).Error
+
+}
+
+func (r *TicketRepository) StopTicket(ticketID uuid.UUID, stopTime time.Time) error {
+	return r.db.Model(&models.Ticket{}).Where("id = ?", ticketID).Updates(map[string]interface{}{
+		"status":   "stopped",
+		"end_time": stopTime,
+	}).Error
+}
+
+func (r *TicketRepository) CancelTicket(ticketID uuid.UUID, cancelTime time.Time) error {
+	return r.db.Model(&models.Ticket{}).Where("id = ?", ticketID).Updates(map[string]interface{}{
+		"status":      "cancelled",
+		"cancel_time": cancelTime,
+	}).Error
 }

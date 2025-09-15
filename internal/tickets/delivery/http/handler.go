@@ -68,3 +68,107 @@ func (h *TicketHandler) GetNamespaceTickets() gin.HandlerFunc {
 		c.JSON(http.StatusOK, tickets)
 	}
 }
+
+func (h *TicketHandler) StartTicket() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var request dtos.StartTicketsRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		tickets, err := h.ticketUsecase.StartTicket(&request)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, tickets)
+	}
+}
+
+func (h *TicketHandler) StopTicket() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var request dtos.StopTicketsRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		tickets, err := h.ticketUsecase.StopTicket(&request)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, tickets)
+	}
+}
+
+func (h *TicketHandler) GetUserTickets() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		tickets, err := h.ticketUsecase.GetUserTickets(userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, tickets)
+	}
+}
+
+func (h *TicketHandler) GetTicket() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		ticketIDParam := c.Param("ticket_id")
+		ticketID, err := uuid.Parse(ticketIDParam)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid ticket ID")))
+			return
+		}
+
+		ticket, err := h.ticketUsecase.GetTicket(ticketID, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, ticket)
+	}
+}
+
+func (h *TicketHandler) CancelTicket() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		ticketIDParam := c.Param("ticket_id")
+		ticketID, err := uuid.Parse(ticketIDParam)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid ticket ID")))
+			return
+		}
+
+		err = h.ticketUsecase.CancelTicket(ticketID, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "ticket cancelled successfully"})
+	}
+}

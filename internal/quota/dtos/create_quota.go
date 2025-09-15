@@ -14,7 +14,7 @@ type OrganizationResources struct {
 	Quantity   uint      `json:"quantity" binding:"required"`
 	ResourceID uuid.UUID `json:"resource_id" binding:"required,uuid"`
 	Price      float32   `json:"price" binding:"required,gte=0"`
-	Duration   float32   `json:"duration" binding:"gte=0"`
+	Duration   uint      `json:"duration" binding:"gte=1"` // in seconds
 }
 
 type CreateProjectQuotaRequest struct {
@@ -24,6 +24,15 @@ type CreateProjectQuotaRequest struct {
 	OrgQuotaID  uuid.UUID  `json:"org_quota_id" binding:"required,uuid"`
 	OrgID       uuid.UUID  `json:"org_id" binding:"required,uuid"`
 	Resources   []Resource `json:"resources" binding:"required"`
+}
+
+type CreateOwnedProjectQuotaRequest struct {
+	Name           string     `json:"name" binding:"required"`
+	Description    string     `json:"description"`
+	ProjectID      uuid.UUID  `json:"project_id" binding:"required,uuid"`
+	OrgID          uuid.UUID  `json:"org_id" binding:"required,uuid"`
+	ResourcePoolID uuid.UUID  `json:"resource_pool_id" binding:"required,uuid"`
+	Resources      []Resource `json:"resources" binding:"required"`
 }
 
 type CreateNamespaceQuotaRequest struct {

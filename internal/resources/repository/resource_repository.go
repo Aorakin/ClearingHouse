@@ -31,3 +31,13 @@ func (r *ResourceRepository) GetResourceByID(id uuid.UUID) (*models.Resource, er
 	}
 	return &resource, nil
 }
+
+func (r *ResourceRepository) GetResourcePoolByID(id uuid.UUID) (*models.ResourcePool, error) {
+	var resourcePool models.ResourcePool
+	err := r.db.Preload("Resources.ResourceType").First(&resourcePool, "id = ?", id).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return &resourcePool, nil
+}

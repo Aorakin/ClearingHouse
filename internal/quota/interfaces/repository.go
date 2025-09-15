@@ -27,6 +27,8 @@ type QuotaRepository interface {
 
 	CreateResourceQuantity(resourceQuantity *models.ResourceQuantity) error
 
+	GetOrganization(orgID uuid.UUID) (*models.Organization, error)
+
 	// FindOrganizationQuotaGroup(fromOrgId uuid.UUID, toOrgId uuid.UUID) ([]models.OrganizationQuotaGroup, error)
 	// FindOrganizationQuotaGroupByID(id uuid.UUID) (*models.OrganizationQuotaGroup, error)
 	// FindExistingOrganizationQuotaGroup(fromOrgID uuid.UUID, toOrgID uuid.UUID, poolID uuid.UUID) (*models.OrganizationQuotaGroup, error)
