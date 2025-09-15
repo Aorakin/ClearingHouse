@@ -1,9 +1,12 @@
 package app
 
 import (
+	"time"
+
 	OrganizationHttp "github.com/ClearingHouse/internal/organizations/delivery/http"
 	OrganizationRepository "github.com/ClearingHouse/internal/organizations/repository"
 	OrganizationUsecase "github.com/ClearingHouse/internal/organizations/usecase"
+	"github.com/gin-gonic/gin"
 
 	ResourceHttp "github.com/ClearingHouse/internal/resources/delivery/http"
 	ResourceRepository "github.com/ClearingHouse/internal/resources/repository"
@@ -35,6 +38,14 @@ import (
 
 func (a *App) MapHandlers() error {
 	// usersGroup := a.gin.Group("/users")
+	a.gin.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Welcome to ClearingHouse API",
+			"status":  "OK",
+			"version": "v1",
+			"time":    time.Now(),
+		})
+	})
 	organizationsGroup := a.gin.Group("/organizations")
 	resourcesGroup := a.gin.Group("/resources")
 	quotaGroup := a.gin.Group("/quota")
