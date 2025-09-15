@@ -139,36 +139,6 @@ func (h *NamespaceHandler) GetNamespace() gin.HandlerFunc {
 	}
 }
 
-func (h *NamespaceHandler) GetNamespaceQuota() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userID := c.MustGet("userID").(uuid.UUID)
-		if userID == uuid.Nil {
-			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
-			return
-		}
-
-		namespaceID := c.Param("id")
-		if namespaceID == "" {
-			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid namespace ID")))
-			return
-		}
-
-		namespaceUUID := uuid.MustParse(namespaceID)
-		if namespaceUUID == uuid.Nil {
-			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid namespace ID")))
-			return
-		}
-
-		quotas, err := h.namespaceUsecase.GetNamespaceQuotas(namespaceUUID, userID)
-		if err != nil {
-			c.JSON(response.ErrorResponseBuilder(err))
-			return
-		}
-
-		c.JSON(http.StatusOK, quotas)
-	}
-}
-
 func (h *NamespaceHandler) GetNamespaceUsage() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
@@ -188,30 +158,8 @@ func (h *NamespaceHandler) GetNamespaceUsage() gin.HandlerFunc {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid namespace ID")))
 			return
 		}
-		var request dtos.QuotaUsageQuery
-		if err := c.ShouldBindQuery(&request); err != nil {
-			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
-			return
-		}
 
-		resourcePoolUUID, err := uuid.Parse(request.ResourcePoolID)
-		if err != nil {
-			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid resource pool ID")))
-			return
-		}
-
-		quotaUUID, err := uuid.Parse(request.QuotaID)
-		if err != nil {
-			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid quota ID")))
-			return
-		}
-
-		requestUUID := dtos.QuotaUsageRequest{
-			ResourcePoolID: resourcePoolUUID,
-			QuotaID:        quotaUUID,
-		}
-
-		usages, err := h.namespaceUsecase.GetNamespaceUsages(&requestUUID, namespaceUUID, userID)
+		usages, err := h.namespaceUsecase.GetNamespaceUsages(namespaceUUID, userID)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return

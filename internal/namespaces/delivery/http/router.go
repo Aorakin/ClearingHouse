@@ -12,7 +12,6 @@ func MapNamespaceRoutes(namespaceGroup *gin.RouterGroup, namespaceHandler interf
 	namespaceGroup.POST("/", namespaceHandler.CreateNamespace())
 	namespaceGroup.GET("/all/:id", namespaceHandler.GetAllUserNamespaces())
 	namespaceGroup.GET("/:id", namespaceHandler.GetNamespace())
-	namespaceGroup.GET("/:id/quota", namespaceHandler.GetNamespaceQuota())
 	namespaceGroup.GET("/:id/usage", namespaceHandler.GetNamespaceUsage())
 
 	namespaceGroup.POST("/members", namespaceHandler.AddMembers())

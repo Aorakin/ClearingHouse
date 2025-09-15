@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"github.com/ClearingHouse/internal/models"
+	"github.com/ClearingHouse/internal/namespaces/dtos"
 	"github.com/google/uuid"
 )
 
@@ -18,4 +19,7 @@ type NamespaceRepository interface {
 
 	GetNamespaceQuotas(namespaceID uuid.UUID) ([]models.NamespaceQuota, error)
 	GetNamespaceTickets(namespaceID, resourcePoolID, quotaID uuid.UUID) ([]models.Ticket, error)
+
+	GetNamespaceQuotaByType(namespaceID uuid.UUID) (*dtos.ResourceQuotaResponse, error)
+	GetNamespaceUsageByType(namespaceID uuid.UUID) (*dtos.ResourceUsageResponse, error)
 }

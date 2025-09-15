@@ -149,7 +149,7 @@ func (u *NamespaceUsecase) GetNamespaceQuotas(namespaceID uuid.UUID, userID uuid
 	return quotas, nil
 }
 
-func (u *NamespaceUsecase) GetNamespaceUsages(request *dtos.QuotaUsageRequest, namespaceID uuid.UUID, userID uuid.UUID) ([]models.Ticket, error) {
+func (u *NamespaceUsecase) GetNamespaceUsages(namespaceID uuid.UUID, userID uuid.UUID) (*dtos.NamespaceUsageResponse, error) {
 	namespace, err := u.namespaceRepo.GetNamespaceByID(namespaceID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
@@ -158,10 +158,30 @@ func (u *NamespaceUsecase) GetNamespaceUsages(request *dtos.QuotaUsageRequest, n
 		return nil, apiError.NewUnauthorizedError("user is not namespace member")
 	}
 
-	tickets, err := u.namespaceRepo.GetNamespaceTickets(namespace.ID, request.ResourcePoolID, request.QuotaID)
+	quotas, err := u.namespaceRepo.GetNamespaceQuotaByType(namespace.ID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}
 
-	return tickets, nil
+	usages, err := u.namespaceRepo.GetNamespaceUsageByType(namespace.ID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	var namespaceUsage dtos.NamespaceUsageResponse
+
+	for _, q := range quotas.ResourceQuotas {
+		for _, u := range usages.ResourceUsages {
+			if q.TypeID == u.TypeID {
+				namespaceUsage.Usage = append(namespaceUsage.Usage, dtos.NamespaceUsage{
+					TypeID: q.TypeID,
+					Type:   q.Type,
+					Quota:  q.Quota,
+					Usage:  u.Usage,
+				})
+			}
+		}
+	}
+
+	return &namespaceUsage, nil
 }
