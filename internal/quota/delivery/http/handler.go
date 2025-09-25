@@ -217,3 +217,44 @@ func (h *QuotaHandler) CreateOwnedProjectQuota() gin.HandlerFunc {
 		c.JSON(http.StatusCreated, quota)
 	}
 }
+
+func (h *QuotaHandler) GetUsage() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		quotaID := c.Param("quota_id")
+		if quotaID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Quota ID is required")))
+			return
+		}
+
+		namespaceID := c.Param("namespace_id")
+		if namespaceID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Namespace ID is required")))
+			return
+		}
+
+		namespaceUUID, err := uuid.Parse(namespaceID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+		quotaUUID, err := uuid.Parse(quotaID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		usage, err := h.quotaUsecase.GetUsage(quotaUUID, namespaceUUID, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, usage)
+	}
+}

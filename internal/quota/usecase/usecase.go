@@ -490,3 +490,59 @@ func (u *QuotaUsecase) isProjAdmin(projID uuid.UUID, userID uuid.UUID) (bool, er
 
 	return true, nil
 }
+
+func (u *QuotaUsecase) GetUsage(quotaID uuid.UUID, namespaceID uuid.UUID, userID uuid.UUID) (interface{}, error) {
+	// Check if the user has access to the namespace
+	namespace, err := u.namespaceRepo.GetNamespaceByID(namespaceID)
+	if err != nil {
+		return nil, apiError.NewNotFoundError(fmt.Errorf("failed to find namespace: %w", err))
+	}
+
+	if !helper.ContainsUserID(namespace.Members, userID) {
+		return nil, apiError.NewForbiddenError(errors.New("user does not have access to the namespace"))
+	}
+
+	// Check if the quota is assigned to the namespace
+	isAssigned, err := u.quotaRepo.IsAssigned(namespaceID, quotaID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to check quota assignment: %w", err))
+	}
+	if !isAssigned {
+		return nil, apiError.NewBadRequestError(errors.New("quota is not assigned to the namespace"))
+	}
+
+	// Fetch usage data
+	usage, err := u.quotaRepo.GetNamespaceUsageByType(namespaceID, quotaID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to fetch usage data: %w", err))
+	}
+
+	quota, err := u.quotaRepo.GetNamespaceQuotaByType(namespaceID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to fetch quota data: %w", err))
+	}
+
+	var totalUsage dtos.UsageResponse
+
+	for _, q := range quota.ResourceQuotas {
+		for _, u := range usage.ResourceUsages {
+			if q.TypeID == u.TypeID {
+				totalUsage.Usage = append(totalUsage.Usage, dtos.Usage{
+					TypeID: q.TypeID,
+					Type:   q.Type,
+					Quota:  q.Quota,
+					Usage:  u.Usage,
+				})
+			} else {
+				totalUsage.Usage = append(totalUsage.Usage, dtos.Usage{
+					TypeID: q.TypeID,
+					Type:   q.Type,
+					Quota:  q.Quota,
+					Usage:  0,
+				})
+			}
+		}
+	}
+
+	return totalUsage, nil
+}

@@ -14,6 +14,8 @@ type QuotaHandler interface {
 	GetNamespaceQuota() gin.HandlerFunc
 	AssignQuotaToNamespace() gin.HandlerFunc
 
+	GetUsage() gin.HandlerFunc
+
 	// FindOrganizationQuotaGroup() gin.HandlerFunc
 	// CreateOrganizationQuotaGroup() gin.HandlerFunc
 	// FindProjectQuotaGroup() gin.HandlerFunc

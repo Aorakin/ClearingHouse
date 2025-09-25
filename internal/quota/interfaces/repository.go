@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"github.com/ClearingHouse/internal/models"
+	"github.com/ClearingHouse/internal/namespaces/dtos"
 	"github.com/google/uuid"
 )
 
@@ -28,6 +29,9 @@ type QuotaRepository interface {
 	CreateResourceQuantity(resourceQuantity *models.ResourceQuantity) error
 
 	GetOrganization(orgID uuid.UUID) (*models.Organization, error)
+
+	GetNamespaceUsageByType(namespaceID uuid.UUID, quotaID uuid.UUID) (*dtos.ResourceUsageResponse, error)
+	GetNamespaceQuotaByType(namespaceID uuid.UUID) (*dtos.ResourceQuotaResponse, error)
 
 	// FindOrganizationQuotaGroup(fromOrgId uuid.UUID, toOrgId uuid.UUID) ([]models.OrganizationQuotaGroup, error)
 	// FindOrganizationQuotaGroupByID(id uuid.UUID) (*models.OrganizationQuotaGroup, error)
