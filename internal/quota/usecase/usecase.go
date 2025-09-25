@@ -544,5 +544,5 @@ func (u *QuotaUsecase) GetUsage(quotaID uuid.UUID, namespaceID uuid.UUID, userID
 		}
 	}
 
-	return totalUsage, nil
+	return usage, nil
 }
