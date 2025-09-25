@@ -524,25 +524,20 @@ func (u *QuotaUsecase) GetUsage(quotaID uuid.UUID, namespaceID uuid.UUID, userID
 
 	var totalUsage dtos.UsageResponse
 
-	for _, q := range quota.ResourceQuotas {
-		for _, u := range usage.ResourceUsages {
-			if q.TypeID == u.TypeID {
-				totalUsage.Usage = append(totalUsage.Usage, dtos.Usage{
-					TypeID: q.TypeID,
-					Type:   q.Type,
-					Quota:  q.Quota,
-					Usage:  u.Usage,
-				})
-			} else {
-				totalUsage.Usage = append(totalUsage.Usage, dtos.Usage{
-					TypeID: q.TypeID,
-					Type:   q.Type,
-					Quota:  q.Quota,
-					Usage:  0,
-				})
-			}
-		}
+	usageMap := make(map[string]float64)
+	for _, u := range usage.ResourceUsages {
+		usageMap[u.TypeID] = u.Usage
 	}
 
-	return usage, nil
+	for _, q := range quota.ResourceQuotas {
+		uVal := usageMap[q.TypeID]
+		totalUsage.Usage = append(totalUsage.Usage, dtos.Usage{
+			TypeID: q.TypeID,
+			Type:   q.Type,
+			Quota:  q.Quota,
+			Usage:  uVal,
+		})
+	}
+
+	return totalUsage, nil
 }
