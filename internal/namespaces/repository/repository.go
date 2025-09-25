@@ -4,6 +4,7 @@ import (
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/namespaces/dtos"
 	"github.com/ClearingHouse/internal/namespaces/interfaces"
+	"github.com/ClearingHouse/pkg/enum"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -129,7 +130,7 @@ func (r *NamespaceRepository) GetNamespaceUsageByType(namespaceID uuid.UUID) (*d
 	var tickets []models.Ticket
 
 	if err := r.db.
-		Where("tickets.namespace_id = ?", namespaceID).
+		Where("tickets.namespace_id = ? AND status IN ?", namespaceID, enum.UsingStatuses).
 		Preload("Resources.Resource.ResourceType").
 		Find(&tickets).Error; err != nil {
 		return nil, err

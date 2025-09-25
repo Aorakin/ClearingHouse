@@ -161,17 +161,19 @@ func (u *ProjectUsecase) GetProjectUsage(projectID uuid.UUID, userID uuid.UUID) 
 
 	var projectUsage dtos.ProjectUsageResponse
 
+	usageMap := make(map[string]float64)
+	for _, u := range usages.ResourceUsages {
+		usageMap[u.TypeID] = u.Usage
+	}
+
 	for _, q := range quotas.ResourceQuotas {
-		for _, u := range usages.ResourceUsages {
-			if q.TypeID == u.TypeID {
-				projectUsage.Usage = append(projectUsage.Usage, dtos.ProjectUsage{
-					TypeID: q.TypeID,
-					Type:   q.Type,
-					Quota:  q.Quota,
-					Usage:  u.Usage,
-				})
-			}
-		}
+		uVal := usageMap[q.TypeID]
+		projectUsage.Usage = append(projectUsage.Usage, dtos.ProjectUsage{
+			TypeID: q.TypeID,
+			Type:   q.Type,
+			Quota:  q.Quota,
+			Usage:  uVal,
+		})
 	}
 
 	return &projectUsage, nil

@@ -12,6 +12,7 @@ type Ticket struct {
 	Status         string           `json:"status"`
 	StartTime      *time.Time       `gorm:"type:timestamptz" json:"start_time"`
 	EndTime        *time.Time       `gorm:"type:timestamptz" json:"end_time"`
+	CancelTime     *time.Time       `gorm:"type:timestamptz" json:"cancel_time"`
 	Duration       uint             `json:"duration"`
 	Price          float32          `json:"price"`
 	OwnerID        uuid.UUID        `gorm:"type:uuid;not null" json:"owner_id"`

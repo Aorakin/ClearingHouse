@@ -4,6 +4,7 @@ import (
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/projects/dtos"
 	"github.com/ClearingHouse/internal/projects/interfaces"
+	"github.com/ClearingHouse/pkg/enum"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -98,7 +99,7 @@ func (r *ProjectRepository) GetProjectUsageByType(projectID uuid.UUID, userID uu
 	if err := r.db.
 		Joins("JOIN namespaces ns ON ns.id = tickets.namespace_id").
 		Joins("JOIN namespace_members nm ON nm.namespace_id = ns.id").
-		Where("ns.project_id = ? AND nm.user_id = ?", projectID, userID).
+		Where("ns.project_id = ? AND nm.user_id = ? AND status IN ?", projectID, userID, enum.UsingStatuses).
 		Preload("Resources.Resource.ResourceType").
 		Find(&tickets).Error; err != nil {
 		return nil, err

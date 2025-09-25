@@ -169,18 +169,19 @@ func (u *NamespaceUsecase) GetNamespaceUsages(namespaceID uuid.UUID, userID uuid
 	}
 
 	var namespaceUsage dtos.NamespaceUsageResponse
+	usageMap := make(map[string]float64)
+	for _, u := range usages.ResourceUsages {
+		usageMap[u.TypeID] = u.Usage
+	}
 
 	for _, q := range quotas.ResourceQuotas {
-		for _, u := range usages.ResourceUsages {
-			if q.TypeID == u.TypeID {
-				namespaceUsage.Usage = append(namespaceUsage.Usage, dtos.NamespaceUsage{
-					TypeID: q.TypeID,
-					Type:   q.Type,
-					Quota:  q.Quota,
-					Usage:  u.Usage,
-				})
-			}
-		}
+		uVal := usageMap[q.TypeID]
+		namespaceUsage.Usage = append(namespaceUsage.Usage, dtos.NamespaceUsage{
+			TypeID: q.TypeID,
+			Type:   q.Type,
+			Quota:  q.Quota,
+			Usage:  uVal,
+		})
 	}
 
 	return &namespaceUsage, nil

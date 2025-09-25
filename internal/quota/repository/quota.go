@@ -4,6 +4,7 @@ import (
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/namespaces/dtos"
 	"github.com/ClearingHouse/internal/quota/interfaces"
+	"github.com/ClearingHouse/pkg/enum"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -195,9 +196,8 @@ const (
 func (r *QuotaRepository) GetNamespaceUsageByType(namespaceID uuid.UUID, quotaID uuid.UUID) (*dtos.ResourceUsageResponse, error) {
 	var tickets []models.Ticket
 
-	statuses := []string{string(StatusCreated), string(StatusRunning)}
 	if err := r.db.
-		Where("tickets.namespace_id = ? and tickets.quota_id = ? and status IN ?", namespaceID, quotaID, statuses).
+		Where("tickets.namespace_id = ? and tickets.quota_id = ? and status IN ?", namespaceID, quotaID, enum.UsingStatuses).
 		Preload("Resources.Resource.ResourceType").
 		Find(&tickets).Error; err != nil {
 		return nil, err
