@@ -168,3 +168,20 @@ func (h *NamespaceHandler) GetNamespaceUsage() gin.HandlerFunc {
 		c.JSON(http.StatusOK, usages)
 	}
 }
+
+func (h *NamespaceHandler) GetAllPrivateNamespaces() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		namespaces, err := h.namespaceUsecase.GetAllPrivateNamespaces(userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+		c.JSON(http.StatusOK, namespaces)
+	}
+}

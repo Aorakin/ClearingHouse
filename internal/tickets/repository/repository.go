@@ -70,7 +70,7 @@ func (r *TicketRepository) GetResourceUsage(namespaceID, quotaID, resourceID uui
 
 func (r *TicketRepository) GetTicketsByNamespaceID(namespaceID uuid.UUID) ([]models.Ticket, error) {
 	var tickets []models.Ticket
-	err := r.db.Preload("Resources").Where("namespace_id = ?", namespaceID).Find(&tickets).Error
+	err := r.db.Preload("Resources").Where("namespace_id = ?", namespaceID).Order("created_at DESC").Find(&tickets).Error
 	if err != nil {
 		return nil, err
 	}

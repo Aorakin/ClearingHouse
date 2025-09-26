@@ -186,3 +186,11 @@ func (u *NamespaceUsecase) GetNamespaceUsages(namespaceID uuid.UUID, userID uuid
 
 	return &namespaceUsage, nil
 }
+
+func (u *NamespaceUsecase) GetAllPrivateNamespaces(userID uuid.UUID) ([]models.Namespace, error) {
+	namespaces, err := u.namespaceRepo.GetPrivateNamespaceByUserID(userID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+	return namespaces, nil
+}

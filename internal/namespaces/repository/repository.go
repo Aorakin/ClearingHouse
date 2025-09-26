@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"sort"
+
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/namespaces/dtos"
 	"github.com/ClearingHouse/internal/namespaces/interfaces"
@@ -123,6 +125,10 @@ func (r *NamespaceRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*d
 		result = append(result, v)
 	}
 
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Type < result[j].Type
+	})
+
 	return &dtos.ResourceQuotaResponse{ResourceQuotas: result}, nil
 }
 
@@ -161,4 +167,13 @@ func (r *NamespaceRepository) GetNamespaceUsageByType(namespaceID uuid.UUID) (*d
 	}
 
 	return &dtos.ResourceUsageResponse{ResourceUsages: result}, nil
+}
+
+func (r *NamespaceRepository) GetPrivateNamespaceByUserID(userID uuid.UUID) ([]models.Namespace, error) {
+	var namespaces []models.Namespace
+	err := r.db.Where("owner_id = ?", userID).Find(&namespaces).Error
+	if err != nil {
+		return nil, err
+	}
+	return namespaces, nil
 }
