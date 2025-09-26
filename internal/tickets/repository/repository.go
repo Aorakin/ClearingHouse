@@ -5,6 +5,7 @@ import (
 
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/tickets/interfaces"
+	"github.com/ClearingHouse/pkg/enum"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -58,7 +59,7 @@ func (r *TicketRepository) GetResourceUsage(namespaceID, quotaID, resourceID uui
 	err := r.db.Model(&models.TicketResource{}).
 		Select("COALESCE(SUM(quantity), 0)").
 		Joins("JOIN tickets ON tickets.id = ticket_resources.ticket_id").
-		Where("tickets.namespace_id = ? AND ticket_resources.resource_id = ? AND tickets.quota_id = ?", namespaceID, resourceID, quotaID).
+		Where("tickets.namespace_id = ? AND ticket_resources.resource_id = ? AND tickets.quota_id = ? AND tickets.status IN ?", namespaceID, resourceID, quotaID, enum.StatusRunning).
 		Scan(&total).Error
 	if err != nil {
 		return 0, err
