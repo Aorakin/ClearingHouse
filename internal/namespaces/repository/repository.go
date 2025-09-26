@@ -162,3 +162,12 @@ func (r *NamespaceRepository) GetNamespaceUsageByType(namespaceID uuid.UUID) (*d
 
 	return &dtos.ResourceUsageResponse{ResourceUsages: result}, nil
 }
+
+func (r *NamespaceRepository) GetPrivateNamespaceByUserID(userID uuid.UUID) ([]models.Namespace, error) {
+	var namespaces []models.Namespace
+	err := r.db.Where("owner_id = ?", userID).Find(&namespaces).Error
+	if err != nil {
+		return nil, err
+	}
+	return namespaces, nil
+}

@@ -8,6 +8,7 @@ import (
 
 func MapNamespaceRoutes(namespaceGroup *gin.RouterGroup, namespaceHandler interfaces.NamespaceHandler) {
 	namespaceGroup.GET("/", namespaceHandler.GetAllNamespaces())
+	namespaceGroup.GET("/private", namespaceHandler.GetAllPrivateNamespaces())
 	namespaceGroup.Use(middleware.AuthMiddleware())
 	namespaceGroup.POST("/", namespaceHandler.CreateNamespace())
 	namespaceGroup.GET("/all/:id", namespaceHandler.GetAllUserNamespaces())

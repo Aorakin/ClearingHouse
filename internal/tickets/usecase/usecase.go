@@ -12,6 +12,7 @@ import (
 	"github.com/ClearingHouse/internal/tickets/dtos"
 	"github.com/ClearingHouse/internal/tickets/interfaces"
 	apiError "github.com/ClearingHouse/pkg/api_error"
+	"github.com/ClearingHouse/pkg/signature_helper"
 	"github.com/google/uuid"
 )
 
@@ -29,7 +30,7 @@ func NewTicketUsecase(namespaceRepo namespaceInterfaces.NamespaceRepository, tic
 	}
 }
 
-func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest, userID uuid.UUID) (*models.Ticket, error) {
+func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest, userID uuid.UUID) (*dtos.GliderTicketResponse, error) {
 	if len(request.Resources) == 0 {
 		return nil, apiError.NewBadRequestError("at least one resource is required")
 	}
@@ -143,7 +144,9 @@ func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest, userID u
 		return nil, apiError.NewInternalServerError(err)
 	}
 
-	return ticket, nil
+	gliderTicket := u.FormatTicketResponse(ticket)
+
+	return gliderTicket, nil
 }
 
 func (u *TicketUsecase) GetNamespaceTickets(namespaceID uuid.UUID, userID uuid.UUID) ([]models.Ticket, error) {
@@ -268,18 +271,25 @@ func (u *TicketUsecase) GetTicket(ticketID uuid.UUID, userID uuid.UUID) (*dtos.G
 }
 
 func (u *TicketUsecase) FormatTicketResponse(ticket *models.Ticket) *dtos.GliderTicketResponse {
+	gliderTicket := dtos.GliderTicket{
+		ID:                ticket.ID,
+		NamespaceURN:      ticket.Namespace.ID.String(),
+		GlideletURN:       ticket.ResourcePoolID.String(),
+		Spec:              u.FormatGliderSpec(ticket),
+		ReferenceTicketID: "",
+		RedeemTimeout:     ticket.RedeemTimeout,
+		Lease:             ticket.Duration,
+		CreatedAt:         ticket.CreatedAt,
+	}
+
+	signature, err := signature_helper.SignTicket(gliderTicket)
+	if err != nil {
+		return nil
+	}
+
 	return &dtos.GliderTicketResponse{
-		Ticket: dtos.GliderTicket{
-			ID:                ticket.ID,
-			NamespaceURN:      ticket.Namespace.ID.String(),
-			GlideletURN:       ticket.ResourcePoolID.String(),
-			Spec:              u.FormatGliderSpec(ticket),
-			ReferenceTicketID: "",
-			RedeemTimeout:     ticket.RedeemTimeout,
-			Lease:             ticket.Duration,
-			CreatedAt:         ticket.CreatedAt,
-		},
-		Signature: "temp_signature",
+		Ticket:    gliderTicket,
+		Signature: signature,
 	}
 }
 
