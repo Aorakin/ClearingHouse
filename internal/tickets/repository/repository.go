@@ -56,10 +56,10 @@ func (r *TicketRepository) GetNamespaceUsage(namespaceID, quotaID, resourceID uu
 func (r *TicketRepository) GetResourceUsage(namespaceID, quotaID, resourceID uuid.UUID) (uint, error) {
 	var total uint
 
-	err := r.db.Model(&models.TicketResource{}).
+	err := r.db.Debug().Model(&models.TicketResource{}).
 		Select("COALESCE(SUM(quantity), 0)").
 		Joins("JOIN tickets ON tickets.id = ticket_resources.ticket_id").
-		Where("tickets.namespace_id = ? AND ticket_resources.resource_id = ? AND tickets.quota_id = ? AND tickets.status IN ?", namespaceID, resourceID, quotaID, enum.StatusRunning).
+		Where("tickets.namespace_id = ? AND ticket_resources.resource_id = ? AND tickets.quota_id = ? AND tickets.status IN ?", namespaceID, resourceID, quotaID, enum.UsingStatuses).
 		Scan(&total).Error
 	if err != nil {
 		return 0, err
