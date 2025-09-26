@@ -12,6 +12,6 @@ type TicketUsecase interface {
 	GetUserTickets(userID uuid.UUID) ([]models.Ticket, error)
 	StartTicket(request *dtos.StartTicketsRequest) ([]models.Ticket, error)
 	StopTicket(request *dtos.StopTicketsRequest) ([]models.Ticket, error)
-	GetTicket(ticketID uuid.UUID, userID uuid.UUID) (*dtos.GliderTicketResponse, error)
+	GetTicket(ticketID uuid.UUID, userID uuid.UUID) (*models.Ticket, error)
 	CancelTicket(ticketID uuid.UUID, userID uuid.UUID) error
 }

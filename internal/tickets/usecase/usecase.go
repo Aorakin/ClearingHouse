@@ -251,7 +251,7 @@ func (u *TicketUsecase) GetUserTickets(userID uuid.UUID) ([]models.Ticket, error
 	return tickets, nil
 }
 
-func (u *TicketUsecase) GetTicket(ticketID uuid.UUID, userID uuid.UUID) (*dtos.GliderTicketResponse, error) {
+func (u *TicketUsecase) GetTicket(ticketID uuid.UUID, userID uuid.UUID) (*models.Ticket, error) {
 	ticket, err := u.ticketRepo.GetTicketByID(ticketID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
@@ -265,9 +265,7 @@ func (u *TicketUsecase) GetTicket(ticketID uuid.UUID, userID uuid.UUID) (*dtos.G
 		return nil, apiError.NewUnauthorizedError("user is not a member of the namespace or the owner of the ticket")
 	}
 
-	ticketResponse := u.FormatTicketResponse(ticket)
-
-	return ticketResponse, nil
+	return ticket, nil
 }
 
 func (u *TicketUsecase) FormatTicketResponse(ticket *models.Ticket) *dtos.GliderTicketResponse {
