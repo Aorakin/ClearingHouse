@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"sort"
+
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/namespaces/dtos"
 	"github.com/ClearingHouse/internal/quota/interfaces"
@@ -188,11 +190,6 @@ func (r *QuotaRepository) GetOrganization(orgID uuid.UUID) (*models.Organization
 	return &organization, nil
 }
 
-const (
-	StatusCreated = "created"
-	StatusRunning = "running"
-)
-
 func (r *QuotaRepository) GetNamespaceUsageByType(namespaceID uuid.UUID, quotaID uuid.UUID) (*dtos.ResourceUsageResponse, error) {
 	var tickets []models.Ticket
 
@@ -232,7 +229,9 @@ func (r *QuotaRepository) GetNamespaceUsageByType(namespaceID uuid.UUID, quotaID
 
 func (r *QuotaRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*dtos.ResourceQuotaResponse, error) {
 	var quota models.NamespaceQuota
-	err := r.db.Preload("Resources.ResourceProp.Resource.ResourceType").Joins("JOIN namespace_quotas nq ON nq.namespace_id = ?", namespaceID).First(&quota).Error
+	err := r.db.Preload("Resources.ResourceProp.Resource.ResourceType").
+		Joins("JOIN namespace_quotas nq ON nq.namespace_id = ?", namespaceID).
+		First(&quota).Error
 	if err != nil {
 		return nil, err
 	}
@@ -258,6 +257,10 @@ func (r *QuotaRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*dtos.
 	for _, v := range typeAgg {
 		result = append(result, v)
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Type < result[j].Type
+	})
 
 	return &dtos.ResourceQuotaResponse{ResourceQuotas: result}, nil
 }

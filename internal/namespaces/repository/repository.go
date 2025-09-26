@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"sort"
+
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/namespaces/dtos"
 	"github.com/ClearingHouse/internal/namespaces/interfaces"
@@ -122,6 +124,10 @@ func (r *NamespaceRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*d
 	for _, v := range typeAgg {
 		result = append(result, v)
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Type < result[j].Type
+	})
 
 	return &dtos.ResourceQuotaResponse{ResourceQuotas: result}, nil
 }

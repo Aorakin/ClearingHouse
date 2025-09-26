@@ -8,8 +8,8 @@ import (
 
 func MapNamespaceRoutes(namespaceGroup *gin.RouterGroup, namespaceHandler interfaces.NamespaceHandler) {
 	namespaceGroup.GET("/", namespaceHandler.GetAllNamespaces())
-	namespaceGroup.GET("/private", namespaceHandler.GetAllPrivateNamespaces())
 	namespaceGroup.Use(middleware.AuthMiddleware())
+	namespaceGroup.GET("/private", namespaceHandler.GetAllPrivateNamespaces())
 	namespaceGroup.POST("/", namespaceHandler.CreateNamespace())
 	namespaceGroup.GET("/all/:id", namespaceHandler.GetAllUserNamespaces())
 	namespaceGroup.GET("/:id", namespaceHandler.GetNamespace())
@@ -17,8 +17,3 @@ func MapNamespaceRoutes(namespaceGroup *gin.RouterGroup, namespaceHandler interf
 
 	namespaceGroup.POST("/members", namespaceHandler.AddMembers())
 }
-
-// get all user's available  namespace
-// get namespace detail
-// get quota of ns
-// get current usage of ns
