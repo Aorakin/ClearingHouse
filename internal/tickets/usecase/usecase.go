@@ -80,7 +80,10 @@ func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest, userID u
 			return nil, apiError.NewInternalServerError(err)
 		}
 
-		log.Printf("Resource ID: %s usage %d", resource.ResourceID, usage)
+		if resource.Quantity <= 0 {
+			return nil, apiError.NewForbiddenError("resource quota is zero")
+		}
+
 		maxQuota := resourceQuantity.Quantity
 		if usage+resource.Quantity > maxQuota {
 			return nil, apiError.NewForbiddenError("namespace usage exceeds quota limit for resource")
@@ -143,9 +146,9 @@ func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest, userID u
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}
-
+	log.Printf("Created ticket: %+v", ticket)
 	gliderTicket := u.FormatTicketResponse(ticket)
-
+	log.Printf("Formatted glider ticket: %+v", gliderTicket)
 	return gliderTicket, nil
 }
 
