@@ -370,8 +370,8 @@ func (u *QuotaUsecase) CreateNamespaceQuota(request *dtos.CreateNamespaceQuotaRe
 	namespaceQuota := &models.NamespaceQuota{
 		Name:           request.Name,
 		Description:    request.Description,
-		ProjectID:      request.ProjectID,
-		ProjectQuotaID: request.ProjectQuotaID,
+		ProjectID:      &request.ProjectID,
+		ProjectQuotaID: &request.ProjectQuotaID,
 		ResourcePoolID: quota.ResourcePoolID,
 	}
 	err = u.quotaRepo.CreateNamespaceQuota(namespaceQuota)
@@ -422,11 +422,11 @@ func (u *QuotaUsecase) AssignQuotaToNamespace(request *dtos.AssignQuotaToNamespa
 		return apiError.NewInternalServerError(fmt.Errorf("failed to find namespace quota group: %w", err))
 	}
 
-	if namespaceQuota.ProjectID != request.ProjectID {
+	if namespaceQuota.ProjectID != &request.ProjectID {
 		return apiError.NewBadRequestError(errors.New("quota group does not belong to the project"))
 	}
 
-	allNamespaceInProj, err := u.namespaceRepo.GetAllNamespacesByProjectID(namespaceQuota.ProjectID)
+	allNamespaceInProj, err := u.namespaceRepo.GetAllNamespacesByProjectID(*namespaceQuota.ProjectID)
 	if err != nil {
 		return apiError.NewInternalServerError(fmt.Errorf("failed to find namespaces by project ID: %w", err))
 	}

@@ -108,3 +108,10 @@ func (r *UsersRepository) GetByIDs(userIDs []uuid.UUID) ([]models.User, error) {
 
 	return users, nil
 }
+
+func (r *UsersRepository) Update(user *models.User) error {
+	if err := r.db.Save(user).Error; err != nil {
+		return err
+	}
+	return nil
+}

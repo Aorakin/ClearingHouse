@@ -1,5 +1,7 @@
 package models
 
+import "github.com/google/uuid"
+
 type User struct {
 	BaseModel
 	Email               string         `json:"email"`
@@ -10,5 +12,6 @@ type User struct {
 	MemberProjects      []Project      `gorm:"many2many:project_members;" json:"-"`
 	AdminProjects       []Project      `gorm:"many2many:project_admins;" json:"-"`
 	MemberNamespaces    []Namespace    `gorm:"many2many:namespace_members;" json:"-"`
-	Namespace           *Namespace     `gorm:"foreignKey:OwnerID" json:"namespace"`
+	Namespace           *Namespace     `gorm:"foreignKey:NamespaceID" json:"namespace"`
+	NamespaceID         *uuid.UUID     `gorm:"type:uuid" json:"namespace_id"`
 }

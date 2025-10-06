@@ -10,6 +10,8 @@ func MapPrivateNamespaceRoutes(privateNamespaceGroup *gin.RouterGroup, privateNa
 	privateNamespaceGroup.Use(middleware.AuthMiddleware())
 	privateNamespaceGroup.GET("/", privateNamespaceHandler.GetPrivateNamespace())
 	privateNamespaceGroup.POST("/", privateNamespaceHandler.CreatePrivateNamespace())
+	privateNamespaceGroup.POST("/quota", privateNamespaceHandler.CreateNamespaceQuota())
+	privateNamespaceGroup.GET("/usage", privateNamespaceHandler.GetUsage())
 }
 
 // create priv ns
