@@ -58,6 +58,14 @@ func (u *PrivateNamespaceUsecase) CreatePrivateNamespace(request *dtos.CreatePri
 		return nil, apiError.NewUnauthorizedError("user is not organization admin")
 	}
 
+	user, err := u.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to fetch user: %w", err))
+	}
+	if user.NamespaceID != nil {
+		return nil, apiError.NewConflictError(errors.New("user already has a private namespace"))
+	}
+
 	namespace := &models.Namespace{
 		Description: request.Description,
 		Credit:      request.Credit,
@@ -69,7 +77,7 @@ func (u *PrivateNamespaceUsecase) CreatePrivateNamespace(request *dtos.CreatePri
 		return nil, err
 	}
 
-	user, err := u.userRepo.GetByID(userID)
+	user, err = u.userRepo.GetByID(userID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to fetch user: %w", err))
 	}

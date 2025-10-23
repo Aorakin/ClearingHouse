@@ -1,6 +1,8 @@
 package http
 
 import (
+	"net/http"
+
 	namespaceInterfaces "github.com/ClearingHouse/internal/namespaces/interfaces"
 	"github.com/ClearingHouse/internal/private_namespaces/dtos"
 	"github.com/ClearingHouse/internal/private_namespaces/interfaces"
@@ -33,7 +35,7 @@ func (h *PrivateNamespaceHandler) GetPrivateNamespace() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(200, namespace)
+		c.JSON(http.StatusOK, namespace)
 	}
 }
 
@@ -57,7 +59,7 @@ func (h *PrivateNamespaceHandler) CreatePrivateNamespace() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(201, namespace)
+		c.JSON(http.StatusCreated, namespace)
 	}
 }
 
@@ -81,7 +83,7 @@ func (h *PrivateNamespaceHandler) CreateNamespaceQuota() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(201, quota)
+		c.JSON(http.StatusCreated, quota)
 	}
 }
 
@@ -105,6 +107,6 @@ func (h *PrivateNamespaceHandler) GetUsage() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(200, usage)
+		c.JSON(http.StatusOK, usage)
 	}
 }
