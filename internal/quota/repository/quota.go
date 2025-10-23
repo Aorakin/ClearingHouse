@@ -230,8 +230,14 @@ func (r *QuotaRepository) GetNamespaceUsageByType(namespaceID uuid.UUID, quotaID
 func (r *QuotaRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*dtos.ResourceQuotaResponse, error) {
 	var quota models.NamespaceQuota
 	err := r.db.Preload("Resources.ResourceProp.Resource.ResourceType").
-		Joins("JOIN namespace_quotas nq ON nq.namespace_id = ?", namespaceID).
+		Joins("JOIN namespace_quotas nq ON nq.namespace_quota_id = namespace_quota.id").
+		Where("nq.namespace_id = ?", namespaceID).
 		First(&quota).Error
+
+	if err != nil {
+		return nil, err
+	}
+
 	if err != nil {
 		return nil, err
 	}
