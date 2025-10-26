@@ -11,6 +11,7 @@ import (
 	quotaInterfaces "github.com/ClearingHouse/internal/quota/interfaces"
 	"github.com/ClearingHouse/internal/tickets/dtos"
 	"github.com/ClearingHouse/internal/tickets/interfaces"
+	userInterfaces "github.com/ClearingHouse/internal/users/interfaces"
 	apiError "github.com/ClearingHouse/pkg/api_error"
 	"github.com/ClearingHouse/pkg/signature_helper"
 	"github.com/google/uuid"
@@ -20,13 +21,15 @@ type TicketUsecase struct {
 	namespaceRepo namespaceInterfaces.NamespaceRepository
 	ticketRepo    interfaces.TicketRepository
 	quotaRepo     quotaInterfaces.QuotaRepository
+	userRepo      userInterfaces.UsersRepository
 }
 
-func NewTicketUsecase(namespaceRepo namespaceInterfaces.NamespaceRepository, ticketRepo interfaces.TicketRepository, quotaRepo quotaInterfaces.QuotaRepository) interfaces.TicketUsecase {
+func NewTicketUsecase(namespaceRepo namespaceInterfaces.NamespaceRepository, ticketRepo interfaces.TicketRepository, quotaRepo quotaInterfaces.QuotaRepository, userRepo userInterfaces.UsersRepository) interfaces.TicketUsecase {
 	return &TicketUsecase{
 		namespaceRepo: namespaceRepo,
 		ticketRepo:    ticketRepo,
 		quotaRepo:     quotaRepo,
+		userRepo:      userRepo,
 	}
 }
 
@@ -237,8 +240,12 @@ func (u *TicketUsecase) isNamespaceMember(userID uuid.UUID, namespaceID uuid.UUI
 	if err != nil {
 		return false, err
 	}
+	user, err := u.userRepo.GetByID(userID)
+	if err != nil {
+		return false, err
+	}
 
-	if !helper.ContainsUserID(namespace.Members, userID) {
+	if !helper.ContainsUserID(namespace.Members, userID) && (*user.NamespaceID != namespace.ID) {
 		return false, nil
 	}
 

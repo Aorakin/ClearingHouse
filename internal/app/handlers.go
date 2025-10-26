@@ -34,6 +34,10 @@ import (
 	TicketHttp "github.com/ClearingHouse/internal/tickets/delivery/http"
 	TicketRepository "github.com/ClearingHouse/internal/tickets/repository"
 	TicketUsecase "github.com/ClearingHouse/internal/tickets/usecase"
+
+	PrivateNamespaceHttp "github.com/ClearingHouse/internal/private_namespaces/delivery/http"
+	PrivateNamespaceRepository "github.com/ClearingHouse/internal/private_namespaces/repository"
+	PrivateNamespaceUsecase "github.com/ClearingHouse/internal/private_namespaces/usecase"
 )
 
 func (a *App) MapHandlers() error {
@@ -54,23 +58,26 @@ func (a *App) MapHandlers() error {
 	authGroup := a.gin.Group("/auth")
 	userGroup := a.gin.Group("/users")
 	ticketGroup := a.gin.Group("/tickets")
+	privNamespaceGroup := namespacesGroup.Group("/private")
 
 	orgRepo := OrganizationRepository.NewOrganizationRepository(a.postgresDB)
-	resourceRepo, resourcePoolRepo, resourceTypeRepo := ResourceRepository.NewResourceRepository(a.postgresDB)
+	resourcePoolRepo, resourceRepo, resourceTypeRepo := ResourceRepository.NewResourceRepository(a.postgresDB)
 	quotaRepo := QuotaRepository.NewQuotaRepository(a.postgresDB)
 	projRepo := ProjectRepository.NewProjectRepository(a.postgresDB)
 	namespaceRepo := NamespaceRepository.NewNamespaceRepository(a.postgresDB)
 	userRepo := UserRepository.NewUsersRepository(a.postgresDB)
 	ticketRepo := TicketRepository.NewTicketRepository(a.postgresDB)
+	privNamespaceRepo := PrivateNamespaceRepository.NewPrivateNamespaceRepository(a.postgresDB)
 
 	orgUsecase := OrganizationUsecase.NewOrganizationUsecase(orgRepo, userRepo)
-	resourceUsecase := ResourceUsecase.NewResourceUsecase(resourceRepo, resourcePoolRepo, resourceTypeRepo)
-	quotaUsecase := QuotaUsecase.NewQuotaUsecase(quotaRepo, resourcePoolRepo, namespaceRepo, orgRepo, projRepo, userRepo)
+	resourceUsecase := ResourceUsecase.NewResourceUsecase(resourcePoolRepo, resourceRepo, resourceTypeRepo)
+	quotaUsecase := QuotaUsecase.NewQuotaUsecase(quotaRepo, resourceRepo, namespaceRepo, orgRepo, projRepo, userRepo)
 	projUsecase := ProjectUsecase.NewProjectUsecase(projRepo, orgRepo, userRepo)
 	namespaceUsecase := NamespaceUsecase.NewNamespaceUsecase(namespaceRepo, userRepo, projRepo, quotaRepo)
 	userUsecase := UserUsecase.NewUsersUsecase(userRepo)
 	authUsecase := AuthUsecase.NewAuthUsecase(userRepo)
-	ticketUsecase := TicketUsecase.NewTicketUsecase(namespaceRepo, ticketRepo, quotaRepo)
+	ticketUsecase := TicketUsecase.NewTicketUsecase(namespaceRepo, ticketRepo, quotaRepo, userRepo)
+	privNamespaceUsecase := PrivateNamespaceUsecase.NewPrivateNamespaceUsecase(privNamespaceRepo, namespaceRepo, orgRepo, userRepo, quotaRepo, resourceRepo)
 
 	orgHandler := OrganizationHttp.NewOrganizationHandler(orgUsecase)
 	resourceHandler := ResourceHttp.NewResourceHandler(resourceUsecase)
@@ -80,6 +87,7 @@ func (a *App) MapHandlers() error {
 	userHandler := UserHttp.NewUsersHandler(userUsecase)
 	authHandler := AuthHttp.NewAuthHandler(authUsecase)
 	ticketHandler := TicketHttp.NewTicketHandler(ticketUsecase)
+	privNamespaceHandler := PrivateNamespaceHttp.NewPrivateNamespaceHandler(privNamespaceUsecase, namespaceUsecase)
 
 	OrganizationHttp.MapOrganizationRoutes(organizationsGroup, orgHandler)
 	ResourceHttp.MapResourceRoutes(resourcesGroup, resourceHandler)
@@ -89,6 +97,7 @@ func (a *App) MapHandlers() error {
 	UserHttp.MapUsersRoutes(userGroup, userHandler)
 	AuthHttp.MapAuthRoutes(authGroup, authHandler)
 	TicketHttp.MapTicketRoutes(ticketGroup, ticketHandler)
+	PrivateNamespaceHttp.MapPrivateNamespaceRoutes(privNamespaceGroup, privNamespaceHandler)
 
 	return nil
 }

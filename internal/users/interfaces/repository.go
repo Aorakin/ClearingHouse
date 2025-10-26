@@ -14,4 +14,5 @@ type UsersRepository interface {
 	GetByUsername(string) (*models.User, error)
 	FindOrCreateUser(email string, firstName string, lastName string) (*models.User, error)
 	GetByIDs(userIDs []uuid.UUID) ([]models.User, error)
+	Update(*models.User) error
 }

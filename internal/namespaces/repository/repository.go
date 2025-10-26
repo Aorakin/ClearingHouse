@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"log"
 	"sort"
 
 	"github.com/ClearingHouse/internal/models"
@@ -96,9 +97,21 @@ func (r *NamespaceRepository) GetAllNamespacesByProjectAndUserID(projectID, user
 
 func (r *NamespaceRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*dtos.ResourceQuotaResponse, error) {
 	var quotas []models.NamespaceQuota
-	err := r.db.Preload("Resources.ResourceProp.Resource.ResourceType").Joins("JOIN namespace_quotas nq ON nq.namespace_id = ?", namespaceID).Find(&quotas).Error
+	err := r.db.Debug().
+		Model(&models.NamespaceQuota{}).
+		Preload("Resources.ResourceProp.Resource.ResourceType").
+		Joins("JOIN namespace_quotas nq ON nq.namespace_quota_id = namespace_quota.id").
+		Where("nq.namespace_id = ?", namespaceID).
+		Find(&quotas).Error
 	if err != nil {
 		return nil, err
+	}
+
+	log.Printf("Fetched %d quotas for namespace %s", len(quotas), namespaceID)
+	log.Printf("Quotas: %+v", quotas)
+
+	for _, q := range quotas {
+		log.Printf("Quota ID: %s, Name: %s", q.ID, q.Name)
 	}
 
 	typeAgg := make(map[string]dtos.ResourceQuota)

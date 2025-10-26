@@ -45,7 +45,7 @@ func (u *NamespaceUsecase) CreateNamespace(request *dtos.CreateNamespaceRequest,
 		Name:        request.Name,
 		Description: request.Description,
 		Credit:      request.Credit,
-		ProjectID:   request.ProjectID,
+		ProjectID:   &request.ProjectID,
 	}
 
 	err = u.namespaceRepo.Create(&namespace)
@@ -66,7 +66,7 @@ func (u *NamespaceUsecase) AddMembers(req *dtos.AddMembersRequest, userID uuid.U
 		return nil, apiError.NewInternalServerError(err)
 	}
 
-	proj, err := u.projRepo.GetProjectByID(namespace.ProjectID)
+	proj, err := u.projRepo.GetProjectByID(*namespace.ProjectID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}
@@ -150,11 +150,15 @@ func (u *NamespaceUsecase) GetNamespaceQuotas(namespaceID uuid.UUID, userID uuid
 }
 
 func (u *NamespaceUsecase) GetNamespaceUsages(namespaceID uuid.UUID, userID uuid.UUID) (*dtos.NamespaceUsageResponse, error) {
+	user, err := u.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
 	namespace, err := u.namespaceRepo.GetNamespaceByID(namespaceID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}
-	if !helper.ContainsUserID(namespace.Members, userID) {
+	if !helper.ContainsUserID(namespace.Members, userID) && (*user.NamespaceID != namespace.ID) {
 		return nil, apiError.NewUnauthorizedError("user is not namespace member")
 	}
 
