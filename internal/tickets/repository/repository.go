@@ -79,7 +79,7 @@ func (r *TicketRepository) GetTicketsByNamespaceID(namespaceID uuid.UUID) ([]mod
 
 func (r *TicketRepository) GetTicketsByUserID(userID uuid.UUID) ([]models.Ticket, error) {
 	var tickets []models.Ticket
-	err := r.db.Preload("Resources").Where("owner_id = ?", userID).Find(&tickets).Error
+	err := r.db.Preload("Resources").Preload("Namespace.Project").Where("owner_id = ?", userID).Find(&tickets).Error
 	if err != nil {
 		return nil, err
 	}

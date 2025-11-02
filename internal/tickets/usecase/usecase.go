@@ -252,13 +252,37 @@ func (u *TicketUsecase) isNamespaceMember(userID uuid.UUID, namespaceID uuid.UUI
 	return true, nil
 }
 
-func (u *TicketUsecase) GetUserTickets(userID uuid.UUID) ([]models.Ticket, error) {
+func (u *TicketUsecase) GetUserTickets(userID uuid.UUID) ([]dtos.TicketResponse, error) {
 	tickets, err := u.ticketRepo.GetTicketsByUserID(userID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}
 
-	return tickets, nil
+	var responses []dtos.TicketResponse
+	for _, ticket := range tickets {
+		ticketResponse := dtos.TicketResponse{
+			ID:             ticket.ID.String(),
+			Name:           ticket.Name,
+			Status:         ticket.Status,
+			StartTime:      ticket.StartTime,
+			EndTime:        ticket.EndTime,
+			CancelTime:     ticket.CancelTime,
+			Duration:       ticket.Duration,
+			Price:          ticket.Price,
+			OwnerID:        ticket.OwnerID.String(),
+			NamespaceID:    ticket.NamespaceID.String(),
+			NamespaceName:  ticket.Namespace.Name,
+			ProjectID:      ticket.Namespace.ProjectID.String(),
+			ProjectName:    ticket.Namespace.Project.Name,
+			ResourcePoolID: ticket.ResourcePoolID.String(),
+			QuotaID:        ticket.QuotaID.String(),
+			RedeemTimeout:  ticket.RedeemTimeout,
+			Resources:      ticket.Resources,
+		}
+		responses = append(responses, ticketResponse)
+	}
+
+	return responses, nil
 }
 
 func (u *TicketUsecase) GetTicket(ticketID uuid.UUID, userID uuid.UUID) (*models.Ticket, error) {
