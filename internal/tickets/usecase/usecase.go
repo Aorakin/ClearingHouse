@@ -305,8 +305,13 @@ func (u *TicketUsecase) GetTicket(ticketID uuid.UUID, userID uuid.UUID) (*models
 func (u *TicketUsecase) FormatTicketResponse(ticket *models.Ticket) *dtos.GliderTicketResponse {
 	gliderTicket := dtos.GliderTicket{
 		ID:                ticket.ID,
-		NamespaceURN:      ticket.Namespace.ID.String(),
+		NamespaceURN:      ticket.NamespaceID.String(),
+		NamespaceName:     ticket.Namespace.Name,
+		ProjectURN:        ticket.Namespace.ProjectID.String(),
+		ProjectName:       ticket.Namespace.Project.Name,
 		GlideletURN:       ticket.ResourcePoolID.String(),
+		GlideletName:      ticket.ResourcePool.Name,
+		OrganizationName:  ticket.ResourcePool.Organization.Name,
 		Spec:              u.FormatGliderSpec(ticket),
 		ReferenceTicketID: "",
 		RedeemTimeout:     ticket.RedeemTimeout,

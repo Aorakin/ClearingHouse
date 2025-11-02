@@ -14,7 +14,12 @@ type GliderTicketResponse struct {
 type GliderTicket struct {
 	ID                uuid.UUID  `json:"id"`
 	NamespaceURN      string     `json:"namespace_urn"` // namespace.id
-	GlideletURN       string     `json:"glidelet_urn"`  // resource_pool.URN
+	NamespaceName     string     `json:"namespace_name"`
+	ProjectURN        string     `json:"project_urn"` // project.id
+	ProjectName       string     `json:"project_name"`
+	GlideletURN       string     `json:"glidelet_urn"` // resource_pool.URN
+	GlideletName      string     `json:"glidelet_name"`
+	OrganizationName  string     `json:"organization_name"`
 	Spec              GliderSpec `json:"spec"`
 	ReferenceTicketID string     `json:"reference_ticket_id"`
 	RedeemTimeout     uint       `json:"redeem_timeout"` // in seconds

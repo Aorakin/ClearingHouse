@@ -22,6 +22,7 @@ type Ticket struct {
 	Resources      []TicketResource `gorm:"foreignKey:TicketID" json:"resources"`
 	Owner          User             `gorm:"foreignKey:OwnerID" json:"-"`
 	Namespace      Namespace        `gorm:"foreignKey:NamespaceID" json:"-"`
+	ResourcePool   ResourcePool     `gorm:"foreignKey:ResourcePoolID" json:"-"`
 	RedeemTimeout  uint             `json:"redeem_timeout"` // in seconds
 }
 

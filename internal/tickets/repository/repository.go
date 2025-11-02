@@ -22,7 +22,7 @@ func NewTicketRepository(db *gorm.DB) interfaces.TicketRepository {
 
 func (r *TicketRepository) GetTicketByID(ticketID uuid.UUID) (*models.Ticket, error) {
 	var ticket models.Ticket
-	err := r.db.Preload("Resources.Resource.ResourceType").Preload("Namespace").First(&ticket, "id = ?", ticketID).Error
+	err := r.db.Preload("Resources.Resource.ResourceType").Preload("ResourcePool.Organization").Preload("Namespace.Project").First(&ticket, "id = ?", ticketID).Error
 	if err != nil {
 		return nil, err
 	}
