@@ -395,12 +395,23 @@ func (u *QuotaUsecase) CreateNamespaceQuota(request *dtos.CreateNamespaceQuotaRe
 	return nil, nil
 }
 
-func (u *QuotaUsecase) GetNamespaceQuota(namespaceID uuid.UUID) ([]models.NamespaceQuota, error) {
+func (u *QuotaUsecase) GetNamespaceQuota(namespaceID uuid.UUID) ([]dtos.NamespaceQuotaResponse, error) {
 	quotas, err := u.quotaRepo.GetNamespaceQuotaByNamespaceID(namespaceID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get namespace quota: %w", err))
 	}
-	return quotas, nil
+
+	var response []dtos.NamespaceQuotaResponse
+	for _, quota := range quotas {
+		log.Println("quota:", quota)
+		response = append(response, dtos.NamespaceQuotaResponse{
+			ID:               quota.ID,
+			Name:             quota.Name,
+			ResourcePoolID:   quota.ResourcePoolID,
+			ResourcePoolName: quota.ResourcePool.Name,
+		})
+	}
+	return response, nil
 }
 
 func (u *QuotaUsecase) AssignQuotaToNamespace(request *dtos.AssignQuotaToNamespaceRequest, userID uuid.UUID) error {

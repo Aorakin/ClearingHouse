@@ -15,7 +15,7 @@ type QuotaUsecase interface {
 	GetProjectQuota(projectID uuid.UUID) ([]models.ProjectQuota, error)
 
 	CreateNamespaceQuota(request *dtos.CreateNamespaceQuotaRequest, userID uuid.UUID) (*models.NamespaceQuota, error)
-	GetNamespaceQuota(namespaceID uuid.UUID) ([]models.NamespaceQuota, error)
+	GetNamespaceQuota(namespaceID uuid.UUID) ([]dtos.NamespaceQuotaResponse, error)
 	AssignQuotaToNamespace(request *dtos.AssignQuotaToNamespaceRequest, userID uuid.UUID) error
 
 	GetUsage(quotaID uuid.UUID, namespaceID uuid.UUID, userID uuid.UUID) (interface{}, error)

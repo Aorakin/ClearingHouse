@@ -51,6 +51,7 @@ type NamespaceQuota struct {
 	ProjectID      *uuid.UUID         `gorm:"type:uuid" json:"project_id"`
 	ProjectQuotaID *uuid.UUID         `gorm:"type:uuid" json:"project_quota_id"`
 	ResourcePoolID uuid.UUID          `gorm:"type:uuid;not null" json:"resource_pool_id"`
+	ResourcePool   ResourcePool       `gorm:"foreignKey:ResourcePoolID" json:"-"`
 	Namespaces     []Namespace        `gorm:"many2many:namespace_quotas;" json:"-"`
 	Resources      []ResourceQuantity `gorm:"foreignKey:NamespaceQuotaID" json:"resources"`
 }

@@ -121,6 +121,7 @@ func (r *QuotaRepository) GetNamespaceQuotaByNamespaceID(namespaceID uuid.UUID) 
 		Table("namespace_quota nq").
 		Joins("JOIN namespace_quotas nqs ON nqs.namespace_quota_id = nq.id").
 		Preload("Resources.ResourceProp").
+		Preload("ResourcePool").
 		Where("nqs.namespace_id = ?", namespaceID).
 		Find(&namespaceQuotas).Error
 
@@ -233,10 +234,6 @@ func (r *QuotaRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*dtos.
 		Joins("JOIN namespace_quotas nq ON nq.namespace_quota_id = namespace_quota.id").
 		Where("nq.namespace_id = ?", namespaceID).
 		First(&quota).Error
-
-	if err != nil {
-		return nil, err
-	}
 
 	if err != nil {
 		return nil, err
