@@ -121,7 +121,7 @@ func (r *QuotaRepository) GetNamespaceQuotaByNamespaceID(namespaceID uuid.UUID) 
 		Table("namespace_quota nq").
 		Joins("JOIN namespace_quotas nqs ON nqs.namespace_quota_id = nq.id").
 		Preload("Resources.ResourceProp").
-		Preload("ResourcePool").
+		Preload("ResourcePool.Organization").
 		Where("nqs.namespace_id = ?", namespaceID).
 		Find(&namespaceQuotas).Error
 

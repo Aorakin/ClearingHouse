@@ -12,4 +12,5 @@ type NamespaceQuotaResponse struct {
 	Name             string    `json:"name"`
 	ResourcePoolID   uuid.UUID `json:"resource_pool_id"`
 	ResourcePoolName string    `json:"resource_pool_name"`
+	OrganizationName string    `json:"organization_name"`
 }
