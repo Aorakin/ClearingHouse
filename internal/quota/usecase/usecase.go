@@ -403,7 +403,6 @@ func (u *QuotaUsecase) GetNamespaceQuota(namespaceID uuid.UUID) ([]dtos.Namespac
 
 	var response []dtos.NamespaceQuotaResponse
 	for _, quota := range quotas {
-		log.Println("quota:", quota)
 		response = append(response, dtos.NamespaceQuotaResponse{
 			ID:               quota.ID,
 			Name:             quota.Name,
