@@ -409,6 +409,7 @@ func (u *QuotaUsecase) GetNamespaceQuota(namespaceID uuid.UUID) ([]dtos.Namespac
 			ResourcePoolID:   quota.ResourcePoolID,
 			ResourcePoolName: quota.ResourcePool.Name,
 			OrganizationName: quota.ResourcePool.Organization.Name,
+			ProjectID:        *quota.ProjectID,
 			Resources:        quota.Resources,
 		})
 	}
