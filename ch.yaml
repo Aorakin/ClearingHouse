@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clearinghouse-deployment   
+  namespace: crosscut-dev
+  labels:
+    app: clearinghouse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clearinghouse
+  template:
+    metadata:
+      labels:
+        app: clearinghouse
+    spec:
+      containers:
+        - name: clearinghouse-container  
+          image: crosscut/clearing-house:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: clearinghouse-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clearinghouse-service         
+  namespace: crosscut-dev
+  labels:
+    app: clearinghouse
+spec:
+  selector:
+    app: clearinghouse               
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: clearinghouse-ingress         
+  namespace: crosscut-dev
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: "letsencrypt-dns"
+spec:
+  ingressClassName: public
+  tls:
+    - hosts:
+        - clearinghouse.onepointfive.life
+      secretName: clearinghouse-tls
+  rules:
+    - host: clearinghouse.onepointfive.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: clearinghouse-service  
+                port:
+                  number: 80

@@ -13,6 +13,7 @@ FROM alpine:3.20
 RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app
 COPY --from=builder /bin/app /app/app
+COPY *.pem /app/
 RUN chmod +x /app/app
 USER app
 ENTRYPOINT ["/app/app"]
