@@ -1,12 +1,18 @@
-FROM golang:1.25-alpine AS base
-
+FROM golang:1.25-alpine AS builder
+ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 WORKDIR /app
+RUN apk add --no-cache git
 
 COPY go.mod go.sum ./
 RUN go mod download
 
-RUN go install github.com/air-verse/air@latest
+COPY . .
+RUN go build -o /bin/app ./cmd/api
 
-EXPOSE 8080
-
-CMD ["air", "-c", ".air.toml"]
+FROM alpine:3.20
+RUN addgroup -S app && adduser -S app -G app
+WORKDIR /app
+COPY --from=builder /bin/app /app/app
+RUN chmod +x /app/app
+USER app
+ENTRYPOINT ["/app/app"]
