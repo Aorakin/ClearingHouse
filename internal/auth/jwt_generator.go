@@ -2,6 +2,9 @@ package auth
 
 import (
 	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
+	"fmt"
 	"os"
 	"time"
 
@@ -9,10 +12,34 @@ import (
 )
 
 var RefreshSecret []byte
+var PublicKey *rsa.PublicKey
 
 func init() {
 	secret := os.Getenv("REFRESH_SECRET")
 	RefreshSecret = []byte(secret)
+
+	publicKeyBytes, err := os.ReadFile("token_public.pem")
+	if err != nil {
+		panic(fmt.Errorf("failed to read public key: %w", err))
+	}
+
+	block, _ := pem.Decode(publicKeyBytes)
+	if block == nil || block.Type != "PUBLIC KEY" {
+		panic("invalid public key format")
+	}
+
+	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		panic(fmt.Errorf("failed to parse public key: %w", err))
+	}
+
+	rsaPub, ok := pub.(*rsa.PublicKey)
+	if !ok {
+		panic("public key is not RSA")
+	}
+
+	PublicKey = rsaPub
+
 }
 
 // GenerateAccessToken - RS512, 15 min expiry
