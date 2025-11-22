@@ -2,10 +2,12 @@ package usecase
 
 import (
 	"context"
+	"log"
 
 	"errors"
 
 	"github.com/ClearingHouse/config"
+	"github.com/ClearingHouse/internal/auth"
 	"github.com/ClearingHouse/internal/auth/interfaces"
 	"github.com/ClearingHouse/internal/models"
 	userInterfaces "github.com/ClearingHouse/internal/users/interfaces"
@@ -42,6 +44,7 @@ func (u *AuthUsecase) HandleGoogleCallback(code string, c *gin.Context) (*models
 	email, emailOk := googleUser["email"].(string)
 	firstName, firstNameOk := googleUser["given_name"].(string)
 	lastName, lastNameOk := googleUser["family_name"].(string)
+	log.Println(email, firstName, lastName)
 	if !emailOk || !firstNameOk || !lastNameOk {
 		return nil, errors.New("invalid user data from Google")
 	}
@@ -50,8 +53,47 @@ func (u *AuthUsecase) HandleGoogleCallback(code string, c *gin.Context) (*models
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("%#v", user)
 
 	return user, nil
+}
+func (u *AuthUsecase) GenerateTokens(user *models.User) (accessToken string, refreshToken string, err error) {
+	privateKey, err := auth.LoadPrivateKey("token_private.pem")
+	if err != nil {
+		return "", "", err
+	}
+
+	accessToken, err = auth.GenerateAccessToken(user.ID.String(), user.Email, user.FirstName, user.LastName, privateKey)
+	if err != nil {
+		return "", "", err
+	}
+
+	refreshToken, err = auth.GenerateRefreshToken(user.ID.String())
+	if err != nil {
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+// Refresh endpoint handler
+func (u *AuthUsecase) RefreshAccessToken(refreshToken string) (string, error) {
+	claims, err := auth.VerifyRefreshToken(refreshToken)
+	if err != nil {
+		return "", err
+	}
+
+	user, err := u.userRepo.GetByID(uuid.MustParse(claims.UserID))
+	if err != nil {
+		return "", err
+	}
+
+	privateKey, err := auth.LoadPrivateKey("token_private.pem")
+	if err != nil {
+		return "", err
+	}
+
+	return auth.GenerateAccessToken(user.ID.String(), user.Email, user.FirstName, user.LastName, privateKey)
 }
 
 func (u *AuthUsecase) GetUserByID(userID uuid.UUID) (*models.User, error) {
