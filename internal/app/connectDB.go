@@ -15,9 +15,7 @@ var DB *gorm.DB
 
 func InitDataBase() (*gorm.DB, error) {
 	err := godotenv.Load()
-	if err != nil {
-		return nil, fmt.Errorf("error loading .env file :%v", err)
-	}
+
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
