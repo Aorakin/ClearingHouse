@@ -98,8 +98,8 @@ func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest, userID u
 		if request.Duration > resourceQuantity.ResourceProp.MaxDuration {
 			return nil, apiError.NewForbiddenError("duration exceeds max limit for resource")
 		}
-		price = resourceQuantity.ResourceProp.Price * float32(resource.Quantity)
-		totalCredit += float32(resource.Quantity) * resourceQuantity.ResourceProp.Price * float32(request.Duration)
+		price += resourceQuantity.ResourceProp.Price * float32(resource.Quantity)
+		totalCredit += float32(resource.Quantity) * resourceQuantity.ResourceProp.Price * float32(request.Duration) / 3600
 	}
 
 	namespace, err := u.namespaceRepo.GetNamespaceByID(request.NamespaceID)
@@ -376,8 +376,30 @@ func (u *TicketUsecase) CancelTicket(ticketID uuid.UUID, userID uuid.UUID) error
 		return apiError.NewInternalServerError(err)
 	}
 
-	namespace.Credit += float32(ticket.Duration) * ticket.Price
+	namespace.Credit += float32(ticket.Duration) / 3600 * ticket.Price
 	err = u.namespaceRepo.UpdateNamespace(namespace)
+	if err != nil {
+		return apiError.NewInternalServerError(err)
+	}
+
+	return nil
+}
+
+func (u *TicketUsecase) DeleteTicket(ticketID uuid.UUID, userID uuid.UUID) error {
+	ticket, err := u.ticketRepo.GetTicketByID(ticketID)
+	if err != nil {
+		return apiError.NewInternalServerError(err)
+	}
+
+	isMember, err := u.isNamespaceMember(userID, ticket.NamespaceID)
+	if err != nil {
+		return apiError.NewInternalServerError(err)
+	}
+	if !isMember && ticket.OwnerID != userID {
+		return apiError.NewUnauthorizedError("user is not a member of the namespace or the owner of the ticket")
+	}
+
+	err = u.ticketRepo.DeleteTicket(ticketID)
 	if err != nil {
 		return apiError.NewInternalServerError(err)
 	}

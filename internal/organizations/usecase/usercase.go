@@ -72,7 +72,7 @@ func (u *OrganizationUsecase) AddMembers(request *dtos.AddMembersRequest, userID
 		return nil, apierror.NewInternalServerError(err)
 	}
 
-	if !helper.ContainsUserID(org.Admins, request.Creator) {
+	if !helper.ContainsUserID(org.Admins, userID) {
 		return nil, apierror.NewUnauthorizedError("user is not organization admin")
 	}
 

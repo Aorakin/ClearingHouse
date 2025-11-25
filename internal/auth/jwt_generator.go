@@ -2,8 +2,6 @@ package auth
 
 import (
 	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"os"
 	"time"
@@ -15,31 +13,16 @@ var RefreshSecret []byte
 var PublicKey *rsa.PublicKey
 
 func init() {
+	// Load Refresh Secret from environment variable
 	secret := os.Getenv("REFRESH_SECRET")
 	RefreshSecret = []byte(secret)
 
-	publicKeyBytes, err := os.ReadFile("token_public.pem")
+	// Load RSA Public Key
+	publicKey, err := LoadPublicKey("token_public.pem")
 	if err != nil {
-		panic(fmt.Errorf("failed to read public key: %w", err))
+		panic(fmt.Errorf("failed to load public key: %w", err))
 	}
-
-	block, _ := pem.Decode(publicKeyBytes)
-	if block == nil || block.Type != "PUBLIC KEY" {
-		panic("invalid public key format")
-	}
-
-	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		panic(fmt.Errorf("failed to parse public key: %w", err))
-	}
-
-	rsaPub, ok := pub.(*rsa.PublicKey)
-	if !ok {
-		panic("public key is not RSA")
-	}
-
-	PublicKey = rsaPub
-
+	PublicKey = publicKey
 }
 
 // GenerateAccessToken - RS512, 15 min expiry
@@ -52,7 +35,7 @@ func GenerateAccessToken(userID, email, firstName, lastName string, privateKey *
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "clearing-house-auth",
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)

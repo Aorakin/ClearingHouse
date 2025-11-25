@@ -100,7 +100,7 @@ func (h *QuotaHandler) CreateProjectQuota() gin.HandlerFunc {
 
 func (h *QuotaHandler) GetProjectQuota() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		projectID := c.Param("id")
+		projectID := c.Param("project-id")
 		if projectID == "" {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Project ID is required")))
 			return
@@ -149,7 +149,7 @@ func (h *QuotaHandler) CreateNamespaceQuota() gin.HandlerFunc {
 
 func (h *QuotaHandler) GetNamespaceQuota() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		namespaceID := c.Param("id")
+		namespaceID := c.Param("namespace-id")
 		if namespaceID == "" {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Namespace ID is required")))
 			return
@@ -202,13 +202,13 @@ func (h *QuotaHandler) CreateOwnedProjectQuota() gin.HandlerFunc {
 			return
 		}
 
-		var request dtos.CreateOwnedProjectQuotaRequest
+		var request dtos.CreateInternalProjectQuotaRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
 			return
 		}
 
-		quota, err := h.quotaUsecase.CreateOwnedProjectQuota(&request, userID)
+		quota, err := h.quotaUsecase.CreateInternalProjectQuota(&request, userID)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
@@ -256,5 +256,35 @@ func (h *QuotaHandler) GetUsage() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, usage)
+	}
+}
+
+func (h *QuotaHandler) GetNamespaceQuotaInProject() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		projectID := c.Param("project-id")
+		if projectID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Project ID is required")))
+			return
+		}
+
+		projectUUID, err := uuid.Parse(projectID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		quotas, err := h.quotaUsecase.GetNamespaceQuotaInProject(userID, projectUUID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, quotas)
 	}
 }

@@ -281,3 +281,19 @@ func (r *QuotaRepository) IsNamespaceQuotaExists(namespaceID uuid.UUID, resource
 
 	return count > 0, nil
 }
+
+func (r *QuotaRepository) GetNamespaceQuotaByProjectID(projectID uuid.UUID) ([]models.NamespaceQuota, error) {
+	var namespaceQuotas []models.NamespaceQuota
+
+	err := r.db.Debug().
+		Preload("Resources.ResourceProp").
+		Preload("ResourcePool.Organization").
+		Where("project_id = ?", projectID).
+		Find(&namespaceQuotas).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return namespaceQuotas, nil
+}

@@ -47,3 +47,19 @@ type Resource struct {
 	Quantity   uint      `json:"quantity" binding:"required"`
 	ResourceID uuid.UUID `json:"resource_id" binding:"required,uuid"`
 }
+
+type CreateInternalProjectQuotaRequest struct {
+	Name           string                 `json:"name" binding:"required"`
+	Description    string                 `json:"description"`
+	OrgID          uuid.UUID              `json:"org_id" binding:"required,uuid"`
+	ResourcePoolID uuid.UUID              `json:"resource_pool_id" binding:"required,uuid"`
+	ProjectID      uuid.UUID              `json:"project_id" binding:"required,uuid"`
+	Resources      []ResourceWithProperty `json:"resources" binding:"required"`
+}
+
+type ResourceWithProperty struct {
+	Quantity   uint      `json:"quantity" binding:"required"`
+	ResourceID uuid.UUID `json:"resource_id" binding:"required,uuid"`
+	Price      float32   `json:"price" binding:"required,gte=0"`
+	Duration   uint      `json:"duration" binding:"gte=1"`
+}

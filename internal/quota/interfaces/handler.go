@@ -9,6 +9,7 @@ type QuotaHandler interface {
 	CreateProjectQuota() gin.HandlerFunc
 	CreateOwnedProjectQuota() gin.HandlerFunc
 	GetProjectQuota() gin.HandlerFunc
+	GetNamespaceQuotaInProject() gin.HandlerFunc
 
 	CreateNamespaceQuota() gin.HandlerFunc
 	GetNamespaceQuota() gin.HandlerFunc
