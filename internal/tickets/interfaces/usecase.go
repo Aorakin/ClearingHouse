@@ -14,4 +14,5 @@ type TicketUsecase interface {
 	StopTicket(request *dtos.StopTicketsRequest) ([]models.Ticket, error)
 	GetTicket(ticketID uuid.UUID, userID uuid.UUID) (*models.Ticket, error)
 	CancelTicket(ticketID uuid.UUID, userID uuid.UUID) error
+	DeleteTicket(ticketID uuid.UUID, userID uuid.UUID) error
 }

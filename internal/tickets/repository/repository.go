@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ClearingHouse/internal/models"
@@ -106,4 +107,16 @@ func (r *TicketRepository) CancelTicket(ticketID uuid.UUID, cancelTime time.Time
 		"status":      "cancelled",
 		"cancel_time": cancelTime,
 	}).Error
+}
+
+func (r *TicketRepository) DeleteTicket(ticketID uuid.UUID) error {
+	var ticket models.Ticket
+	err := r.db.First(&ticket, "id = ?", ticketID).Error
+	if err != nil {
+		return err
+	}
+	if ticket.Status != "cancelled" {
+		return fmt.Errorf("only cancelled ticket can be deleted")
+	}
+	return r.db.Delete(&models.Ticket{}, "id = ?", ticketID).Error
 }

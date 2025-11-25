@@ -53,7 +53,6 @@ func (u *AuthUsecase) HandleGoogleCallback(code string, c *gin.Context) (*models
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("%#v", user)
 
 	return user, nil
 }

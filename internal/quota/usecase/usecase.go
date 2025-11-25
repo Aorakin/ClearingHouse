@@ -660,3 +660,32 @@ func (u *QuotaUsecase) createInternalProjectResource(resourceProperties []dtos.R
 
 	return resourceQuantities, nil
 }
+
+func (u *QuotaUsecase) GetNamespaceQuotaInProject(userID uuid.UUID, projectID uuid.UUID) ([]dtos.NamespaceQuotaResponse, error) {
+	isProjAdmin, err := u.isProjAdmin(projectID, userID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to check project admin status: %w", err))
+	}
+	if !isProjAdmin {
+		return nil, apiError.NewForbiddenError(errors.New("user is not a project admin"))
+	}
+
+	quotas, err := u.quotaRepo.GetNamespaceQuotaByProjectID(projectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get namespace quotas in project: %w", err))
+	}
+
+	var response []dtos.NamespaceQuotaResponse
+	for _, quota := range quotas {
+		response = append(response, dtos.NamespaceQuotaResponse{
+			ID:               quota.ID,
+			Name:             quota.Name,
+			ResourcePoolID:   quota.ResourcePoolID,
+			ResourcePoolName: quota.ResourcePool.Name,
+			OrganizationName: quota.ResourcePool.Organization.Name,
+			ProjectID:        *quota.ProjectID,
+			Resources:        quota.Resources,
+		})
+	}
+	return response, nil
+}

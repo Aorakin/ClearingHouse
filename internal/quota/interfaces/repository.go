@@ -35,6 +35,8 @@ type QuotaRepository interface {
 
 	IsNamespaceQuotaExists(namespaceID uuid.UUID, resourcePoolID uuid.UUID) (bool, error)
 
+	GetNamespaceQuotaByProjectID(projectID uuid.UUID) ([]models.NamespaceQuota, error)
+
 	// FindOrganizationQuotaGroup(fromOrgId uuid.UUID, toOrgId uuid.UUID) ([]models.OrganizationQuotaGroup, error)
 	// FindOrganizationQuotaGroupByID(id uuid.UUID) (*models.OrganizationQuotaGroup, error)
 	// FindExistingOrganizationQuotaGroup(fromOrgID uuid.UUID, toOrgID uuid.UUID, poolID uuid.UUID) (*models.OrganizationQuotaGroup, error)

@@ -131,7 +131,7 @@ func (h *TicketHandler) GetTicket() gin.HandlerFunc {
 			return
 		}
 
-		ticketIDParam := c.Param("ticket_id")
+		ticketIDParam := c.Param("ticket-id")
 		ticketID, err := uuid.Parse(ticketIDParam)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid ticket ID")))
@@ -156,7 +156,7 @@ func (h *TicketHandler) CancelTicket() gin.HandlerFunc {
 			return
 		}
 
-		ticketIDParam := c.Param("ticket_id")
+		ticketIDParam := c.Param("ticket-id")
 		ticketID, err := uuid.Parse(ticketIDParam)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid ticket ID")))
@@ -170,5 +170,30 @@ func (h *TicketHandler) CancelTicket() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "ticket cancelled successfully"})
+	}
+}
+
+func (h *TicketHandler) DeleteTicket() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		ticketIDParam := c.Param("ticket-id")
+		ticketID, err := uuid.Parse(ticketIDParam)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid ticket ID")))
+			return
+		}
+
+		err = h.ticketUsecase.DeleteTicket(ticketID, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "ticket deleted successfully"})
 	}
 }
