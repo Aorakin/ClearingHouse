@@ -92,7 +92,7 @@ func (h *TicketHandler) StopTicket() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request dtos.StopTicketsRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
-			log.Printf("%#v", err)
+			log.Printf("%#v", err.Error())
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
 			return
 		}
