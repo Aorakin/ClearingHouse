@@ -1,6 +1,7 @@
 package http
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/ClearingHouse/internal/tickets/dtos"
@@ -91,12 +92,14 @@ func (h *TicketHandler) StopTicket() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request dtos.StopTicketsRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
+			log.Printf("%#v", err)
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
 			return
 		}
 
 		tickets, err := h.ticketUsecase.StopTicket(&request)
 		if err != nil {
+			log.Printf("%#v", err)
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
