@@ -91,6 +91,13 @@ func (h *TicketHandler) StartTicket() gin.HandlerFunc {
 func (h *TicketHandler) StopTicket() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request dtos.StopTicketsRequest
+
+		// Read and log the request body as string
+		bodyBytes, _ := c.GetRawData()
+		log.Println("Request body:", string(bodyBytes))
+
+		// Restore the body for binding
+		c.Request.Body = http.NoBody
 		if err := c.ShouldBindJSON(&request); err != nil {
 			log.Printf("%#v", err.Error())
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
