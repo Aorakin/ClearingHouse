@@ -92,25 +92,21 @@ func (h *TicketHandler) StopTicket() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request dtos.StopTicketsRequest
 
-		// Read and log the request body as string
-		bodyBytes, _ := c.GetRawData()
-		log.Println("Request body:", string(bodyBytes))
-
-		// Restore the body for binding
-		c.Request.Body = http.NoBody
+		log.Printf("StopTicket request binding")
 		if err := c.ShouldBindJSON(&request); err != nil {
-			log.Printf("%#v", err.Error())
+			log.Println(err.Error())
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
 			return
 		}
 
+		log.Printf("StopTicket request: %+v", request)
 		tickets, err := h.ticketUsecase.StopTicket(&request)
 		if err != nil {
-			log.Printf("%#v", err)
+			log.Println(err.Error())
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
-
+		log.Printf("Stopped tickets: %+v", tickets)
 		c.JSON(http.StatusOK, tickets)
 	}
 }
