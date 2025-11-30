@@ -220,7 +220,7 @@ func (u *TicketUsecase) StopTicket(request *dtos.StopTicketsRequest) ([]models.T
 				return nil, apiError.NewInternalServerError(err)
 			}
 
-			namespace.Credit += float32(float64(t.Duration)-actualSeconds) * t.Price
+			namespace.Credit += float32(float64(t.Duration)-actualSeconds) / 3600 * t.Price
 			err = u.namespaceRepo.UpdateNamespace(namespace)
 			if err != nil {
 				return nil, apiError.NewInternalServerError(err)
