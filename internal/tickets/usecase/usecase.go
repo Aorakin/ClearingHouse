@@ -198,8 +198,8 @@ func (u *TicketUsecase) StartTicket(request *dtos.StartTicketsRequest) ([]models
 
 func (u *TicketUsecase) StopTicket(request *dtos.StopTicketsRequest) ([]models.Ticket, error) {
 	var tickets []models.Ticket
-	for _, ticket := range request.Tickets {
-		t, err := u.ticketRepo.GetTicketByID(ticket.TicketID)
+	for _, ticketID := range request.Tickets {
+		t, err := u.ticketRepo.GetTicketByID(ticketID)
 		if err != nil {
 			return nil, apiError.NewInternalServerError(err)
 		}
@@ -207,7 +207,7 @@ func (u *TicketUsecase) StopTicket(request *dtos.StopTicketsRequest) ([]models.T
 			return nil, apiError.NewBadRequestError("ticket is not in running status")
 		}
 		endTime := time.Now()
-		err = u.ticketRepo.StopTicket(ticket.TicketID, endTime)
+		err = u.ticketRepo.StopTicket(ticketID, endTime)
 		if err != nil {
 			return nil, apiError.NewInternalServerError(err)
 		}
@@ -226,7 +226,7 @@ func (u *TicketUsecase) StopTicket(request *dtos.StopTicketsRequest) ([]models.T
 			}
 		}
 
-		t, err = u.ticketRepo.GetTicketByID(ticket.TicketID)
+		t, err = u.ticketRepo.GetTicketByID(ticketID)
 		if err != nil {
 			return nil, apiError.NewInternalServerError(err)
 		}
