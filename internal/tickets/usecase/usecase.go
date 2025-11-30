@@ -203,7 +203,7 @@ func (u *TicketUsecase) StopTicket(request *dtos.StopTicketsRequest) ([]models.T
 		if err != nil {
 			return nil, apiError.NewInternalServerError(err)
 		}
-		log.Printf("Stopping ticket: %+v", t)
+
 		if t.Status != "running" {
 			return nil, apiError.NewBadRequestError("ticket is not in running status")
 		}
