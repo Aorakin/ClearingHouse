@@ -120,7 +120,7 @@ func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest, userID u
 	ticket := &models.Ticket{
 		NamespaceID:    request.NamespaceID,
 		Name:           request.Name,
-		Duration:       request.Duration,
+		Duration:       60,
 		OwnerID:        userID,
 		QuotaID:        request.QuotaID,
 		ResourcePoolID: quota.ResourcePoolID,
