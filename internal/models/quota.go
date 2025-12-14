@@ -22,14 +22,14 @@ type ResourceQuantity struct {
 
 type OrganizationQuota struct {
 	BaseModel
-	Name           string             `json:"name"`
-	Description    string             `json:"description"`
-	ResourcePoolID uuid.UUID          `gorm:"type:uuid;not null" json:"resource_pool_id"`
-	FromOrgID      uuid.UUID          `gorm:"type:uuid;not null" json:"from_organization_id"`
-	ToOrgID        uuid.UUID          `gorm:"type:uuid;not null" json:"to_organization_id"`
-	FromOrg        Organization       `gorm:"foreignKey:FromOrgID" json:"-"`
-	ToOrg          Organization       `gorm:"foreignKey:ToOrgID" json:"-"`
-	Resources      []ResourceQuantity `gorm:"foreignKey:OrganizationQuotaID" json:"resources"`
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
+	NodeID      uuid.UUID          `gorm:"type:uuid;not null" json:"node_id"`
+	FromOrgID   uuid.UUID          `gorm:"type:uuid;not null" json:"from_organization_id"`
+	ToOrgID     uuid.UUID          `gorm:"type:uuid;not null" json:"to_organization_id"`
+	FromOrg     Organization       `gorm:"foreignKey:FromOrgID" json:"-"`
+	ToOrg       Organization       `gorm:"foreignKey:ToOrgID" json:"-"`
+	Resources   []ResourceQuantity `gorm:"foreignKey:OrganizationQuotaID" json:"resources"`
 }
 
 type ProjectQuota struct {
@@ -39,7 +39,7 @@ type ProjectQuota struct {
 	OrganizationID      uuid.UUID          `gorm:"type:uuid" json:"organization_id"`
 	OrganizationQuotaID *uuid.UUID         `gorm:"type:uuid;not null" json:"organization_quota_id"`
 	ProjectID           uuid.UUID          `gorm:"type:uuid;not null" json:"project_id"`
-	ResourcePoolID      uuid.UUID          `gorm:"type:uuid;not null" json:"resource_pool_id"`
+	NodeID              uuid.UUID          `gorm:"type:uuid;not null" json:"node_id"`
 	Project             Project            `gorm:"foreignKey:ProjectID" json:"-"`
 	Resources           []ResourceQuantity `gorm:"foreignKey:ProjectQuotaID" json:"resources"`
 }
@@ -50,8 +50,18 @@ type NamespaceQuota struct {
 	Description    string             `json:"description"`
 	ProjectID      *uuid.UUID         `gorm:"type:uuid" json:"project_id"`
 	ProjectQuotaID *uuid.UUID         `gorm:"type:uuid" json:"project_quota_id"`
-	ResourcePoolID uuid.UUID          `gorm:"type:uuid;not null" json:"resource_pool_id"`
-	ResourcePool   ResourcePool       `gorm:"foreignKey:ResourcePoolID" json:"-"`
-	Namespaces     []Namespace        `gorm:"many2many:namespace_quotas;" json:"-"`
+	NodeID         uuid.UUID          `gorm:"type:uuid;not null" json:"node_id"`
+	Node           ResourceNode       `gorm:"foreignKey:NodeID" json:"-"`
+	TemplateID     *uuid.UUID         `gorm:"type:uuid" json:"template_id"`
 	Resources      []ResourceQuantity `gorm:"foreignKey:NamespaceQuotaID" json:"resources"`
+}
+
+type NamespaceQuotaTemplate struct {
+	BaseModel
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	ProjectID   uuid.UUID        `gorm:"type:uuid;not null" json:"project_id"`
+	Project     Project          `gorm:"foreignKey:ProjectID" json:"-"`
+	Quotas      []NamespaceQuota `gorm:"foreignKey:TemplateID" json:"quotas"`
+	Namespaces  []Namespace      `gorm:"many2many:namespace_quotas;" json:"-"`
 }

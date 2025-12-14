@@ -10,6 +10,12 @@ type ResourceRepository interface {
 	UpdateResource(resource *models.Resource) (*models.Resource, error)
 	GetResourceByID(id uuid.UUID) (*models.Resource, error)
 	GetResourcePoolByID(id uuid.UUID) (*models.ResourcePool, error)
+	GetResourcesByOrganizationID(orgID uuid.UUID) ([]models.Resource, error)
+	GetResourcesByNodeID(nodeID uuid.UUID) ([]models.Resource, error)
+
+	CreateResourceNode(resourceNode *models.ResourceNode) (*models.ResourceNode, error)
+	GetResourceNodeByID(nodeID uuid.UUID) (*models.ResourceNode, error)
+	GetResourceNodeOrganization(nodeID uuid.UUID) (*models.Organization, error)
 }
 
 type ResourceTypeRepository interface {
@@ -21,9 +27,4 @@ type ResourcePoolRepository interface {
 	GetResourcePoolByID(id uuid.UUID) (*models.ResourcePool, error)
 	GetResourcePoolByOrgID(orgID uuid.UUID) ([]models.ResourcePool, error)
 	CreateResourcePool(resourcePool *models.ResourcePool) (*models.ResourcePool, error)
-}
-
-type ResourceNodeRepository interface {
-	CreateResourceNode(resourceNode *models.ResourceNode) (*models.ResourceNode, error)
-	GetResourceNodeByID(id uuid.UUID) (*models.ResourceNode, error)
 }

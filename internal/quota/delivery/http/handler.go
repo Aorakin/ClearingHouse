@@ -98,7 +98,7 @@ func (h *QuotaHandler) CreateProjectQuota() gin.HandlerFunc {
 	}
 }
 
-func (h *QuotaHandler) GetProjectQuota() gin.HandlerFunc {
+func (h *QuotaHandler) GetProjectQuotas() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		projectID := c.Param("project_id")
 		if projectID == "" {
@@ -112,13 +112,13 @@ func (h *QuotaHandler) GetProjectQuota() gin.HandlerFunc {
 			return
 		}
 
-		quota, err := h.quotaUsecase.GetProjectQuota(projectUUID)
+		quotas, err := h.quotaUsecase.GetProjectQuotas(projectUUID)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
 
-		c.JSON(http.StatusOK, quota)
+		c.JSON(http.StatusOK, quotas)
 	}
 }
 
@@ -171,7 +171,55 @@ func (h *QuotaHandler) GetNamespaceQuota() gin.HandlerFunc {
 	}
 }
 
-func (h *QuotaHandler) AssignQuotaToNamespace() gin.HandlerFunc {
+func (h *QuotaHandler) CreateNamespaceQuotaTemplate() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		var request dtos.CreateNamespaceQuotaTemplateRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		template, err := h.quotaUsecase.CreateNamespaceQuotaTemplate(&request, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusCreated, template)
+	}
+}
+
+func (h *QuotaHandler) GetNamespaceQuotaTemplate() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		quotaTemplateID := c.Param("quota_template_id")
+		if quotaTemplateID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Quota Template ID is required")))
+			return
+		}
+
+		quotaTemplateUUID, err := uuid.Parse(quotaTemplateID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		template, err := h.quotaUsecase.GetNamespaceQuotaTemplate(quotaTemplateUUID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, template)
+	}
+}
+
+func (h *QuotaHandler) AssignQuotaTemplateToNamespace() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
 		if userID == uuid.Nil {
@@ -185,7 +233,7 @@ func (h *QuotaHandler) AssignQuotaToNamespace() gin.HandlerFunc {
 			return
 		}
 
-		if err := h.quotaUsecase.AssignQuotaToNamespace(&request, userID); err != nil {
+		if err := h.quotaUsecase.AssignQuotaTemplateToNamespace(&request, userID); err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
@@ -194,7 +242,7 @@ func (h *QuotaHandler) AssignQuotaToNamespace() gin.HandlerFunc {
 	}
 }
 
-func (h *QuotaHandler) CreateOwnedProjectQuota() gin.HandlerFunc {
+func (h *QuotaHandler) CreateInternalProjectQuota() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
 		if userID == uuid.Nil {

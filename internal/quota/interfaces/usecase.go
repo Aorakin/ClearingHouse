@@ -12,13 +12,14 @@ type QuotaUsecase interface {
 
 	GetNamespaceQuotaInProject(userID uuid.UUID, projectID uuid.UUID) ([]dtos.NamespaceQuotaResponse, error)
 	CreateProjectQuota(request *dtos.CreateProjectQuotaRequest, userID uuid.UUID) (*models.ProjectQuota, error)
-	CreateOwnedProjectQuota(request *dtos.CreateOwnedProjectQuotaRequest, userID uuid.UUID) (*models.ProjectQuota, error)
-	GetProjectQuota(projectID uuid.UUID) ([]models.ProjectQuota, error)
+	GetProjectQuotas(projectID uuid.UUID) ([]models.ProjectQuota, error)
 	CreateInternalProjectQuota(request *dtos.CreateInternalProjectQuotaRequest, userID uuid.UUID) (*models.ProjectQuota, error)
 
 	CreateNamespaceQuota(request *dtos.CreateNamespaceQuotaRequest, userID uuid.UUID) (*models.NamespaceQuota, error)
 	GetNamespaceQuota(namespaceID uuid.UUID) ([]dtos.NamespaceQuotaResponse, error)
-	AssignQuotaToNamespace(request *dtos.AssignQuotaToNamespaceRequest, userID uuid.UUID) error
+	CreateNamespaceQuotaTemplate(request *dtos.CreateNamespaceQuotaTemplateRequest, userID uuid.UUID) (*models.NamespaceQuotaTemplate, error)
+	GetNamespaceQuotaTemplate(quotaTemplateID uuid.UUID) (*models.NamespaceQuotaTemplate, error)
+	AssignQuotaTemplateToNamespace(request *dtos.AssignQuotaToNamespaceRequest, userID uuid.UUID) error
 
 	GetUsage(quotaID uuid.UUID, namespaceID uuid.UUID, userID uuid.UUID) (interface{}, error)
 

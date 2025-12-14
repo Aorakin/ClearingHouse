@@ -13,8 +13,8 @@ type FindOrganizationQuotaGroupRequest struct {
 type NamespaceQuotaResponse struct {
 	ID               uuid.UUID                 `json:"id"`
 	Name             string                    `json:"name"`
-	ResourcePoolID   uuid.UUID                 `json:"resource_pool_id"`
-	ResourcePoolName string                    `json:"resource_pool_name"`
+	NodeID           uuid.UUID                 `json:"node_id"`
+	NodeName         string                    `json:"node_name"`
 	OrganizationName string                    `json:"organization_name"`
 	ProjectID        uuid.UUID                 `json:"project_id"`
 	Resources        []models.ResourceQuantity `json:"resources"`

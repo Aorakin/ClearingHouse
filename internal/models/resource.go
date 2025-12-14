@@ -31,7 +31,7 @@ type ResourcePool struct {
 
 type ResourceNode struct {
 	BaseModel
-	NodeName       string       `gorm:"not null;uniqueIndex:idx_node_name" json:"node_name"`
+	Name           string       `gorm:"not null;uniqueIndex:idx_node_name" json:"name"`
 	ResourcePoolID uuid.UUID    `gorm:"type:uuid;not null;uniqueIndex:idx_node_name" json:"resource_pool_id"`
 	ResourcePool   ResourcePool `gorm:"foreignKey:ResourcePoolID" json:"-"`
 	Resources      []Resource   `gorm:"foreignKey:NodeID" json:"resources"`

@@ -13,15 +13,13 @@ type ResourceUsecase struct {
 	poolRepo         interfaces.ResourcePoolRepository
 	resourceRepo     interfaces.ResourceRepository
 	resourceTypeRepo interfaces.ResourceTypeRepository
-	resourceNodeRepo interfaces.ResourceNodeRepository
 }
 
-func NewResourceUsecase(poolRepo interfaces.ResourcePoolRepository, resourceRepo interfaces.ResourceRepository, resourceTypeRepo interfaces.ResourceTypeRepository, resourceNodeRepo interfaces.ResourceNodeRepository) interfaces.ResourceUsecase {
+func NewResourceUsecase(poolRepo interfaces.ResourcePoolRepository, resourceRepo interfaces.ResourceRepository, resourceTypeRepo interfaces.ResourceTypeRepository) interfaces.ResourceUsecase {
 	return &ResourceUsecase{
 		poolRepo:         poolRepo,
 		resourceRepo:     resourceRepo,
 		resourceTypeRepo: resourceTypeRepo,
-		resourceNodeRepo: resourceNodeRepo,
 	}
 }
 
@@ -29,6 +27,7 @@ func (u *ResourceUsecase) CreateResourcePool(request *dtos.CreateResourcePoolReq
 	resourcePool := &models.ResourcePool{
 		OrganizationID: request.OrganizationID,
 		Name:           request.Name,
+		GlideletURN:    request.GlideletURN,
 	}
 	resourcePool, err := u.poolRepo.CreateResourcePool(resourcePool)
 	if err != nil {
@@ -40,9 +39,9 @@ func (u *ResourceUsecase) CreateResourcePool(request *dtos.CreateResourcePoolReq
 func (u *ResourceUsecase) CreateResourceNode(request *dtos.CreateResourceNodeRequest) (*models.ResourceNode, error) {
 	resourceNode := &models.ResourceNode{
 		ResourcePoolID: request.ResourcePoolID,
-		NodeName:       request.NodeName,
+		Name:           request.Name,
 	}
-	createdNode, err := u.resourceNodeRepo.CreateResourceNode(resourceNode)
+	createdNode, err := u.resourceRepo.CreateResourceNode(resourceNode)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}
@@ -84,7 +83,7 @@ func (u *ResourceUsecase) GetResourcePool(resourcePoolID *uuid.UUID) (*models.Re
 }
 
 func (u *ResourceUsecase) GetResourceNode(nodeID uuid.UUID) (*models.ResourceNode, error) {
-	resourceNode, err := u.resourceNodeRepo.GetResourceNodeByID(nodeID)
+	resourceNode, err := u.resourceRepo.GetResourceNodeByID(nodeID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}

@@ -7,22 +7,22 @@ import (
 )
 
 type QuotaRepository interface {
-	IsOrgQuotaExist(fromOrgID uuid.UUID, toOrgID uuid.UUID, poolID uuid.UUID) (bool, error)
+	IsOrgQuotaExist(fromOrgID uuid.UUID, toOrgID uuid.UUID, nodeID uuid.UUID) (bool, error)
 	CreateOrgQuota(quota *models.OrganizationQuota) error
 	GetOrganizationByRelationship(fromOrgID uuid.UUID, toOrgID uuid.UUID) ([]models.OrganizationQuota, error)
 	GetOrgQuotaByID(id uuid.UUID) (*models.OrganizationQuota, error)
 	GetOrgUsage(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)
 	GetOrgQuotaQuantity(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)
 
+	IsProjectQuotaExist(projectID uuid.UUID, nodeID uuid.UUID) (bool, error)
 	CreateProjectQuota(quota *models.ProjectQuota) error
 	GetProjectQuotaByProjectID(projectID uuid.UUID) ([]models.ProjectQuota, error)
 	GetProjectQuotaByID(id uuid.UUID) (*models.ProjectQuota, error)
 
+	IsNamespaceQuotaExists(namespaceID uuid.UUID, nodeID uuid.UUID) (bool, error)
 	CreateNamespaceQuota(quota *models.NamespaceQuota) error
 	GetNamespaceQuotaByNamespaceID(namespaceID uuid.UUID) ([]models.NamespaceQuota, error)
 	GetNamespaceQuotaByID(id uuid.UUID) (*models.NamespaceQuota, error)
-	AssignQuotaToNamespace(namespaceID uuid.UUID, namespaceQuotaID uuid.UUID) error
-	IsAssigned(namespaceID uuid.UUID, quotaID uuid.UUID) (bool, error)
 
 	CreateResourceProperty(resourceProperty *models.ResourceProperty) error
 
@@ -33,32 +33,10 @@ type QuotaRepository interface {
 	GetNamespaceUsageByType(namespaceID uuid.UUID, quotaID uuid.UUID) (*dtos.ResourceUsageResponse, error)
 	GetNamespaceQuotaByType(namespaceID uuid.UUID) (*dtos.ResourceQuotaResponse, error)
 
-	IsNamespaceQuotaExists(namespaceID uuid.UUID, resourcePoolID uuid.UUID) (bool, error)
-
-	GetNamespaceQuotaByProjectID(projectID uuid.UUID) ([]models.NamespaceQuota, error)
-
-	// FindOrganizationQuotaGroup(fromOrgId uuid.UUID, toOrgId uuid.UUID) ([]models.OrganizationQuotaGroup, error)
-	// FindOrganizationQuotaGroupByID(id uuid.UUID) (*models.OrganizationQuotaGroup, error)
-	// FindExistingOrganizationQuotaGroup(fromOrgID uuid.UUID, toOrgID uuid.UUID, poolID uuid.UUID) (*models.OrganizationQuotaGroup, error)
-	// CreateOrganizationQuotaGroup(quota *models.OrganizationQuotaGroup) error
-
-	// CreateNamespaceQuotaGroup(quota *models.NamespaceQuotaGroup) error
-	// CreateResourceQuantity(resourceQuantity *models.ResourceQuantity) error
-	// CreateResourceProperty(resourceProperty *models.ResourceProperty) error
-
-	// GetOrgUsage(orgQuotaGroupID uuid.UUID, resourceID uuid.UUID) (uint, error)
-	// GetOrgQuotaQuantity(orgQuotaGroupID uuid.UUID, resourceID uuid.UUID) (uint, error)
-	// GetResourcePropertyByOrg(orgQuotaGroupID uuid.UUID, resourceID uuid.UUID) (*models.ResourceProperty, error)
-
-	// FindProjectQuotaGroupByID(id uuid.UUID) (*models.ProjectQuotaGroup, error)
-	// CreateProjectQuotaGroup(quota *models.ProjectQuotaGroup) error
-	// FindProjectQuotaGroupByProjectID(projectID uuid.UUID) ([]models.ProjectQuotaGroup, error)
-
-	// FindNamespaceQuotaGroupByID(id uuid.UUID) (*models.NamespaceQuotaGroup, error)
-	// GetNamespaceQuotaQuantity(namespaceQuotaGroupID uuid.UUID, resourceID uuid.UUID) (uint, error)
-	// AssignQuotaToNamespace(namespaceID uuid.UUID, quotaGroupID uuid.UUID) error
-	// GetResourcePropertyByNamespace(namespaceQuotaGroupID uuid.UUID, resourceID uuid.UUID) (*models.ResourceProperty, error)
-
-	// GetProjectQuotaQuantity(projQuotaGroupID uuid.UUID, resourceID uuid.UUID) (uint, error)
-	// GetResourcePropertyByProj(projQuotaGroupID uuid.UUID, resourceID uuid.UUID) (*models.ResourceProperty, error)
+	GetNamespaceQuotasByProjectID(projectID uuid.UUID) ([]models.NamespaceQuota, error)
+	GetNamespaceQuotasByIDs(quotaIDs []uuid.UUID, projectID uuid.UUID) ([]models.NamespaceQuota, error)
+	CreateNamespaceQuotaTemplate(template *models.NamespaceQuotaTemplate) error
+	GetNamespaceQuotaTemplateByID(templateID uuid.UUID) (*models.NamespaceQuotaTemplate, error)
+	AssignQuotaToNamespace(namespaceID uuid.UUID, quotaTemplateID uuid.UUID) error
+	IsAssigned(namespaceID uuid.UUID, quotaID uuid.UUID) (bool, error)
 }

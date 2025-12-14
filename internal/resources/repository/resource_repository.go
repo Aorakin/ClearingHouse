@@ -41,3 +41,23 @@ func (r *ResourceRepository) GetResourcePoolByID(id uuid.UUID) (*models.Resource
 	}
 	return &resourcePool, nil
 }
+
+func (r *ResourceRepository) GetResourcesByOrganizationID(orgID uuid.UUID) ([]models.Resource, error) {
+	var resources []models.Resource
+	err := r.db.Joins("JOIN resource_pools ON resource_pools.id = resources.resource_pool_id").
+		Where("resource_pools.organization_id = ?", orgID).
+		Find(&resources).Error
+	if err != nil {
+		return nil, err
+	}
+	return resources, nil
+}
+
+func (r *ResourceRepository) GetResourcesByNodeID(nodeID uuid.UUID) ([]models.Resource, error) {
+	var resources []models.Resource
+	err := r.db.Where("node_id = ?", nodeID).Find(&resources).Error
+	if err != nil {
+		return nil, err
+	}
+	return resources, nil
+}

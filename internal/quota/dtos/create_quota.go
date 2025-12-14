@@ -7,7 +7,7 @@ type CreateOrganizationQuotaRequest struct {
 	Description        string                  `json:"description"`
 	FromOrganizationID uuid.UUID               `json:"from_organization_id" binding:"required,uuid"`
 	ToOrganizationID   uuid.UUID               `json:"to_organization_id" binding:"required,uuid"`
-	PoolID             uuid.UUID               `json:"pool_id" binding:"required,uuid"`
+	NodeID             uuid.UUID               `json:"node_id" binding:"required,uuid"`
 	Resources          []OrganizationResources `json:"resources" binding:"required"`
 }
 
@@ -24,16 +24,8 @@ type CreateProjectQuotaRequest struct {
 	ProjectID   uuid.UUID  `json:"project_id" binding:"required,uuid"`
 	OrgQuotaID  uuid.UUID  `json:"org_quota_id" binding:"required,uuid"`
 	OrgID       uuid.UUID  `json:"org_id" binding:"required,uuid"`
+	NodeID      uuid.UUID  `json:"node_id" binding:"required,uuid"`
 	Resources   []Resource `json:"resources" binding:"required"`
-}
-
-type CreateOwnedProjectQuotaRequest struct {
-	Name           string     `json:"name" binding:"required"`
-	Description    string     `json:"description"`
-	ProjectID      uuid.UUID  `json:"project_id" binding:"required,uuid"`
-	OrgID          uuid.UUID  `json:"org_id" binding:"required,uuid"`
-	ResourcePoolID uuid.UUID  `json:"resource_pool_id" binding:"required,uuid"`
-	Resources      []Resource `json:"resources" binding:"required"`
 }
 
 type CreateNamespaceQuotaRequest struct {
@@ -41,6 +33,7 @@ type CreateNamespaceQuotaRequest struct {
 	Description    string     `json:"description"`
 	ProjectID      uuid.UUID  `json:"project_id" binding:"required,uuid"`
 	ProjectQuotaID uuid.UUID  `json:"project_quota_id" binding:"required,uuid"`
+	NodeID         uuid.UUID  `json:"node_id" binding:"required,uuid"`
 	Resources      []Resource `json:"resources" binding:"required"`
 }
 
@@ -50,12 +43,12 @@ type Resource struct {
 }
 
 type CreateInternalProjectQuotaRequest struct {
-	Name           string                 `json:"name" binding:"required"`
-	Description    string                 `json:"description"`
-	OrgID          uuid.UUID              `json:"org_id" binding:"required,uuid"`
-	ResourcePoolID uuid.UUID              `json:"resource_pool_id" binding:"required,uuid"`
-	ProjectID      uuid.UUID              `json:"project_id" binding:"required,uuid"`
-	Resources      []ResourceWithProperty `json:"resources" binding:"required"`
+	Name        string                 `json:"name" binding:"required"`
+	Description string                 `json:"description"`
+	OrgID       uuid.UUID              `json:"org_id" binding:"required,uuid"`
+	NodeID      uuid.UUID              `json:"node_id" binding:"required,uuid"`
+	ProjectID   uuid.UUID              `json:"project_id" binding:"required,uuid"`
+	Resources   []ResourceWithProperty `json:"resources" binding:"required"`
 }
 
 type ResourceWithProperty struct {

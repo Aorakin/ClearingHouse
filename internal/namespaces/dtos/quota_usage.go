@@ -19,9 +19,9 @@ type QuotaUsageRequest struct {
 }
 
 type ResourceQuota struct {
-	TypeID string  `json:"type_id"`
-	Type   string  `json:"type"`
-	Quota  float64 `json:"quota"`
+	TypeID uuid.UUID `json:"type_id"`
+	Type   string    `json:"type"`
+	Quota  float64   `json:"quota"`
 }
 
 type ResourceQuotaResponse struct {
@@ -29,9 +29,9 @@ type ResourceQuotaResponse struct {
 }
 
 type ResourceUsage struct {
-	TypeID string  `json:"type_id"`
-	Type   string  `json:"type"`
-	Usage  float64 `json:"usage"`
+	TypeID uuid.UUID `json:"type_id"`
+	Type   string    `json:"type"`
+	Usage  float64   `json:"usage"`
 }
 
 type ResourceUsageResponse struct {
