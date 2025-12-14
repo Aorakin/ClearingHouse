@@ -16,9 +16,5 @@ type StartTicketRequest struct {
 }
 
 type StopTicketsRequest struct {
-	Tickets []StopTicketRequest `json:"tickets" binding:"required,dive"`
-}
-
-type StopTicketRequest struct {
-	TicketID uuid.UUID `json:"ticket_id" binding:"required,uuid"`
+	Tickets uuid.UUIDs `json:"tickets" binding:"required,dive"`
 }
