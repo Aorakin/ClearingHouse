@@ -7,9 +7,11 @@ type Resource struct {
 	Name           string       `json:"name"`
 	Quantity       uint         `json:"quantity"`
 	ResourceTypeID uuid.UUID    `gorm:"type:uuid;not null" json:"resource_type_id"`
-	ResourceType   ResourceType `gorm:"foreignKey:ResourceTypeID" json:"resource_type"`
-	ResourcePoolID uuid.UUID    `gorm:"type:uuid;not null" json:"resource_pool_id"`
-	ResourcePool   ResourcePool `gorm:"foreignKey:ResourcePoolID" json:"-"`
+	ResourceType   ResourceType `gorm:"foreignKey:ResourceTypeID" json:"-"`
+	NodeID         uuid.UUID    `gorm:"type:uuid" json:"node_id,omitempty"`
+	Node           ResourceNode `gorm:"foreignKey:NodeID" json:"-"`
+	// ResourcePoolID uuid.UUID    `gorm:"type:uuid;not null" json:"resource_pool_id"`
+	// ResourcePool   ResourcePool `gorm:"foreignKey:ResourcePoolID" json:"-"`
 }
 
 type ResourceType struct {
@@ -20,8 +22,17 @@ type ResourceType struct {
 
 type ResourcePool struct {
 	BaseModel
-	Name           string       `json:"name"`
-	OrganizationID uuid.UUID    `gorm:"type:uuid;not null" json:"organization_id"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID" json:"-"`
-	Resources      []Resource   `gorm:"foreignKey:ResourcePoolID" json:"Resources"`
+	Name           string         `gorm:"not null;uniqueIndex:idx_resource_pool_name" json:"name"`
+	OrganizationID uuid.UUID      `gorm:"type:uuid;not null;uniqueIndex:idx_resource_pool_name" json:"organization_id"`
+	Organization   Organization   `gorm:"foreignKey:OrganizationID" json:"-"`
+	GlideletURN    string         `json:"glidelet_urn"`
+	Nodes          []ResourceNode `gorm:"foreignKey:ResourcePoolID" json:"nodes"`
+}
+
+type ResourceNode struct {
+	BaseModel
+	NodeName       string       `gorm:"not null;uniqueIndex:idx_node_name" json:"node_name"`
+	ResourcePoolID uuid.UUID    `gorm:"type:uuid;not null;uniqueIndex:idx_node_name" json:"resource_pool_id"`
+	ResourcePool   ResourcePool `gorm:"foreignKey:ResourcePoolID" json:"-"`
+	Resources      []Resource   `gorm:"foreignKey:NodeID" json:"resources"`
 }
