@@ -7,12 +7,14 @@ import (
 
 func MapResourceRoutes(resourcesGroup *gin.RouterGroup, resourceHandler interfaces.ResourceHandler) {
 	resourcesGroup.GET("/org/:id", resourceHandler.GetResource())
-	resourcesGroup.PATCH("/:id", resourceHandler.UpdateResource())
 	resourcesGroup.GET("/type", resourceHandler.GetResourceTypes())
+	resourcesGroup.GET("/:id", resourceHandler.GetResourceProperty())
+	resourcesGroup.GET("/node/:node_id", resourceHandler.GetResourceNode())
+	resourcesGroup.GET("/pool/:id", resourceHandler.GetResourcePool())
 	resourcesGroup.POST("/pool", resourceHandler.CreateResourcePool())
 	resourcesGroup.POST("/type", resourceHandler.CreateResourceType())
+	resourcesGroup.POST("/node", resourceHandler.CreateResourceNode())
 	resourcesGroup.POST("/", resourceHandler.CreateResource())
+	resourcesGroup.PATCH("/:id", resourceHandler.UpdateResource())
 
-	resourcesGroup.GET("/:id", resourceHandler.GetResourceProperty())
-	resourcesGroup.GET("/pool/:id", resourceHandler.GetResourcePool())
 }

@@ -183,3 +183,44 @@ func (h *ResourceHandler) GetResourcePool() gin.HandlerFunc {
 		c.JSON(http.StatusOK, resourcePool)
 	}
 }
+
+func (h *ResourceHandler) GetResourceNode() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		nodeID := c.Param("node_id")
+		if nodeID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Resource Node ID is required")))
+			return
+		}
+
+		nodeUUID, err := uuid.Parse(nodeID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		resourceNode, err := h.ResourceUsecase.GetResourceNode(nodeUUID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+		c.JSON(http.StatusOK, resourceNode)
+	}
+}
+
+func (h *ResourceHandler) CreateResourceNode() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var request dtos.CreateResourceNodeRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		resourceNode, err := h.ResourceUsecase.CreateResourceNode(&request)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusCreated, resourceNode)
+	}
+}

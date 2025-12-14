@@ -12,4 +12,7 @@ type ResourceHandler interface {
 
 	GetResourceProperty() gin.HandlerFunc
 	GetResourcePool() gin.HandlerFunc
+
+	GetResourceNode() gin.HandlerFunc
+	CreateResourceNode() gin.HandlerFunc
 }

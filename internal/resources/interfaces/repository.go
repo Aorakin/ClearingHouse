@@ -22,3 +22,8 @@ type ResourcePoolRepository interface {
 	GetResourcePoolByOrgID(orgID uuid.UUID) ([]models.ResourcePool, error)
 	CreateResourcePool(resourcePool *models.ResourcePool) (*models.ResourcePool, error)
 }
+
+type ResourceNodeRepository interface {
+	CreateResourceNode(resourceNode *models.ResourceNode) (*models.ResourceNode, error)
+	GetResourceNodeByID(id uuid.UUID) (*models.ResourceNode, error)
+}

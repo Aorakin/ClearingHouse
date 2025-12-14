@@ -100,7 +100,7 @@ func (h *QuotaHandler) CreateProjectQuota() gin.HandlerFunc {
 
 func (h *QuotaHandler) GetProjectQuota() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		projectID := c.Param("project-id")
+		projectID := c.Param("project_id")
 		if projectID == "" {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Project ID is required")))
 			return
@@ -149,7 +149,7 @@ func (h *QuotaHandler) CreateNamespaceQuota() gin.HandlerFunc {
 
 func (h *QuotaHandler) GetNamespaceQuota() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		namespaceID := c.Param("namespace-id")
+		namespaceID := c.Param("namespace_id")
 		if namespaceID == "" {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Namespace ID is required")))
 			return
@@ -267,7 +267,7 @@ func (h *QuotaHandler) GetNamespaceQuotaInProject() gin.HandlerFunc {
 			return
 		}
 
-		projectID := c.Param("project-id")
+		projectID := c.Param("project_id")
 		if projectID == "" {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Project ID is required")))
 			return

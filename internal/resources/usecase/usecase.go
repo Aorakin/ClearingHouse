@@ -13,32 +13,16 @@ type ResourceUsecase struct {
 	poolRepo         interfaces.ResourcePoolRepository
 	resourceRepo     interfaces.ResourceRepository
 	resourceTypeRepo interfaces.ResourceTypeRepository
+	resourceNodeRepo interfaces.ResourceNodeRepository
 }
 
-func NewResourceUsecase(poolRepo interfaces.ResourcePoolRepository, resourceRepo interfaces.ResourceRepository, resourceTypeRepo interfaces.ResourceTypeRepository) interfaces.ResourceUsecase {
+func NewResourceUsecase(poolRepo interfaces.ResourcePoolRepository, resourceRepo interfaces.ResourceRepository, resourceTypeRepo interfaces.ResourceTypeRepository, resourceNodeRepo interfaces.ResourceNodeRepository) interfaces.ResourceUsecase {
 	return &ResourceUsecase{
 		poolRepo:         poolRepo,
 		resourceRepo:     resourceRepo,
 		resourceTypeRepo: resourceTypeRepo,
+		resourceNodeRepo: resourceNodeRepo,
 	}
-}
-
-func (u *ResourceUsecase) GetResources(orgID uuid.UUID) ([]dtos.ResourcePoolResponse, error) {
-	resourcePools, err := u.poolRepo.GetResourcePoolByOrgID(orgID)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, nil // No resource pools found for the organization
-		}
-		return nil, err
-	}
-
-	var response []dtos.ResourcePoolResponse
-	for _, pool := range resourcePools {
-		response = append(response, dtos.NewResourcePoolResponse(pool))
-
-	}
-
-	return response, nil
 }
 
 func (u *ResourceUsecase) CreateResourcePool(request *dtos.CreateResourcePoolRequest) (*models.ResourcePool, error) {
@@ -53,12 +37,16 @@ func (u *ResourceUsecase) CreateResourcePool(request *dtos.CreateResourcePoolReq
 	return resourcePool, nil
 }
 
-func (u *ResourceUsecase) GetResourceTypes() ([]models.ResourceType, error) {
-	resourceTypes, err := u.resourceTypeRepo.GetResourceTypes()
-	if err != nil {
-		return nil, err
+func (u *ResourceUsecase) CreateResourceNode(request *dtos.CreateResourceNodeRequest) (*models.ResourceNode, error) {
+	resourceNode := &models.ResourceNode{
+		ResourcePoolID: request.ResourcePoolID,
+		NodeName:       request.NodeName,
 	}
-	return resourceTypes, nil
+	createdNode, err := u.resourceNodeRepo.CreateResourceNode(resourceNode)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+	return createdNode, nil
 }
 
 func (u *ResourceUsecase) CreateResourceType(request *dtos.CreateResourceTypeRequest) (*models.ResourceType, error) {
@@ -75,7 +63,7 @@ func (u *ResourceUsecase) CreateResourceType(request *dtos.CreateResourceTypeReq
 
 func (u *ResourceUsecase) CreateResource(request *dtos.CreateResourceRequest) (*models.Resource, error) {
 	resource := &models.Resource{
-		ResourcePoolID: request.ResourcePoolID,
+		NodeID:         request.ResourceNodeID,
 		ResourceTypeID: request.ResourceTypeID,
 		Quantity:       request.Quantity,
 		Name:           request.Name,
@@ -85,6 +73,42 @@ func (u *ResourceUsecase) CreateResource(request *dtos.CreateResourceRequest) (*
 		return nil, err
 	}
 	return resource, nil
+}
+
+func (u *ResourceUsecase) GetResourcePool(resourcePoolID *uuid.UUID) (*models.ResourcePool, error) {
+	resourcePool, err := u.poolRepo.GetResourcePoolByID(*resourcePoolID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+	return resourcePool, nil
+}
+
+func (u *ResourceUsecase) GetResourceNode(nodeID uuid.UUID) (*models.ResourceNode, error) {
+	resourceNode, err := u.resourceNodeRepo.GetResourceNodeByID(nodeID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+	return resourceNode, nil
+}
+
+func (u *ResourceUsecase) GetResources(orgID uuid.UUID) ([]models.ResourcePool, error) {
+	resourcePools, err := u.poolRepo.GetResourcePoolByOrgID(orgID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil // No resource pools found for the organization
+		}
+		return nil, err
+	}
+
+	return resourcePools, nil
+}
+
+func (u *ResourceUsecase) GetResourceTypes() ([]models.ResourceType, error) {
+	resourceTypes, err := u.resourceTypeRepo.GetResourceTypes()
+	if err != nil {
+		return nil, err
+	}
+	return resourceTypes, nil
 }
 
 func (u *ResourceUsecase) UpdateResource(resourceID uuid.UUID, request *dtos.UpdateResourceRequest) (*models.Resource, error) {
@@ -109,12 +133,4 @@ func (u *ResourceUsecase) GetResourceProperty(resourceID uuid.UUID) (*models.Res
 		return nil, apiError.NewInternalServerError(err)
 	}
 	return resource, nil
-}
-
-func (u *ResourceUsecase) GetResourcePool(resourcePoolID *uuid.UUID) (*models.ResourcePool, error) {
-	resourcePool, err := u.poolRepo.GetResourcePoolByID(*resourcePoolID)
-	if err != nil {
-		return nil, apiError.NewInternalServerError(err)
-	}
-	return resourcePool, nil
 }

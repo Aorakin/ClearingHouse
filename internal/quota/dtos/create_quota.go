@@ -7,12 +7,13 @@ type CreateOrganizationQuotaRequest struct {
 	Description        string                  `json:"description"`
 	FromOrganizationID uuid.UUID               `json:"from_organization_id" binding:"required,uuid"`
 	ToOrganizationID   uuid.UUID               `json:"to_organization_id" binding:"required,uuid"`
+	PoolID             uuid.UUID               `json:"pool_id" binding:"required,uuid"`
 	Resources          []OrganizationResources `json:"resources" binding:"required"`
 }
 
 type OrganizationResources struct {
-	Quantity   uint      `json:"quantity" binding:"required"`
 	ResourceID uuid.UUID `json:"resource_id" binding:"required,uuid"`
+	Quantity   uint      `json:"quantity" binding:"required"`
 	Price      float32   `json:"price" binding:"required,gte=0"`
 	Duration   uint      `json:"duration" binding:"gte=1"` // in seconds
 }

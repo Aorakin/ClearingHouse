@@ -43,12 +43,9 @@ func (u *QuotaUsecase) CreateOrganizationQuota(request *dtos.CreateOrganizationQ
 		return nil, apiError.NewBadRequestError(errors.New("at least one resource quota is required"))
 	}
 
-	isOrgAdmin, err := u.isOrgAdmin(request.FromOrganizationID, userID)
+	err := u.isOrgAdmin(request.FromOrganizationID, userID)
 	if err != nil {
-		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to check organization admin: %w", err))
-	}
-	if !isOrgAdmin {
-		return nil, apiError.NewForbiddenError(errors.New("user is not an admin of the organization"))
+		return nil, err
 	}
 
 	_, err = u.orgRepo.GetOrganizationByID(request.ToOrganizationID)
@@ -468,22 +465,22 @@ func (u *QuotaUsecase) AssignQuotaToNamespace(request *dtos.AssignQuotaToNamespa
 	return nil
 }
 
-func (u *QuotaUsecase) isOrgAdmin(orgID uuid.UUID, userID uuid.UUID) (bool, error) {
+func (u *QuotaUsecase) isOrgAdmin(orgID uuid.UUID, userID uuid.UUID) error {
 	org, err := u.orgRepo.GetOrganizationByID(orgID)
 	if err != nil {
-		return false, err
+		return apiError.NewInternalServerError(fmt.Errorf("failed to get organization: %w", err))
 	}
 
 	user, err := u.userRepo.GetByID(userID)
 	if err != nil {
-		return false, err
+		return apiError.NewInternalServerError(fmt.Errorf("failed to get user: %w", err))
 	}
 
 	if !helper.ContainsUserID(org.Admins, user.ID) {
-		return false, nil
+		return apiError.NewForbiddenError(fmt.Errorf("user is not an admin of the organization"))
 	}
 
-	return true, nil
+	return nil
 }
 
 func (u *QuotaUsecase) isProjAdmin(projID uuid.UUID, userID uuid.UUID) (bool, error) {
