@@ -23,7 +23,7 @@ type ResourceType struct {
 type ResourcePool struct {
 	BaseModel
 	Name           string         `gorm:"not null;uniqueIndex:idx_resource_pool_name" json:"name"`
-	OrganizationID uuid.UUID      `gorm:"type:uuid;not null;uniqueIndex:idx_resource_pool_name" json:"organization_id"`
+	OrganizationID uuid.UUID      `gorm:"type:uuid;not null;uniqueIndex:idx_resource_pool_name;index" json:"organization_id"`
 	Organization   Organization   `gorm:"foreignKey:OrganizationID" json:"-"`
 	GlideletURN    string         `json:"glidelet_urn"`
 	Nodes          []ResourceNode `gorm:"foreignKey:ResourcePoolID" json:"nodes"`
@@ -32,7 +32,7 @@ type ResourcePool struct {
 type ResourceNode struct {
 	BaseModel
 	Name           string       `gorm:"not null;uniqueIndex:idx_node_name" json:"name"`
-	ResourcePoolID uuid.UUID    `gorm:"type:uuid;not null;uniqueIndex:idx_node_name" json:"resource_pool_id"`
+	ResourcePoolID uuid.UUID    `gorm:"type:uuid;not null;uniqueIndex:idx_node_name;index" json:"resource_pool_id"`
 	ResourcePool   ResourcePool `gorm:"foreignKey:ResourcePoolID" json:"-"`
 	Resources      []Resource   `gorm:"foreignKey:NodeID" json:"resources"`
 }

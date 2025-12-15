@@ -97,3 +97,58 @@ func (r *QuotaRepository) IsAssigned(namespaceID uuid.UUID, quotaID uuid.UUID) (
 
 	return count > 0, nil
 }
+
+func (r *QuotaRepository) GetNamespaceQuotasByProjectID(projectID uuid.UUID) ([]models.NamespaceQuota, error) {
+	var namespaceQuotas []models.NamespaceQuota
+
+	err := r.db.
+		Preload("Resources.ResourceProp").
+		Preload("Node.ResourcePool.Organization").
+		Where("project_id = ?", projectID).
+		Find(&namespaceQuotas).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return namespaceQuotas, nil
+}
+
+func (r *QuotaRepository) CreateNamespaceQuota(quota *models.NamespaceQuota) error {
+	return r.db.Create(quota).Error
+}
+
+func (r *QuotaRepository) GetNamespaceQuotaByID(quotaID uuid.UUID) (*models.NamespaceQuota, error) {
+	var namespaceQuota models.NamespaceQuota
+	err := r.db.Preload("Resources.ResourceProp").First(&namespaceQuota, "id = ?", quotaID).Error
+	if err != nil {
+		return nil, err
+	}
+	return &namespaceQuota, nil
+}
+
+func (r *QuotaRepository) GetNamespaceQuotaByNamespaceID(namespaceID uuid.UUID) ([]models.NamespaceQuota, error) {
+	var namespaceQuotas []models.NamespaceQuota
+
+	var namespace models.Namespace
+	if err := r.db.First(&namespace, "id = ?", namespaceID).Error; err != nil {
+		return nil, err
+	}
+
+	if namespace.QuotaTemplateID == nil {
+		return namespaceQuotas, nil
+	}
+
+	err := r.db.
+		Joins("JOIN namespace_quota_templates nqt ON nqt.namespace_quota_id = namespace_quotas.id").
+		Preload("Resources.ResourceProp").
+		Preload("Node.ResourcePool.Organization").
+		Where("nqt.namespace_quota_template_id = ?", *namespace.QuotaTemplateID).
+		Find(&namespaceQuotas).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return namespaceQuotas, nil
+}

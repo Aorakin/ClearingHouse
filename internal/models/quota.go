@@ -16,7 +16,7 @@ type ResourceQuantity struct {
 	ProjectQuotaID      *uuid.UUID       `gorm:"type:uuid;index" json:"project_quota_id,omitempty"`
 	NamespaceQuotaID    *uuid.UUID       `gorm:"type:uuid;index" json:"namespace_quota_id,omitempty"`
 	Quantity            uint             `json:"quantity"`
-	ResourcePropID      uuid.UUID        `gorm:"type:uuid;not null" json:"resource_property_id"`
+	ResourcePropID      uuid.UUID        `gorm:"type:uuid;not null;index" json:"resource_property_id"`
 	ResourceProp        ResourceProperty `gorm:"foreignKey:ResourcePropID" json:"resource_prop"`
 }
 
@@ -48,9 +48,9 @@ type NamespaceQuota struct {
 	BaseModel
 	Name           string                   `json:"name"`
 	Description    string                   `json:"description"`
-	ProjectID      *uuid.UUID               `gorm:"type:uuid" json:"project_id"`
-	ProjectQuotaID *uuid.UUID               `gorm:"type:uuid" json:"project_quota_id"`
-	NodeID         uuid.UUID                `gorm:"type:uuid;not null" json:"node_id"`
+	ProjectID      *uuid.UUID               `gorm:"type:uuid;index" json:"project_id"`
+	ProjectQuotaID *uuid.UUID               `gorm:"type:uuid;index" json:"project_quota_id"`
+	NodeID         uuid.UUID                `gorm:"type:uuid;not null;index" json:"node_id"`
 	Node           ResourceNode             `gorm:"foreignKey:NodeID" json:"-"`
 	Templates      []NamespaceQuotaTemplate `gorm:"many2many:namespace_quota_templates;" json:"-"`
 	Resources      []ResourceQuantity       `gorm:"foreignKey:NamespaceQuotaID" json:"resources"`

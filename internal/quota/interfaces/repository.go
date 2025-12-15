@@ -28,8 +28,6 @@ type QuotaRepository interface {
 
 	CreateResourceQuantity(resourceQuantity *models.ResourceQuantity) error
 
-	GetOrganization(orgID uuid.UUID) (*models.Organization, error)
-
 	GetNamespaceUsageByType(namespaceID uuid.UUID, quotaID uuid.UUID) (*dtos.ResourceUsageResponse, error)
 	GetNamespaceQuotaByType(namespaceID uuid.UUID) (*dtos.ResourceQuotaResponse, error)
 
