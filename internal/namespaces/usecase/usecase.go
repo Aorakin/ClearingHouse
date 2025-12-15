@@ -173,7 +173,7 @@ func (u *NamespaceUsecase) GetNamespaceUsages(namespaceID uuid.UUID, userID uuid
 	}
 
 	var namespaceUsage dtos.NamespaceUsageResponse
-	usageMap := make(map[string]float64)
+	usageMap := make(map[uuid.UUID]float64)
 	for _, u := range usages.ResourceUsages {
 		usageMap[u.TypeID] = u.Usage
 	}

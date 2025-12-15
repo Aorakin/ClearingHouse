@@ -39,10 +39,10 @@ type ResourceUsageResponse struct {
 }
 
 type NamespaceUsage struct {
-	TypeID string  `json:"type_id"`
-	Type   string  `json:"type"`
-	Quota  float64 `json:"quota"`
-	Usage  float64 `json:"usage"`
+	TypeID uuid.UUID `json:"type_id"`
+	Type   string    `json:"type"`
+	Quota  float64   `json:"quota"`
+	Usage  float64   `json:"usage"`
 }
 
 type NamespaceUsageResponse struct {
