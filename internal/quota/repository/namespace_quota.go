@@ -11,9 +11,41 @@ func (r *QuotaRepository) CreateNamespaceQuotaTemplate(template *models.Namespac
 	return r.db.Create(template).Error
 }
 
+func (r *QuotaRepository) AddQuotasToTemplate(templateID uuid.UUID, quotaIDs []uuid.UUID) error {
+	var template models.NamespaceQuotaTemplate
+	if err := r.db.First(&template, "id = ?", templateID).Error; err != nil {
+		return err
+	}
+
+	var quotas []models.NamespaceQuota
+	if err := r.db.Where("id IN ?", quotaIDs).Find(&quotas).Error; err != nil {
+		return err
+	}
+
+	if len(quotas) != len(quotaIDs) {
+		return fmt.Errorf("expected %d quotas but found %d", len(quotaIDs), len(quotas))
+	}
+
+	return r.db.Model(&template).Association("Quotas").Append(&quotas)
+}
+
+func (r *QuotaRepository) RemoveQuotasFromTemplate(templateID uuid.UUID, quotaIDs []uuid.UUID) error {
+	var template models.NamespaceQuotaTemplate
+	if err := r.db.First(&template, "id = ?", templateID).Error; err != nil {
+		return err
+	}
+
+	var quotas []models.NamespaceQuota
+	if err := r.db.Where("id IN ?", quotaIDs).Find(&quotas).Error; err != nil {
+		return err
+	}
+
+	return r.db.Model(&template).Association("Quotas").Delete(&quotas)
+}
+
 func (r *QuotaRepository) GetNamespaceQuotaTemplateByID(templateID uuid.UUID) (*models.NamespaceQuotaTemplate, error) {
 	var template models.NamespaceQuotaTemplate
-	if err := r.db.Where("id = ?", templateID).First(&template).Error; err != nil {
+	if err := r.db.Preload("Quotas").Where("id = ?", templateID).First(&template).Error; err != nil {
 		return nil, err
 	}
 
@@ -54,14 +86,14 @@ func (r *QuotaRepository) IsAssigned(namespaceID uuid.UUID, quotaID uuid.UUID) (
 		return false, nil
 	}
 
-	var quota models.NamespaceQuota
-	if err := r.db.First(&quota, "id = ?", quotaID).Error; err != nil {
+	// Check if the quota belongs to the template assigned to this namespace
+	var count int64
+	err := r.db.Table("namespace_quota_templates").
+		Where("namespace_quota_template_id = ? AND namespace_quota_id = ?", *namespace.QuotaTemplateID, quotaID).
+		Count(&count).Error
+	if err != nil {
 		return false, err
 	}
 
-	if quota.TemplateID == nil {
-		return false, nil
-	}
-
-	return *quota.TemplateID == *namespace.QuotaTemplateID, nil
+	return count > 0, nil
 }

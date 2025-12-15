@@ -46,14 +46,14 @@ type ProjectQuota struct {
 
 type NamespaceQuota struct {
 	BaseModel
-	Name           string             `json:"name"`
-	Description    string             `json:"description"`
-	ProjectID      *uuid.UUID         `gorm:"type:uuid" json:"project_id"`
-	ProjectQuotaID *uuid.UUID         `gorm:"type:uuid" json:"project_quota_id"`
-	NodeID         uuid.UUID          `gorm:"type:uuid;not null" json:"node_id"`
-	Node           ResourceNode       `gorm:"foreignKey:NodeID" json:"-"`
-	TemplateID     *uuid.UUID         `gorm:"type:uuid" json:"template_id"`
-	Resources      []ResourceQuantity `gorm:"foreignKey:NamespaceQuotaID" json:"resources"`
+	Name           string                   `json:"name"`
+	Description    string                   `json:"description"`
+	ProjectID      *uuid.UUID               `gorm:"type:uuid" json:"project_id"`
+	ProjectQuotaID *uuid.UUID               `gorm:"type:uuid" json:"project_quota_id"`
+	NodeID         uuid.UUID                `gorm:"type:uuid;not null" json:"node_id"`
+	Node           ResourceNode             `gorm:"foreignKey:NodeID" json:"-"`
+	Templates      []NamespaceQuotaTemplate `gorm:"many2many:namespace_quota_templates;" json:"-"`
+	Resources      []ResourceQuantity       `gorm:"foreignKey:NamespaceQuotaID" json:"resources"`
 }
 
 type NamespaceQuotaTemplate struct {
@@ -62,6 +62,6 @@ type NamespaceQuotaTemplate struct {
 	Description string           `json:"description"`
 	ProjectID   uuid.UUID        `gorm:"type:uuid;not null" json:"project_id"`
 	Project     Project          `gorm:"foreignKey:ProjectID" json:"-"`
-	Quotas      []NamespaceQuota `gorm:"foreignKey:TemplateID" json:"quotas"`
+	Quotas      []NamespaceQuota `gorm:"many2many:namespace_quota_templates;" json:"quotas"`
 	Namespaces  []Namespace      `gorm:"many2many:namespace_quotas;" json:"-"`
 }

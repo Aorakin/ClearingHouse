@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/ClearingHouse/internal/models"
+	"github.com/google/uuid"
 )
 
 type TicketResponse struct {
@@ -20,7 +21,9 @@ type TicketResponse struct {
 	NamespaceName  string                  `json:"namespace_name"`
 	ProjectID      string                  `json:"project_id"`
 	ProjectName    string                  `json:"project_name"`
+	NodeID         uuid.UUID               `json:"node_id"`
 	ResourcePoolID string                  `json:"resource_pool_id"`
+	GlideletURN    string                  `json:"glidelet_urn"`
 	QuotaID        string                  `json:"quota_id"`
 	Resources      []models.TicketResource `json:"resources"`
 	RedeemTimeout  uint                    `json:"redeem_timeout"`

@@ -15,13 +15,16 @@ type Ticket struct {
 	CancelTime     *time.Time       `gorm:"type:timestamptz" json:"cancel_time"`
 	Duration       uint             `json:"duration"`
 	Price          float32          `json:"price"`
+	GlideletURN    string           `json:"glidelet_urn"`
 	OwnerID        uuid.UUID        `gorm:"type:uuid;not null" json:"owner_id"`
 	NamespaceID    uuid.UUID        `gorm:"type:uuid;not null" json:"namespace_id"`
+	NodeID         uuid.UUID        `gorm:"type:uuid;not null" json:"node_id"`
 	ResourcePoolID uuid.UUID        `gorm:"type:uuid;not null" json:"resource_pool_id"`
 	QuotaID        uuid.UUID        `gorm:"type:uuid;not null" json:"quota_id"`
 	Resources      []TicketResource `gorm:"foreignKey:TicketID" json:"resources"`
 	Owner          User             `gorm:"foreignKey:OwnerID" json:"-"`
 	Namespace      Namespace        `gorm:"foreignKey:NamespaceID" json:"-"`
+	Node           ResourceNode     `gorm:"foreignKey:NodeID" json:"-"`
 	ResourcePool   ResourcePool     `gorm:"foreignKey:ResourcePoolID" json:"-"`
 	RedeemTimeout  uint             `json:"redeem_timeout"` // in seconds
 }

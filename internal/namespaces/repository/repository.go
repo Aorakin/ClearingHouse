@@ -114,11 +114,11 @@ func (r *NamespaceRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*d
 		log.Printf("Quota ID: %s, Name: %s", q.ID, q.Name)
 	}
 
-	typeAgg := make(map[string]dtos.ResourceQuota)
+	typeAgg := make(map[uuid.UUID]dtos.ResourceQuota)
 	for _, quota := range quotas {
 		for _, res := range quota.Resources {
 			rt := res.ResourceProp.Resource.ResourceType
-			rtID := rt.ID.String()
+			rtID := rt.ID
 
 			if _, ok := typeAgg[rtID]; !ok {
 				typeAgg[rtID] = dtos.ResourceQuota{
@@ -155,11 +155,11 @@ func (r *NamespaceRepository) GetNamespaceUsageByType(namespaceID uuid.UUID) (*d
 		return nil, err
 	}
 
-	typeAgg := make(map[string]dtos.ResourceUsage)
+	typeAgg := make(map[uuid.UUID]dtos.ResourceUsage)
 	for _, t := range tickets {
 		for _, tr := range t.Resources {
 			rt := tr.Resource.ResourceType
-			rtID := rt.ID.String()
+			rtID := rt.ID
 
 			if _, ok := typeAgg[rtID]; !ok {
 				typeAgg[rtID] = dtos.ResourceUsage{
