@@ -35,7 +35,7 @@ func GenerateAccessToken(userID, email, firstName, lastName string, privateKey *
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "clearing-house-auth",
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * 24 * time.Hour)),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)

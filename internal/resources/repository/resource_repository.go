@@ -26,7 +26,7 @@ func (r *ResourceRepository) UpdateResource(resource *models.Resource) (*models.
 
 func (r *ResourceRepository) GetResourceByID(id uuid.UUID) (*models.Resource, error) {
 	var resource models.Resource
-	if err := r.db.Preload("ResourceType").Preload("ResourcePool").First(&resource, "id = ?", id).Error; err != nil {
+	if err := r.db.First(&resource, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &resource, nil

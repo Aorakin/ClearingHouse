@@ -88,7 +88,7 @@ func (r *QuotaRepository) IsAssigned(namespaceID uuid.UUID, quotaID uuid.UUID) (
 
 	// Check if the quota belongs to the template assigned to this namespace
 	var count int64
-	err := r.db.Table("namespace_quota_templates").
+	err := r.db.Table("namespace_quota_template_relations").
 		Where("namespace_quota_template_id = ? AND namespace_quota_id = ?", *namespace.QuotaTemplateID, quotaID).
 		Count(&count).Error
 	if err != nil {
@@ -140,7 +140,7 @@ func (r *QuotaRepository) GetNamespaceQuotaByNamespaceID(namespaceID uuid.UUID) 
 	}
 
 	err := r.db.
-		Joins("JOIN namespace_quota_templates nqt ON nqt.namespace_quota_id = namespace_quotas.id").
+		Joins("JOIN namespace_quota_template_relations nqt ON nqt.namespace_quota_id = namespace_quota.id").
 		Preload("Resources.ResourceProp").
 		Preload("Node.ResourcePool.Organization").
 		Where("nqt.namespace_quota_template_id = ?", *namespace.QuotaTemplateID).

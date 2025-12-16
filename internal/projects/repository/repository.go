@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"log"
 	"sort"
 
 	"github.com/ClearingHouse/internal/models"
@@ -58,8 +59,9 @@ func (r *ProjectRepository) GetProjectQuotaByType(projectID uuid.UUID, userID uu
 
 	// Fetch quotas with resources and resource types
 	if err := r.db.
-		Joins("JOIN namespace_quotas nqj ON nqj.namespace_quota_id = namespace_quota.id").
-		Joins("JOIN namespaces ns ON ns.id = nqj.namespace_id").
+		Joins("JOIN namespace_quota_template_relations nqtr ON nqtr.namespace_quota_id = namespace_quota.id").
+		Joins("JOIN namespace_quota_templates nqt ON nqt.id = nqtr.namespace_quota_template_id").
+		Joins("JOIN namespaces ns ON ns.quota_template_id = nqt.id").
 		Joins("JOIN namespace_members nm ON nm.namespace_id = ns.id").
 		Where("ns.project_id = ? AND nm.user_id = ?", projectID, userID).
 		Preload("Resources.ResourceProp.Resource.ResourceType").
@@ -67,6 +69,7 @@ func (r *ProjectRepository) GetProjectQuotaByType(projectID uuid.UUID, userID uu
 		return nil, err
 	}
 
+	log.Println(len(quotas))
 	// Aggregate usage by type
 	typeAgg := make(map[string]dtos.ResourceQuota)
 	for _, quota := range quotas {

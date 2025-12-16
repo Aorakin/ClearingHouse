@@ -13,8 +13,7 @@ type ResourcePoolRepository struct {
 func (r *ResourcePoolRepository) GetResourcePoolByOrgID(orgID uuid.UUID) ([]models.ResourcePool, error) {
 	var resourcePools []models.ResourcePool
 	err := r.db.
-		Preload("Resources").
-		Preload("Resources.ResourceType").
+		Preload("Nodes.Resources.ResourceType").
 		Where("organization_id = ?", orgID).
 		Find(&resourcePools).Error
 
@@ -33,7 +32,7 @@ func (r *ResourcePoolRepository) CreateResourcePool(resourcePool *models.Resourc
 
 func (r *ResourcePoolRepository) GetResourcePoolByID(id uuid.UUID) (*models.ResourcePool, error) {
 	var resourcePool models.ResourcePool
-	err := r.db.Preload("Resources.ResourceType").First(&resourcePool, "id = ?", id).Error
+	err := r.db.Preload("Nodes.Resources.ResourceType").First(&resourcePool, "id = ?", id).Error
 
 	if err != nil {
 		return nil, err

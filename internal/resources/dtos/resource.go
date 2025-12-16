@@ -1,7 +1,7 @@
 package dtos
 
 type IDUri struct {
-	ID string `uri:"id" binding:"required,uuid"`
+	ID string `uri:"resource_id" binding:"required,uuid"`
 }
 
 type ResourcePoolResponse struct {
@@ -17,5 +17,3 @@ type ResourceResponse struct {
 	Unit         string `json:"unit"`
 	Quantity     uint   `json:"quantity"`
 }
-
-

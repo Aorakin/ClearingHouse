@@ -74,8 +74,8 @@ func (u *ResourceUsecase) CreateResource(request *dtos.CreateResourceRequest) (*
 	return resource, nil
 }
 
-func (u *ResourceUsecase) GetResourcePool(resourcePoolID *uuid.UUID) (*models.ResourcePool, error) {
-	resourcePool, err := u.poolRepo.GetResourcePoolByID(*resourcePoolID)
+func (u *ResourceUsecase) GetResourcePool(resourcePoolID uuid.UUID) (*models.ResourcePool, error) {
+	resourcePool, err := u.poolRepo.GetResourcePoolByID(resourcePoolID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}

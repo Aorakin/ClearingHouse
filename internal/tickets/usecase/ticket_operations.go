@@ -114,7 +114,7 @@ func (u *TicketUsecase) createTicket(quota *models.NamespaceQuota, request *dtos
 }
 
 func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest, userID uuid.UUID) (*dtos.GliderTicketResponse, error) {
-	if err := u.isNamespaceMember(userID, request.NamespaceID); err != nil {
+	if err := u.isNamespaceMember(request.NamespaceID, userID); err != nil {
 		return nil, err
 	}
 

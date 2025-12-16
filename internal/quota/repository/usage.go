@@ -46,9 +46,9 @@ func (r *QuotaRepository) GetNamespaceUsageByType(namespaceID uuid.UUID, quotaID
 }
 
 func (r *QuotaRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*dtos.ResourceQuotaResponse, error) {
-	// First, get the namespace to find its quota template
 	var namespace models.Namespace
-	if err := r.db.First(&namespace, "id = ?", namespaceID).Error; err != nil {
+	err := r.db.First(&namespace, "id = ?", namespaceID).Error
+	if err != nil {
 		return nil, err
 	}
 
@@ -58,8 +58,9 @@ func (r *QuotaRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*dtos.
 
 	// Get all quotas belonging to this template
 	var quotas []models.NamespaceQuota
-	err := r.db.Preload("Resources.ResourceProp.Resource.ResourceType").
-		Where("template_id = ?", *namespace.QuotaTemplateID).
+	err = r.db.Preload("Resources.ResourceProp.Resource.ResourceType").
+		Joins("JOIN namespace_quota_template_relations nqtr ON nqtr.namespace_quota_id = namespace_quota.id").
+		Where("nqtr.namespace_quota_template_id = ?", *namespace.QuotaTemplateID).
 		Find(&quotas).Error
 
 	if err != nil {

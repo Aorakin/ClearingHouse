@@ -87,7 +87,8 @@ func (r *NamespaceRepository) GetNamespaceTickets(namespaceID, resourcePoolID, q
 	return tickets, nil
 }
 
-func (r *NamespaceRepository) GetAllNamespacesByProjectAndUserID(projectID, userID uuid.UUID) ([]models.Namespace, error) {
+func (r *NamespaceRepository) GetAllNamespacesByProjectAndUserID(projectID uuid.UUID, userID uuid.UUID) ([]models.Namespace, error) {
+	log.Println("")
 	var namespaces []models.Namespace
 	err := r.db.Joins("JOIN namespace_members nm ON nm.namespace_id = namespaces.id").
 		Where("namespaces.project_id = ? AND nm.user_id = ?", projectID, userID).
@@ -96,12 +97,21 @@ func (r *NamespaceRepository) GetAllNamespacesByProjectAndUserID(projectID, user
 }
 
 func (r *NamespaceRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*dtos.ResourceQuotaResponse, error) {
+	var namespace models.Namespace
+	if err := r.db.First(&namespace, "id = ?", namespaceID).Error; err != nil {
+		return nil, err
+	}
+
+	if namespace.QuotaTemplateID == nil {
+		return &dtos.ResourceQuotaResponse{ResourceQuotas: []dtos.ResourceQuota{}}, nil
+	}
+
 	var quotas []models.NamespaceQuota
-	err := r.db.Debug().
-		Model(&models.NamespaceQuota{}).
+	err := r.db.
+		Table("namespace_quota").
+		Joins("JOIN namespace_quota_template_relations nqt ON nqt.namespace_quota_id = namespace_quota.id").
 		Preload("Resources.ResourceProp.Resource.ResourceType").
-		Joins("JOIN namespace_quotas nq ON nq.namespace_quota_id = namespace_quota.id").
-		Where("nq.namespace_id = ?", namespaceID).
+		Where("nqt.namespace_quota_template_id = ?", *namespace.QuotaTemplateID).
 		Find(&quotas).Error
 	if err != nil {
 		return nil, err

@@ -18,7 +18,7 @@ func MapQuotaRoutes(quotaGroup *gin.RouterGroup, quotaHandler interfaces.QuotaHa
 
 	quotaGroup.POST("/namespace", quotaHandler.CreateNamespaceQuota())
 	quotaGroup.GET("/namespace/:namespace_id", quotaHandler.GetNamespaceQuota())
-	quotaGroup.GET("/namespace/template", quotaHandler.CreateNamespaceQuotaTemplate())
+	quotaGroup.POST("/namespace/template", quotaHandler.CreateNamespaceQuotaTemplate())
 	quotaGroup.GET("/namespace/template/:quota_template_id", quotaHandler.GetNamespaceQuotaTemplate())
 	quotaGroup.POST("/namespace/template/assign", quotaHandler.AssignQuotaTemplateToNamespace())
 

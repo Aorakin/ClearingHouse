@@ -23,13 +23,13 @@ func NewResourceHandler(resourceUsecase interfaces.ResourceUsecase) interfaces.R
 
 func (h *ResourceHandler) GetResource() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var uri dtos.IDUri
-		if err := c.ShouldBindUri(&uri); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		orgIDStr := c.Param("org_id")
+		if orgIDStr == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "organization ID is required"})
 			return
 		}
 
-		orgID, err := uuid.Parse(uri.ID)
+		orgID, err := uuid.Parse(orgIDStr)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -140,7 +140,7 @@ func (h *ResourceHandler) UpdateResource() gin.HandlerFunc {
 
 func (h *ResourceHandler) GetResourceProperty() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		resourceID := c.Param("id")
+		resourceID := c.Param("resource_id")
 		if resourceID == "" {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Resource ID is required")))
 			return
@@ -163,7 +163,7 @@ func (h *ResourceHandler) GetResourceProperty() gin.HandlerFunc {
 
 func (h *ResourceHandler) GetResourcePool() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		resourcePoolID := c.Param("id")
+		resourcePoolID := c.Param("pool_id")
 		if resourcePoolID == "" {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Resource Pool ID is required")))
 			return
@@ -175,7 +175,7 @@ func (h *ResourceHandler) GetResourcePool() gin.HandlerFunc {
 			return
 		}
 
-		resourcePool, err := h.ResourceUsecase.GetResourcePool(&resourcePoolUUID)
+		resourcePool, err := h.ResourceUsecase.GetResourcePool(resourcePoolUUID)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
