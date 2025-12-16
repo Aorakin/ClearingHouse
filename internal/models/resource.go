@@ -7,7 +7,7 @@ type Resource struct {
 	Name           string       `json:"name"`
 	Quantity       uint         `json:"quantity"`
 	ResourceTypeID uuid.UUID    `gorm:"type:uuid;not null" json:"resource_type_id"`
-	ResourceType   ResourceType `gorm:"foreignKey:ResourceTypeID" json:"-"`
+	ResourceType   ResourceType `gorm:"foreignKey:ResourceTypeID" json:"resource_type"`
 	NodeID         uuid.UUID    `gorm:"type:uuid" json:"node_id,omitempty"`
 	Node           ResourceNode `gorm:"foreignKey:NodeID" json:"-"`
 	// ResourcePoolID uuid.UUID    `gorm:"type:uuid;not null" json:"resource_pool_id"`
