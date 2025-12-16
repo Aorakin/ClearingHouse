@@ -151,7 +151,7 @@ func (u *TicketUsecase) CreateTicket(request *dtos.CreateTicketRequest, userID u
 		return nil, err
 	}
 
-	return u.FormatTicketResponse(ticket), nil
+	return u.formatTicketResponse(ticket), nil
 }
 
 func (u *TicketUsecase) CancelTicket(ticketID uuid.UUID, userID uuid.UUID) error {

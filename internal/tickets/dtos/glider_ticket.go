@@ -15,6 +15,8 @@ type GliderTicket struct {
 	ID                uuid.UUID  `json:"id"`           // ticket id
 	NamespaceID       uuid.UUID  `json:"namespace_id"` // namespace id
 	NamespaceName     string     `json:"namespace_name"`
+	ResourcePoolID    uuid.UUID  `json:"resource_pool_id"`
+	ResourcePoolName  string     `json:"resource_pool_name"`
 	ProjectID         uuid.UUID  `json:"project_id"` // project id
 	ProjectName       string     `json:"project_name"`
 	NodeID            uuid.UUID  `json:"node_id"`

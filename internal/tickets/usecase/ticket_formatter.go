@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (u *TicketUsecase) FormatTicketResponse(ticket *models.Ticket) *dtos.GliderTicketResponse {
+func (u *TicketUsecase) formatTicketResponse(ticket *models.Ticket) *dtos.GliderTicketResponse {
 	gliderTicket := dtos.GliderTicket{
 		ID:                ticket.ID,
 		NamespaceID:       ticket.NamespaceID,
@@ -16,6 +16,8 @@ func (u *TicketUsecase) FormatTicketResponse(ticket *models.Ticket) *dtos.Glider
 		ProjectName:       ticket.Namespace.Project.Name,
 		NodeID:            ticket.NodeID,
 		NodeName:          ticket.Node.Name,
+		ResourcePoolID:    ticket.ResourcePoolID,
+		ResourcePoolName:  ticket.ResourcePool.Name,
 		GlideletURN:       ticket.GlideletURN,
 		GlideletName:      ticket.ResourcePool.Name,
 		OrganizationName:  ticket.ResourcePool.Organization.Name,
