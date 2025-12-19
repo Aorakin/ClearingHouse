@@ -108,7 +108,7 @@ func (u *QuotaUsecase) GetUsage(quotaID uuid.UUID, namespaceID uuid.UUID, userID
 		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to fetch usage data: %w", err))
 	}
 
-	quota, err := u.quotaRepo.GetNamespaceQuotaByType(namespaceID)
+	quota, err := u.quotaRepo.GetQuotaByType(quotaID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to fetch quota data: %w", err))
 	}

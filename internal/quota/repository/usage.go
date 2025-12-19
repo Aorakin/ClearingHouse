@@ -96,3 +96,40 @@ func (r *QuotaRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*dtos.
 
 	return &dtos.ResourceQuotaResponse{ResourceQuotas: result}, nil
 }
+
+func (r *QuotaRepository) GetQuotaByType(quotaID uuid.UUID) (*dtos.ResourceQuotaResponse, error) {
+	var quota models.NamespaceQuota
+	err := r.db.Preload("Resources.ResourceProp.Resource.ResourceType").
+		First(&quota, "namespace_quota.id = ?", quotaID).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	typeAgg := make(map[uuid.UUID]dtos.ResourceQuota)
+	for _, res := range quota.Resources {
+		rt := res.ResourceProp.Resource.ResourceType
+		rtID := rt.ID
+		if _, ok := typeAgg[rtID]; !ok {
+			typeAgg[rtID] = dtos.ResourceQuota{
+				TypeID: rtID,
+				Type:   rt.Name,
+				Quota:  0,
+			}
+		}
+		tmp := typeAgg[rtID]
+		tmp.Quota += float64(res.Quantity)
+		typeAgg[rtID] = tmp
+	}
+
+	var result []dtos.ResourceQuota
+	for _, v := range typeAgg {
+		result = append(result, v)
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Type < result[j].Type
+	})
+
+	return &dtos.ResourceQuotaResponse{ResourceQuotas: result}, nil
+}
