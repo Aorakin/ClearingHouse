@@ -45,8 +45,8 @@ func (u *TicketUsecase) validateCreateTicketRequest(request *dtos.CreateTicketRe
 			return nil, 0, apiError.NewForbiddenError(fmt.Errorf("namespace usage exceeds quota limit for resource"))
 		}
 
-		if request.Duration < 3600 {
-			return nil, 0, apiError.NewBadRequestError(fmt.Errorf("duration must be greater than 3600 seconds"))
+		if request.Duration < 1800 {
+			return nil, 0, apiError.NewBadRequestError(fmt.Errorf("duration must be greater than 1800 seconds"))
 		}
 		if request.Duration > resourceQuantity.ResourceProp.MaxDuration {
 			return nil, 0, apiError.NewForbiddenError(fmt.Errorf("duration exceeds max limit for resource"))
