@@ -95,6 +95,12 @@ func (r *TicketRepository) StartTicket(ticketID uuid.UUID, startTime time.Time) 
 
 }
 
+func (r *TicketRepository) StopPendingTicket(ticketID uuid.UUID) error {
+	return r.db.Model(&models.Ticket{}).Where("id = ?", ticketID).Updates(map[string]interface{}{
+		"status": "created",
+	}).Error
+}
+
 func (r *TicketRepository) StopTicket(ticketID uuid.UUID, stopTime time.Time) error {
 	return r.db.Model(&models.Ticket{}).Where("id = ?", ticketID).Updates(map[string]interface{}{
 		"status":   "stopped",

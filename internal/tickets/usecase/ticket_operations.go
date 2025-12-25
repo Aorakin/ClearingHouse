@@ -302,6 +302,22 @@ func (u *TicketUsecase) StartTicket(request *dtos.StartTicketsRequest) ([]models
 	return tickets, nil
 }
 
+func (u *TicketUsecase) StopPendingTicket(request *dtos.StopPendingTicketsRequest) error {
+	errorTickets := []uuid.UUID{}
+	for _, ticketID := range request.Tickets {
+		err := u.ticketRepo.StopPendingTicket(ticketID)
+		if err != nil {
+			errorTickets = append(errorTickets, ticketID)
+			continue
+		}
+
+	}
+	if len(errorTickets) > 0 {
+		return apiError.NewInternalServerError(fmt.Errorf("some tickets could not be stopped"))
+	}
+	return nil
+}
+
 func (u *TicketUsecase) StopTicket(request *dtos.StopTicketsRequest) ([]models.Ticket, error) {
 	var tickets []models.Ticket
 	for _, ticketID := range request.Tickets {

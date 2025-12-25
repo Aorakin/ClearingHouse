@@ -87,6 +87,25 @@ func (h *TicketHandler) StartTicket() gin.HandlerFunc {
 	}
 }
 
+func (h *TicketHandler) StopPendingTicket() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var request dtos.StopPendingTicketsRequest
+
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		err := h.ticketUsecase.StopPendingTicket(&request)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, nil)
+	}
+}
+
 func (h *TicketHandler) StopTicket() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request dtos.StopTicketsRequest

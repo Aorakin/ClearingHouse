@@ -8,6 +8,7 @@ import (
 
 func MapTicketRoutes(ticketGroup *gin.RouterGroup, ticketHandler interfaces.TicketHandler) {
 	ticketGroup.PATCH("/start", ticketHandler.StartTicket())
+	ticketGroup.PATCH("/stop-pending", ticketHandler.StopPendingTicket())
 	ticketGroup.PATCH("/stop", ticketHandler.StopTicket())
 	ticketGroup.Use(middleware.AuthMiddleware())
 	ticketGroup.POST("/", ticketHandler.CreateTicket())
