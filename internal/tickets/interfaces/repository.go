@@ -19,6 +19,7 @@ type TicketRepository interface {
 	GetTicketsByUserID(userID uuid.UUID) ([]models.Ticket, error)
 
 	StartTicket(ticketID uuid.UUID, startTime time.Time) error
+	StopPendingTicket(ticketID uuid.UUID) error
 	StopTicket(ticketID uuid.UUID, stopTime time.Time) error
 	CancelTicket(ticketID uuid.UUID, cancelTime time.Time) error
 	DeleteTicket(ticketID uuid.UUID) error

@@ -11,6 +11,7 @@ type TicketUsecase interface {
 	GetNamespaceTickets(namespaceID uuid.UUID, userID uuid.UUID) ([]models.Ticket, error)
 	GetUserTickets(userID uuid.UUID) ([]dtos.TicketResponse, error)
 	StartTicket(request *dtos.StartTicketsRequest) ([]models.Ticket, error)
+	StopPendingTicket(request *dtos.StopPendingTicketsRequest) error
 	StopTicket(request *dtos.StopTicketsRequest) ([]models.Ticket, error)
 	GetTicket(ticketID uuid.UUID, userID uuid.UUID) (*models.Ticket, error)
 	CancelTicket(ticketID uuid.UUID, userID uuid.UUID) error
