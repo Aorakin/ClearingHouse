@@ -14,23 +14,28 @@ import (
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		// 1. Get Authorization header
+		var accessToken string
+
+		// 1. Try to get token from Authorization header first
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "missing Authorization header"})
-			c.Abort()
-			return
+		if authHeader != "" {
+			// Must be "Bearer <token>"
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
+				accessToken = parts[1]
+			}
 		}
 
-		// 2. Must be "Bearer <token>"
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid Authorization header format"})
-			c.Abort()
-			return
+		// 2. If not in header, try to get from cookie
+		if accessToken == "" {
+			var err error
+			accessToken, err = c.Cookie("access_token")
+			if err != nil || accessToken == "" {
+				c.JSON(http.StatusUnauthorized, gin.H{"message": "missing access token"})
+				c.Abort()
+				return
+			}
 		}
-
-		accessToken := parts[1]
 
 		// 3. Parse JWT using your RSA public key
 		token, err := jwt.Parse(accessToken, func(t *jwt.Token) (interface{}, error) {

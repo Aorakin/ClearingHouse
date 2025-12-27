@@ -47,8 +47,20 @@ func (h *AuthHandler) GoogleCallback() gin.HandlerFunc {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewInternalServerError(err)))
 			return
 		}
+		c.SetCookie("access_token", accessToken, 3600, "/", ".localhost", true, true)
+		c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", ".localhost", true, true)
 
 		c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
+	}
+}
+
+func (h *AuthHandler) Logout() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Clear the access token cookie
+		c.SetCookie("access_token", "", -1, "/", ".localhost", true, true)
+		// Clear the refresh token cookie
+		c.SetCookie("refresh_token", "", -1, "/", ".localhost", true, true)
+		c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
 	}
 }
 
