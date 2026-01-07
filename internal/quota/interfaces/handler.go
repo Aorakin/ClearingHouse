@@ -5,6 +5,7 @@ import "github.com/gin-gonic/gin"
 type QuotaHandler interface {
 	CreateOrganizationQuota() gin.HandlerFunc
 	GetOrganizationQuota() gin.HandlerFunc
+	GetOrganizationQuotasByOrgID() gin.HandlerFunc
 
 	CreateProjectQuota() gin.HandlerFunc
 	CreateInternalProjectQuota() gin.HandlerFunc

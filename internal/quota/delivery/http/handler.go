@@ -74,6 +74,25 @@ func (h *QuotaHandler) GetOrganizationQuota() gin.HandlerFunc {
 	}
 }
 
+func (h *QuotaHandler) GetOrganizationQuotasByOrgID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		orgID := c.Param("org_id")
+		orgUUID, err := uuid.Parse(orgID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		quotas, err := h.quotaUsecase.GetOrganizationQuotasByOrgID(orgUUID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, quotas)
+	}
+}
+
 func (h *QuotaHandler) CreateProjectQuota() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)

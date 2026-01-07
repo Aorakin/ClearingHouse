@@ -10,6 +10,7 @@ type QuotaRepository interface {
 	IsOrgQuotaExist(fromOrgID uuid.UUID, toOrgID uuid.UUID, nodeID uuid.UUID) (bool, error)
 	CreateOrgQuota(quota *models.OrganizationQuota) error
 	GetOrganizationByRelationship(fromOrgID uuid.UUID, toOrgID uuid.UUID) ([]models.OrganizationQuota, error)
+	GetOrganizationQuotasByOrgID(orgID uuid.UUID) ([]models.OrganizationQuota, error)
 	GetOrgQuotaByID(id uuid.UUID) (*models.OrganizationQuota, error)
 	GetOrgUsage(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)
 	GetOrgQuotaQuantity(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)

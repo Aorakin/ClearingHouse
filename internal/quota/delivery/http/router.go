@@ -10,6 +10,7 @@ func MapQuotaRoutes(quotaGroup *gin.RouterGroup, quotaHandler interfaces.QuotaHa
 	quotaGroup.Use(middleware.AuthMiddleware())
 	quotaGroup.POST("/organization", quotaHandler.CreateOrganizationQuota())
 	quotaGroup.GET("/organization", quotaHandler.GetOrganizationQuota())
+	quotaGroup.GET("/organization/:org_id", quotaHandler.GetOrganizationQuotasByOrgID())
 
 	quotaGroup.POST("/project", quotaHandler.CreateProjectQuota())
 	quotaGroup.GET("/project/:project_id", quotaHandler.GetProjectQuotas())

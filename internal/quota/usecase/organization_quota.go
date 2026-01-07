@@ -42,6 +42,14 @@ func (u *QuotaUsecase) GetOrganizationQuota(fromOrgID uuid.UUID, toOrgID uuid.UU
 	return quotas, nil
 }
 
+func (u *QuotaUsecase) GetOrganizationQuotasByOrgID(orgID uuid.UUID) ([]models.OrganizationQuota, error) {
+	quotas, err := u.quotaRepo.GetOrganizationQuotasByOrgID(orgID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get organization quotas: %w", err))
+	}
+	return quotas, nil
+}
+
 func (u *QuotaUsecase) validateOrganizationQuotaRequest(request *dtos.CreateOrganizationQuotaRequest) error {
 	if len(request.Resources) == 0 {
 		return apiError.NewBadRequestError(errors.New("at least one resource quota is required"))

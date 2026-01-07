@@ -5,7 +5,7 @@ import "github.com/google/uuid"
 type ResourceProperty struct {
 	BaseModel
 	ResourceID  uuid.UUID `gorm:"type:uuid;not null" json:"resource_id"`
-	Resource    Resource  `gorm:"foreignKey:ResourceID" json:"-"`
+	Resource    Resource  `gorm:"foreignKey:ResourceID" json:"resource,omitempty"`
 	Price       float32   `gorm:"not null" json:"price"`
 	MaxDuration uint      `json:"max_duration"`
 }
@@ -27,8 +27,8 @@ type OrganizationQuota struct {
 	NodeID      uuid.UUID          `gorm:"type:uuid;not null" json:"node_id"`
 	FromOrgID   uuid.UUID          `gorm:"type:uuid;not null" json:"from_organization_id"`
 	ToOrgID     uuid.UUID          `gorm:"type:uuid;not null" json:"to_organization_id"`
-	FromOrg     Organization       `gorm:"foreignKey:FromOrgID" json:"-"`
-	ToOrg       Organization       `gorm:"foreignKey:ToOrgID" json:"-"`
+	FromOrg     Organization       `gorm:"foreignKey:FromOrgID" json:"from_organization,omitempty"`
+	ToOrg       Organization       `gorm:"foreignKey:ToOrgID" json:"to_organization,omitempty"`
 	Resources   []ResourceQuantity `gorm:"foreignKey:OrganizationQuotaID" json:"resources"`
 }
 
