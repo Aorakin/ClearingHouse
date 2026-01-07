@@ -12,5 +12,6 @@ type ProjectHandler interface {
 
 	GetAllUserProjects() gin.HandlerFunc
 	GetProject() gin.HandlerFunc
+	GetProjectsByOrganizationID() gin.HandlerFunc
 	GetProjectUsage() gin.HandlerFunc
 }

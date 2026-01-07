@@ -54,6 +54,15 @@ func (r *ProjectRepository) GetAllProjectsByUserID(userID uuid.UUID) ([]models.P
 	return user.MemberProjects, nil
 }
 
+func (r *ProjectRepository) GetProjectsByOrganizationID(orgID uuid.UUID) ([]models.Project, error) {
+	var projects []models.Project
+	err := r.db.Preload("Admins").Preload("Members").Where("organization_id = ?", orgID).Find(&projects).Error
+	if err != nil {
+		return nil, err
+	}
+	return projects, nil
+}
+
 func (r *ProjectRepository) GetProjectQuotaByType(projectID uuid.UUID, userID uuid.UUID) (*dtos.ResourceQuotaResponse, error) {
 	var quotas []models.NamespaceQuota
 

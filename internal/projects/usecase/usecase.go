@@ -126,6 +126,23 @@ func (u *ProjectUsecase) GetAllUserProjects(userID uuid.UUID) ([]models.Project,
 	return projects, nil
 }
 
+func (u *ProjectUsecase) GetProjectsByOrganizationID(orgID uuid.UUID, userID uuid.UUID) ([]models.Project, error) {
+	org, err := u.orgRepo.GetOrganizationByID(orgID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	if !helper.ContainsUserID(org.Members, userID) && !helper.ContainsUserID(org.Admins, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not a member of this organization")
+	}
+
+	projects, err := u.projRepo.GetProjectsByOrganizationID(orgID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+	return projects, nil
+}
+
 func (u *ProjectUsecase) GetProjectByID(projectID uuid.UUID, userID uuid.UUID) (*models.Project, error) {
 	project, err := u.projRepo.GetProjectByID(projectID)
 	if err != nil {

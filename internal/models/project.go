@@ -10,6 +10,6 @@ type Project struct {
 	Organization   Organization   `gorm:"foreignKey:OrganizationID" json:"-"`
 	Namespaces     []Namespace    `gorm:"foreignKey:ProjectID" json:"-"`
 	Quotas         []ProjectQuota `gorm:"foreignKey:ProjectID" json:"-"`
-	Members        []User         `gorm:"many2many:project_members;" json:"-"`
-	Admins         []User         `gorm:"many2many:project_admins;" json:"-"`
+	Members        []User         `gorm:"many2many:project_members;" json:"members"`
+	Admins         []User         `gorm:"many2many:project_admins;" json:"admins"`
 }

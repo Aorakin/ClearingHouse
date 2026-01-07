@@ -130,6 +130,36 @@ func (h *ProjectHandler) GetProject() gin.HandlerFunc {
 	}
 }
 
+func (h *ProjectHandler) GetProjectsByOrganizationID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		orgID := c.Param("orgId")
+		if orgID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid organization ID")))
+			return
+		}
+
+		orgUUID, err := uuid.Parse(orgID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid organization ID")))
+			return
+		}
+
+		projects, err := h.projUsecase.GetProjectsByOrganizationID(orgUUID, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, projects)
+	}
+}
+
 func (h *ProjectHandler) GetProjectUsage() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
