@@ -198,3 +198,23 @@ func (u *NamespaceUsecase) GetAllPrivateNamespaces(userID uuid.UUID) ([]models.N
 	}
 	return namespaces, nil
 }
+
+func (u *NamespaceUsecase) GetNamespacesByProjectID(projectID uuid.UUID, userID uuid.UUID) ([]models.Namespace, error) {
+	// Check if project exists and user has access
+	proj, err := u.projRepo.GetProjectByID(projectID)
+	if err != nil {
+		return nil, apiError.NewNotFoundError("project not found")
+	}
+
+	// Check if user is a member or admin of the project
+	if !helper.ContainsUserID(proj.Members, userID) && !helper.ContainsUserID(proj.Admins, userID) {
+		return nil, apiError.NewUnauthorizedError("user does not have access to this project")
+	}
+
+	namespaces, err := u.namespaceRepo.GetAllNamespacesByProjectID(projectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	return namespaces, nil
+}

@@ -185,3 +185,33 @@ func (h *NamespaceHandler) GetAllPrivateNamespaces() gin.HandlerFunc {
 		c.JSON(http.StatusOK, namespaces)
 	}
 }
+
+func (h *NamespaceHandler) GetNamespacesByProjectID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		projectID := c.Param("projectId")
+		if projectID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
+			return
+		}
+
+		projectUUID := uuid.MustParse(projectID)
+		if projectUUID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
+			return
+		}
+
+		namespaces, err := h.namespaceUsecase.GetNamespacesByProjectID(projectUUID, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, namespaces)
+	}
+}

@@ -17,4 +17,5 @@ type NamespaceUsecase interface {
 	GetNamespaceUsages(namespaceID uuid.UUID, userID uuid.UUID) (*dtos.NamespaceUsageResponse, error)
 
 	GetAllPrivateNamespaces(userID uuid.UUID) ([]models.Namespace, error)
+	GetNamespacesByProjectID(projectID uuid.UUID, userID uuid.UUID) ([]models.Namespace, error)
 }
