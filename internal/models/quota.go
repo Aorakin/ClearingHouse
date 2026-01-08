@@ -37,7 +37,7 @@ type ProjectQuota struct {
 	Name                string             `json:"name"`
 	Description         string             `json:"description"`
 	OrganizationID      uuid.UUID          `gorm:"type:uuid" json:"organization_id"`
-	OrganizationQuotaID *uuid.UUID         `gorm:"type:uuid;not null" json:"organization_quota_id"`
+	OrganizationQuotaID *uuid.UUID         `gorm:"type:uuid" json:"organization_quota_id"`
 	ProjectID           uuid.UUID          `gorm:"type:uuid;not null" json:"project_id"`
 	NodeID              uuid.UUID          `gorm:"type:uuid;not null" json:"node_id"`
 	Project             Project            `gorm:"foreignKey:ProjectID" json:"-"`
