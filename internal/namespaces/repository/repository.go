@@ -34,7 +34,7 @@ func (r *NamespaceRepository) GetAll() ([]models.Namespace, error) {
 
 func (r *NamespaceRepository) GetNamespaceByID(namespaceID uuid.UUID) (*models.Namespace, error) {
 	var namespace models.Namespace
-	err := r.db.Preload("Members").First(&namespace, "id = ?", namespaceID).Error
+	err := r.db.Preload("Members").Preload("Owner").First(&namespace, "id = ?", namespaceID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (r *NamespaceRepository) GetNamespaceByID(namespaceID uuid.UUID) (*models.N
 
 func (r *NamespaceRepository) GetAllNamespacesByProjectID(projectID uuid.UUID) ([]models.Namespace, error) {
 	var namespaces []models.Namespace
-	err := r.db.Where("project_id = ?", projectID).Find(&namespaces).Error
+	err := r.db.Preload("Owner").Where("project_id = ?", projectID).Find(&namespaces).Error
 	return namespaces, err
 }
 

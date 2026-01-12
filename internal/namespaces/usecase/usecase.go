@@ -46,6 +46,8 @@ func (u *NamespaceUsecase) CreateNamespace(request *dtos.CreateNamespaceRequest,
 		Description: request.Description,
 		Credit:      request.Credit,
 		ProjectID:   &request.ProjectID,
+		OrgID:       proj.OrganizationID,
+		OwnerID:     userID,
 	}
 
 	err = u.namespaceRepo.Create(&namespace)
@@ -124,8 +126,9 @@ func (u *NamespaceUsecase) GetNamespace(namespaceID uuid.UUID, userID uuid.UUID)
 		return nil, apiError.NewInternalServerError(err)
 	}
 
-	if !helper.ContainsUserID(namespace.Members, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not namespace member")
+	// Check if user is owner or member
+	if namespace.OwnerID != userID && !helper.ContainsUserID(namespace.Members, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not namespace owner or member")
 	}
 
 	log.Printf("Namespace members: %+v", namespace.Members)
