@@ -39,6 +39,7 @@ type QuotaRepository interface {
 	AddQuotasToTemplate(templateID uuid.UUID, quotaIDs []uuid.UUID) error
 	RemoveQuotasFromTemplate(templateID uuid.UUID, quotaIDs []uuid.UUID) error
 	GetNamespaceQuotaTemplateByID(templateID uuid.UUID) (*models.NamespaceQuotaTemplate, error)
+	GetNamespaceQuotaTemplatesByProjectID(projectID uuid.UUID) ([]models.NamespaceQuotaTemplate, error)
 	AssignQuotaToNamespace(namespaceID uuid.UUID, quotaTemplateID uuid.UUID) error
 	IsAssigned(namespaceID uuid.UUID, quotaID uuid.UUID) (bool, error)
 }

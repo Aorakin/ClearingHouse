@@ -98,6 +98,19 @@ func (u *QuotaUsecase) GetNamespaceQuotaTemplate(quotaTemplateID uuid.UUID) (*mo
 	return quotaTemplate, nil
 }
 
+func (u *QuotaUsecase) GetNamespaceQuotaTemplatesByProjectID(projectID uuid.UUID, userID uuid.UUID) ([]models.NamespaceQuotaTemplate, error) {
+	if err := u.isProjAdmin(projectID, userID); err != nil {
+		return nil, err
+	}
+
+	templates, err := u.quotaRepo.GetNamespaceQuotaTemplatesByProjectID(projectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get namespace quota templates: %w", err))
+	}
+
+	return templates, nil
+}
+
 func (u *QuotaUsecase) AssignQuotaTemplateToNamespace(request *dtos.AssignQuotaToNamespaceRequest, userID uuid.UUID) error {
 	if err := u.isProjAdmin(request.ProjectID, userID); err != nil {
 		return err
@@ -173,7 +186,12 @@ func (u *QuotaUsecase) validateNamespaceQuotaRequest(request *dtos.CreateNamespa
 	seenResources := make(map[uuid.UUID]struct{})
 	for _, r := range request.Resources {
 		if _, exists := quotaResourcesMap[r.ResourceID]; !exists {
-			return apiError.NewBadRequestError(fmt.Errorf("resource %s not found in project quota", r.ResourceID))
+			// Build list of available resource IDs for better error message
+			availableResources := make([]uuid.UUID, 0, len(quotaResourcesMap))
+			for resourceID := range quotaResourcesMap {
+				availableResources = append(availableResources, resourceID)
+			}
+			return apiError.NewBadRequestError(fmt.Errorf("resource %s not found in project quota. Available resources: %v", r.ResourceID, availableResources))
 		}
 
 		if _, duplicate := seenResources[r.ResourceID]; duplicate {

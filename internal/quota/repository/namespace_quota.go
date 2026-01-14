@@ -52,6 +52,15 @@ func (r *QuotaRepository) GetNamespaceQuotaTemplateByID(templateID uuid.UUID) (*
 	return &template, nil
 }
 
+func (r *QuotaRepository) GetNamespaceQuotaTemplatesByProjectID(projectID uuid.UUID) ([]models.NamespaceQuotaTemplate, error) {
+	var templates []models.NamespaceQuotaTemplate
+	if err := r.db.Preload("Quotas.Resources.ResourceProp.Resource").Where("project_id = ?", projectID).Find(&templates).Error; err != nil {
+		return nil, err
+	}
+
+	return templates, nil
+}
+
 func (r *QuotaRepository) GetNamespaceQuotasByIDs(quotaIDs []uuid.UUID, projectID uuid.UUID) ([]models.NamespaceQuota, error) {
 	var namespaceQuotas []models.NamespaceQuota
 	err := r.db.Where("id IN ? and project_id = ?", quotaIDs, projectID).
@@ -102,7 +111,7 @@ func (r *QuotaRepository) GetNamespaceQuotasByProjectID(projectID uuid.UUID) ([]
 	var namespaceQuotas []models.NamespaceQuota
 
 	err := r.db.
-		Preload("Resources.ResourceProp").
+		Preload("Resources.ResourceProp.Resource.ResourceType").
 		Preload("Node.ResourcePool.Organization").
 		Where("project_id = ?", projectID).
 		Find(&namespaceQuotas).Error
@@ -141,7 +150,7 @@ func (r *QuotaRepository) GetNamespaceQuotaByNamespaceID(namespaceID uuid.UUID) 
 
 	err := r.db.
 		Joins("JOIN namespace_quota_template_relations nqt ON nqt.namespace_quota_id = namespace_quota.id").
-		Preload("Resources.ResourceProp").
+		Preload("Resources.ResourceProp.Resource.ResourceType").
 		Preload("Node.ResourcePool.Organization").
 		Where("nqt.namespace_quota_template_id = ?", *namespace.QuotaTemplateID).
 		Find(&namespaceQuotas).Error

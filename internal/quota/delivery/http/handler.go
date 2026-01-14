@@ -238,6 +238,36 @@ func (h *QuotaHandler) GetNamespaceQuotaTemplate() gin.HandlerFunc {
 	}
 }
 
+func (h *QuotaHandler) GetNamespaceQuotaTemplatesByProjectID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		projectID := c.Param("project_id")
+		if projectID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Project ID is required")))
+			return
+		}
+
+		projectUUID, err := uuid.Parse(projectID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		templates, err := h.quotaUsecase.GetNamespaceQuotaTemplatesByProjectID(projectUUID, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, templates)
+	}
+}
+
 func (h *QuotaHandler) AssignQuotaTemplateToNamespace() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
