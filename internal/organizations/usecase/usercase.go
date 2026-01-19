@@ -65,6 +65,26 @@ func (u *OrganizationUsecase) CreateOrganization(request *dtos.CreateOrganizatio
 
 	return org, nil
 }
+func (u *OrganizationUsecase) UpdateOrganization(orgID uuid.UUID, request *dtos.UpdateOrganization, userID uuid.UUID) (*models.Organization, error) {
+	org, err := u.orgRepo.GetOrganizationByID(orgID)
+	if err != nil {
+		return nil, apierror.NewInternalServerError(err)
+	}
+
+	if !helper.ContainsUserID(org.Admins, userID) {
+		return nil, apierror.NewUnauthorizedError("user is not organization admin")
+	}
+
+	org.Name = request.Name
+	org.Description = request.Description
+
+	updatedOrg, err := u.orgRepo.UpdateOrganization(org)
+	if err != nil {
+		return nil, apierror.NewInternalServerError(err)
+	}
+
+	return updatedOrg, nil
+}
 
 func (u *OrganizationUsecase) AddMembers(request *dtos.AddMembersRequest, userID uuid.UUID) (*models.Organization, error) {
 	org, err := u.orgRepo.GetOrganizationByID(request.OrganizationID)

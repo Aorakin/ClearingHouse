@@ -83,11 +83,12 @@ func (u *QuotaUsecase) isNamespaceMember(namespaceID uuid.UUID, userID uuid.UUID
 		return apiError.NewNotFoundError(fmt.Errorf("failed to get user: %w", err))
 	}
 
-	if !helper.ContainsUserID(namespace.Members, user.ID) {
-		return apiError.NewForbiddenError(fmt.Errorf("user is not a member of the namespace"))
+	// Allow both owners and members
+	if namespace.OwnerID == user.ID || helper.ContainsUserID(namespace.Members, user.ID) {
+		return nil
 	}
 
-	return nil
+	return apiError.NewForbiddenError(fmt.Errorf("user is not a member or owner of the namespace"))
 }
 
 func (u *QuotaUsecase) GetUsage(quotaID uuid.UUID, namespaceID uuid.UUID, userID uuid.UUID) (interface{}, error) {

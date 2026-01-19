@@ -110,3 +110,39 @@ func (h *OrganizationHandler) AddMembers() gin.HandlerFunc {
 		c.JSON(http.StatusOK, org)
 	}
 }
+
+func (h *OrganizationHandler) UpdateOrganization() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		var uri dtos.OrganizationURI
+		if err := c.ShouldBindUri(&uri); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		orgID, err := uuid.Parse(uri.OrgID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		var dto dtos.UpdateOrganization
+		if err := c.ShouldBindJSON(&dto); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		org, uErr := h.organizationUsecase.UpdateOrganization(orgID, &dto, userID)
+		if uErr != nil {
+			c.JSON(response.ErrorResponseBuilder(uErr))
+			return
+		}
+
+		c.JSON(http.StatusOK, org)
+	}
+}

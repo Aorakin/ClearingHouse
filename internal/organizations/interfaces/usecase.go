@@ -10,5 +10,6 @@ type OrganizationUsecase interface {
 	GetAllOrganizations() ([]models.Organization, error)
 	GetOrganizationByID(orgID uuid.UUID, userID uuid.UUID) (*models.Organization, error)
 	CreateOrganization(request *dtos.CreateOrganization, userID uuid.UUID) (*models.Organization, error)
+	UpdateOrganization(orgID uuid.UUID, request *dtos.UpdateOrganization, userID uuid.UUID) (*models.Organization, error)
 	AddMembers(request *dtos.AddMembersRequest, userID uuid.UUID) (*models.Organization, error)
 }

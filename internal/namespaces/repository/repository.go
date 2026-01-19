@@ -43,7 +43,7 @@ func (r *NamespaceRepository) GetNamespaceByID(namespaceID uuid.UUID) (*models.N
 
 func (r *NamespaceRepository) GetAllNamespacesByProjectID(projectID uuid.UUID) ([]models.Namespace, error) {
 	var namespaces []models.Namespace
-	err := r.db.Preload("Owner").Where("project_id = ?", projectID).Find(&namespaces).Error
+	err := r.db.Preload("Owner").Preload("QuotaTemplate.Quotas.Resources.ResourceProp.Resource.ResourceType").Where("project_id = ?", projectID).Find(&namespaces).Error
 	return namespaces, err
 }
 

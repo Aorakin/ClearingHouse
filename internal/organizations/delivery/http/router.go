@@ -11,5 +11,6 @@ func MapOrganizationRoutes(orgGroup *gin.RouterGroup, orgHandler interfaces.Orga
 	orgGroup.Use(middleware.AuthMiddleware())
 	orgGroup.GET("/:org-id", orgHandler.GetOrganizationByID())
 	orgGroup.POST("/", orgHandler.CreateOrganization())
+	orgGroup.PUT("/:org-id", orgHandler.UpdateOrganization())
 	orgGroup.POST("/members", orgHandler.AddMembers())
 }

@@ -54,7 +54,7 @@ func (r *QuotaRepository) GetNamespaceQuotaTemplateByID(templateID uuid.UUID) (*
 
 func (r *QuotaRepository) GetNamespaceQuotaTemplatesByProjectID(projectID uuid.UUID) ([]models.NamespaceQuotaTemplate, error) {
 	var templates []models.NamespaceQuotaTemplate
-	if err := r.db.Preload("Quotas.Resources.ResourceProp.Resource").Where("project_id = ?", projectID).Find(&templates).Error; err != nil {
+	if err := r.db.Preload("Quotas.Resources.ResourceProp.Resource.ResourceType").Where("project_id = ?", projectID).Find(&templates).Error; err != nil {
 		return nil, err
 	}
 
