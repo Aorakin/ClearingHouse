@@ -7,20 +7,23 @@ import (
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/organizations/dtos"
 	"github.com/ClearingHouse/internal/organizations/interfaces"
+	quotaInterfaces "github.com/ClearingHouse/internal/quota/interfaces"
 	userInterfaces "github.com/ClearingHouse/internal/users/interfaces"
 	apierror "github.com/ClearingHouse/pkg/api_error"
 	"github.com/google/uuid"
 )
 
 type OrganizationUsecase struct {
-	orgRepo  interfaces.OrganizationRepository
-	userRepo userInterfaces.UsersRepository
+	orgRepo   interfaces.OrganizationRepository
+	userRepo  userInterfaces.UsersRepository
+	quotaRepo quotaInterfaces.QuotaRepository
 }
 
-func NewOrganizationUsecase(orgRepo interfaces.OrganizationRepository, userRepo userInterfaces.UsersRepository) interfaces.OrganizationUsecase {
+func NewOrganizationUsecase(orgRepo interfaces.OrganizationRepository, userRepo userInterfaces.UsersRepository, quotaRepo quotaInterfaces.QuotaRepository) interfaces.OrganizationUsecase {
 	return &OrganizationUsecase{
-		orgRepo:  orgRepo,
-		userRepo: userRepo,
+		orgRepo:   orgRepo,
+		userRepo:  userRepo,
+		quotaRepo: quotaRepo,
 	}
 }
 
@@ -84,6 +87,44 @@ func (u *OrganizationUsecase) UpdateOrganization(orgID uuid.UUID, request *dtos.
 	}
 
 	return updatedOrg, nil
+}
+
+func (u *OrganizationUsecase) DeleteOrganization(orgID uuid.UUID, userID uuid.UUID) error {
+	org, err := u.orgRepo.GetOrganizationByID(orgID)
+	if err != nil {
+		return apierror.NewInternalServerError(err)
+	}
+
+	if !helper.ContainsUserID(org.Admins, userID) {
+		return apierror.NewUnauthorizedError("user is not organization admin")
+	}
+
+	// Prevent deletion if organization has projects
+	if len(org.Projects) > 0 {
+		return apierror.NewBadRequestError(fmt.Errorf("cannot delete organization with existing projects. Please delete all projects first"))
+	}
+
+	// Prevent deletion if organization has resource pools
+	if len(org.ResourcePools) > 0 {
+		return apierror.NewBadRequestError(fmt.Errorf("cannot delete organization with existing resource pools. Please delete all resource pools first"))
+	}
+
+	// Prevent deletion if organization has given quotas to other organizations
+	// These quotas are being used by other organizations and must be revoked first
+	if len(org.GivenQuotas) > 0 {
+		return apierror.NewBadRequestError(fmt.Errorf("cannot delete organization with given quotas to other organizations. Please revoke all given quotas first"))
+	}
+
+	// Delete all quotas received by this organization (ToOrgID = orgID)
+	if err := u.quotaRepo.DeleteOrganizationQuotasByOrgID(orgID); err != nil {
+		return apierror.NewInternalServerError(err)
+	}
+
+	if err := u.orgRepo.DeleteOrganization(orgID); err != nil {
+		return apierror.NewInternalServerError(err)
+	}
+
+	return nil
 }
 
 func (u *OrganizationUsecase) AddMembers(request *dtos.AddMembersRequest, userID uuid.UUID) (*models.Organization, error) {

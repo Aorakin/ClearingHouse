@@ -73,3 +73,7 @@ func (r *QuotaRepository) GetOrgQuotaQuantity(quotaID uuid.UUID, resourceID uuid
 	}
 	return total, nil
 }
+
+func (r *QuotaRepository) DeleteOrganizationQuotasByOrgID(orgID uuid.UUID) error {
+	return r.db.Where("to_org_id = ?", orgID).Delete(&models.OrganizationQuota{}).Error
+}

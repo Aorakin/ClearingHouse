@@ -23,7 +23,7 @@ func (r *OrganizationRepository) CreateOrganization(org *models.Organization) (*
 }
 func (r *OrganizationRepository) GetOrganizationByID(id uuid.UUID) (*models.Organization, error) {
 	var org models.Organization
-	if err := r.db.Preload("Members").Preload("Admins").First(&org, "id = ?", id).Error; err != nil {
+	if err := r.db.Preload("Members").Preload("Admins").Preload("Projects").Preload("ResourcePools").Preload("Quotas").Preload("GivenQuotas").First(&org, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &org, nil

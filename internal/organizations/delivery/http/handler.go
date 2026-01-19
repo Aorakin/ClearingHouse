@@ -111,6 +111,35 @@ func (h *OrganizationHandler) AddMembers() gin.HandlerFunc {
 	}
 }
 
+func (h *OrganizationHandler) DeleteOrganization() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		var uri dtos.OrganizationURI
+		if err := c.ShouldBindUri(&uri); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		orgID, err := uuid.Parse(uri.OrgID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		if err := h.organizationUsecase.DeleteOrganization(orgID, userID); err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "organization deleted successfully"})
+	}
+}
+
 func (h *OrganizationHandler) UpdateOrganization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)

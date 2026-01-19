@@ -14,6 +14,7 @@ type QuotaRepository interface {
 	GetOrgQuotaByID(id uuid.UUID) (*models.OrganizationQuota, error)
 	GetOrgUsage(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)
 	GetOrgQuotaQuantity(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)
+	DeleteOrganizationQuotasByOrgID(orgID uuid.UUID) error
 
 	IsProjectQuotaExist(projectID uuid.UUID, nodeID uuid.UUID) (bool, error)
 	CreateProjectQuota(quota *models.ProjectQuota) error
