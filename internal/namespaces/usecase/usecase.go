@@ -112,6 +112,65 @@ func (u *NamespaceUsecase) AddMembers(req *dtos.AddMembersRequest, userID uuid.U
 	return namespace, nil
 }
 
+func (u *NamespaceUsecase) RemoveMembers(req *dtos.RemoveMembersRequest, userID uuid.UUID) (*models.Namespace, error) {
+	namespace, err := u.namespaceRepo.GetNamespaceByID(req.NamespaceID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	proj, err := u.projRepo.GetProjectByID(*namespace.ProjectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	if !helper.ContainsUserID(proj.Admins, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project admin")
+	}
+
+	// Create a map of members to remove for quick lookup
+	removeMap := make(map[uuid.UUID]struct{})
+	seenReq := make(map[uuid.UUID]struct{})
+	for _, memberID := range req.Members {
+		if _, found := seenReq[memberID]; found {
+			return nil, apiError.NewBadRequestError(fmt.Sprintf("duplicate user %s in request", memberID))
+		}
+		seenReq[memberID] = struct{}{}
+		removeMap[memberID] = struct{}{}
+	}
+
+	// Check if members to remove exist in namespace and prevent removing owner
+	existing := make(map[uuid.UUID]struct{})
+	for _, m := range namespace.Members {
+		existing[m.ID] = struct{}{}
+	}
+
+	for _, memberID := range req.Members {
+		if _, found := existing[memberID]; !found {
+			return nil, apiError.NewNotFoundError(fmt.Sprintf("user %s is not a member of this namespace", memberID))
+		}
+		// Prevent removing namespace owner
+		if namespace.OwnerID == memberID {
+			return nil, apiError.NewBadRequestError(fmt.Sprintf("user %s is the namespace owner and cannot be removed", memberID))
+		}
+	}
+
+	// Filter out members to remove
+	newMembers := []models.User{}
+	for _, member := range namespace.Members {
+		if _, shouldRemove := removeMap[member.ID]; !shouldRemove {
+			newMembers = append(newMembers, member)
+		}
+	}
+
+	namespace.Members = newMembers
+
+	if err := u.namespaceRepo.UpdateMembers(namespace); err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	return namespace, nil
+}
+
 func (u *NamespaceUsecase) GetAllUserNamespaces(projID uuid.UUID, userID uuid.UUID) ([]models.Namespace, error) {
 	namespaces, err := u.namespaceRepo.GetAllNamespacesByProjectAndUserID(projID, userID)
 	if err != nil {

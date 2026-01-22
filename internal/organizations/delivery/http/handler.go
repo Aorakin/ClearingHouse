@@ -111,6 +111,30 @@ func (h *OrganizationHandler) AddMembers() gin.HandlerFunc {
 	}
 }
 
+func (h *OrganizationHandler) RemoveMembers() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		var request dtos.RemoveMembersRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		org, err := h.organizationUsecase.RemoveMembers(&request, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, org)
+	}
+}
+
 func (h *OrganizationHandler) DeleteOrganization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
@@ -173,5 +197,47 @@ func (h *OrganizationHandler) UpdateOrganization() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, org)
+	}
+}
+
+func (h *OrganizationHandler) GetMembers() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+		members, err := h.organizationUsecase.GetMembers()
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, members)
+	}
+}
+func (h *OrganizationHandler) GetOrganizationMembers() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+		var uri dtos.OrganizationURI
+		if err := c.ShouldBindUri(&uri); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+		orgID, err := uuid.Parse(uri.OrgID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+		members, err := h.organizationUsecase.GetOrganizationMembers(orgID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+		c.JSON(http.StatusOK, members)
 	}
 }

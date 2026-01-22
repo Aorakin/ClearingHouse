@@ -9,4 +9,7 @@ type OrganizationHandler interface {
 	UpdateOrganization() gin.HandlerFunc
 	DeleteOrganization() gin.HandlerFunc
 	AddMembers() gin.HandlerFunc
+	RemoveMembers() gin.HandlerFunc
+	GetMembers() gin.HandlerFunc
+	GetOrganizationMembers() gin.HandlerFunc
 }

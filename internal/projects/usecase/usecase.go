@@ -117,6 +117,60 @@ func (u *ProjectUsecase) AddMembers(request *dtos.AddMembersRequest, userID uuid
 	return project, nil
 }
 
+func (u *ProjectUsecase) RemoveMembers(request *dtos.RemoveMembersRequest, userID uuid.UUID) (*models.Project, error) {
+	project, err := u.projRepo.GetProjectByID(request.ProjectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	if !helper.ContainsUserID(project.Admins, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project admin")
+	}
+
+	// Create a map of members to remove for quick lookup
+	removeMap := make(map[uuid.UUID]struct{})
+	seenReq := make(map[uuid.UUID]struct{})
+	for _, memberID := range request.Members {
+		if _, found := seenReq[memberID]; found {
+			return nil, apiError.NewBadRequestError(fmt.Sprintf("duplicate user %s in request", memberID))
+		}
+		seenReq[memberID] = struct{}{}
+		removeMap[memberID] = struct{}{}
+	}
+
+	// Check if members to remove exist in project and prevent removing admins
+	existing := make(map[uuid.UUID]struct{})
+	for _, m := range project.Members {
+		existing[m.ID] = struct{}{}
+	}
+
+	for _, memberID := range request.Members {
+		if _, found := existing[memberID]; !found {
+			return nil, apiError.NewNotFoundError(fmt.Sprintf("user %s is not a member of this project", memberID))
+		}
+		// Prevent removing admins through member removal
+		if helper.ContainsUserID(project.Admins, memberID) {
+			return nil, apiError.NewBadRequestError(fmt.Sprintf("user %s is an admin and cannot be removed as a member directly", memberID))
+		}
+	}
+
+	// Filter out members to remove
+	newMembers := []models.User{}
+	for _, member := range project.Members {
+		if _, shouldRemove := removeMap[member.ID]; !shouldRemove {
+			newMembers = append(newMembers, member)
+		}
+	}
+
+	project.Members = newMembers
+
+	if err := u.projRepo.UpdateMembers(project); err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	return project, nil
+}
+
 func (u *ProjectUsecase) GetAllUserProjects(userID uuid.UUID) ([]models.Project, error) {
 	projects, err := u.projRepo.GetAllProjectsByUserID(userID)
 	if err != nil {
@@ -141,6 +195,24 @@ func (u *ProjectUsecase) GetProjectsByOrganizationID(orgID uuid.UUID, userID uui
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 	return projects, nil
+}
+
+func (u *ProjectUsecase) GetProjectMembers(projectID uuid.UUID, userID uuid.UUID) ([]models.User, error) {
+	project, err := u.projRepo.GetProjectByID(projectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	if !helper.ContainsUserID(project.Members, userID) && !helper.ContainsUserID(project.Admins, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project member")
+	}
+
+	members, err := u.projRepo.GetProjectMembers(projectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	return members, nil
 }
 
 func (u *ProjectUsecase) GetProjectByID(projectID uuid.UUID, userID uuid.UUID) (*models.Project, error) {

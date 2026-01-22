@@ -82,6 +82,30 @@ func (h *ProjectHandler) AddMembers() gin.HandlerFunc {
 	}
 }
 
+func (h *ProjectHandler) RemoveMembers() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		var request dtos.RemoveMembersRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err.Error())))
+			return
+		}
+
+		project, err := h.projUsecase.RemoveMembers(&request, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, project)
+	}
+}
+
 func (h *ProjectHandler) GetAllUserProjects() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
@@ -157,6 +181,36 @@ func (h *ProjectHandler) GetProjectsByOrganizationID() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, projects)
+	}
+}
+
+func (h *ProjectHandler) GetProjectMembers() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		projectID := c.Param("id")
+		if projectID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
+			return
+		}
+
+		projectUUID, err := uuid.Parse(projectID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
+			return
+		}
+
+		members, err := h.projUsecase.GetProjectMembers(projectUUID, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, members)
 	}
 }
 

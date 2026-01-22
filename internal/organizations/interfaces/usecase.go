@@ -13,4 +13,7 @@ type OrganizationUsecase interface {
 	UpdateOrganization(orgID uuid.UUID, request *dtos.UpdateOrganization, userID uuid.UUID) (*models.Organization, error)
 	DeleteOrganization(orgID uuid.UUID, userID uuid.UUID) error
 	AddMembers(request *dtos.AddMembersRequest, userID uuid.UUID) (*models.Organization, error)
+	RemoveMembers(request *dtos.RemoveMembersRequest, userID uuid.UUID) (*models.Organization, error)
+	GetMembers() ([]models.User, error)
+	GetOrganizationMembers(orgID uuid.UUID) ([]models.User, error)
 }

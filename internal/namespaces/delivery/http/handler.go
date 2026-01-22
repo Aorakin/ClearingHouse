@@ -79,6 +79,30 @@ func (h *NamespaceHandler) AddMembers() gin.HandlerFunc {
 	}
 }
 
+func (h *NamespaceHandler) RemoveMembers() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		var request dtos.RemoveMembersRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		namespace, err := h.namespaceUsecase.RemoveMembers(&request, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, namespace)
+	}
+}
+
 func (h *NamespaceHandler) GetAllUserNamespaces() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)

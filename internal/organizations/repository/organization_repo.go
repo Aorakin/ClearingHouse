@@ -52,3 +52,18 @@ func (r *OrganizationRepository) GetOrganizations() ([]models.Organization, erro
 func (r *OrganizationRepository) UpdateMembers(org *models.Organization) error {
 	return r.db.Model(org).Association("Members").Replace(org.Members)
 }
+
+func (r *OrganizationRepository) GetMembers() ([]models.User, error) {
+	var users []models.User
+	if err := r.db.Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+func (r *OrganizationRepository) GetOrganizationMembers(orgID uuid.UUID) ([]models.User, error) {
+	var org models.Organization
+	if err := r.db.Preload("Members").First(&org, "id = ?", orgID).Error; err != nil {
+		return nil, err
+	}
+	return org.Members, nil
+}

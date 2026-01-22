@@ -17,6 +17,7 @@ type ProjectRepository interface {
 
 	GetAllProjectsByUserID(userID uuid.UUID) ([]models.Project, error)
 	GetProjectsByOrganizationID(orgID uuid.UUID) ([]models.Project, error)
+	GetProjectMembers(projectID uuid.UUID) ([]models.User, error)
 	GetProjectQuotaByType(projectID uuid.UUID, userID uuid.UUID) (*dtos.ResourceQuotaResponse, error)
 	GetProjectUsageByType(projectID uuid.UUID, userID uuid.UUID) (*dtos.ResourceUsageResponse, error)
 }

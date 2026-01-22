@@ -1,0 +1,8 @@
+package dtos
+
+import "github.com/google/uuid"
+
+type RemoveMembersRequest struct {
+	ProjectID uuid.UUID   `json:"project_id" binding:"required,uuid"`
+	Members   []uuid.UUID `json:"members" binding:"required,dive,uuid"`
+}
