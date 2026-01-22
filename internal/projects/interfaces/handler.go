@@ -6,12 +6,11 @@ type ProjectHandler interface {
 	CreateProject() gin.HandlerFunc
 	GetAllProjects() gin.HandlerFunc
 	AddMembers() gin.HandlerFunc
-	// GetProject() gin.HandlerFunc
-	// UpdateProject() gin.HandlerFunc
-	// DeleteProject() gin.HandlerFunc
+	GetProject() gin.HandlerFunc
+	UpdateProject() gin.HandlerFunc
+	DeleteProject() gin.HandlerFunc
 
 	GetAllUserProjects() gin.HandlerFunc
-	GetProject() gin.HandlerFunc
 	GetProjectsByOrganizationID() gin.HandlerFunc
 	GetProjectUsage() gin.HandlerFunc
 }

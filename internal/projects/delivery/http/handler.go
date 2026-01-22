@@ -189,3 +189,54 @@ func (h *ProjectHandler) GetProjectUsage() gin.HandlerFunc {
 		c.JSON(http.StatusOK, project)
 	}
 }
+
+func (h *ProjectHandler) UpdateProject() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		var request dtos.UpdateProjectRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		project, err := h.projUsecase.UpdateProject(&request, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+		c.JSON(http.StatusOK, project)
+	}
+}
+func (h *ProjectHandler) DeleteProject() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		projectID := c.Param("id")
+		if projectID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
+			return
+		}
+
+		projectUUID, err := uuid.Parse(projectID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid project ID")))
+			return
+		}
+
+		if err := h.projUsecase.DeleteProject(projectUUID, userID); err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "project deleted successfully"})
+	}
+}

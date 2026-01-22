@@ -195,3 +195,53 @@ func (u *ProjectUsecase) GetProjectUsage(projectID uuid.UUID, userID uuid.UUID) 
 
 	return &projectUsage, nil
 }
+
+func (u *ProjectUsecase) UpdateProject(request *dtos.UpdateProjectRequest, userID uuid.UUID) (*models.Project, error) {
+	project, err := u.projRepo.GetProjectByID(request.ProjectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	// Only admins can update project
+	if !helper.ContainsUserID(project.Admins, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project admin")
+	}
+
+	// Update only provided fields
+	if request.Name != "" {
+		project.Name = request.Name
+	}
+	if request.Description != "" {
+		project.Description = request.Description
+	}
+
+	if err := u.projRepo.UpdateProject(project); err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	// Fetch updated project with associations
+	updatedProject, err := u.projRepo.GetProjectByID(request.ProjectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	return updatedProject, nil
+}
+
+func (u *ProjectUsecase) DeleteProject(projectID uuid.UUID, userID uuid.UUID) error {
+	project, err := u.projRepo.GetProjectByID(projectID)
+	if err != nil {
+		return apiError.NewInternalServerError(err.Error())
+	}
+
+	// Only admins can delete project
+	if !helper.ContainsUserID(project.Admins, userID) {
+		return apiError.NewUnauthorizedError("user is not project admin")
+	}
+
+	if err := u.projRepo.DeleteProject(projectID); err != nil {
+		return apiError.NewInternalServerError(err.Error())
+	}
+
+	return nil
+}

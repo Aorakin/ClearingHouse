@@ -16,4 +16,6 @@ type ProjectUsecase interface {
 	GetProjectsByOrganizationID(orgID uuid.UUID, userID uuid.UUID) ([]models.Project, error)
 
 	GetProjectUsage(projectID uuid.UUID, userID uuid.UUID) (*dtos.ProjectUsageResponse, error)
+	UpdateProject(request *dtos.UpdateProjectRequest, userID uuid.UUID) (*models.Project, error)
+	DeleteProject(projectID uuid.UUID, userID uuid.UUID) error
 }

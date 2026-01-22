@@ -42,8 +42,19 @@ func (r *ProjectRepository) GetProjectByID(id uuid.UUID) (*models.Project, error
 	return &project, nil
 }
 
+func (r *ProjectRepository) UpdateProject(project *models.Project) error {
+	return r.db.Model(project).Updates(map[string]interface{}{
+		"name":        project.Name,
+		"description": project.Description,
+	}).Error
+}
+
 func (r *ProjectRepository) UpdateMembers(project *models.Project) error {
 	return r.db.Model(project).Association("Members").Replace(project.Members)
+}
+
+func (r *ProjectRepository) DeleteProject(id uuid.UUID) error {
+	return r.db.Delete(&models.Project{}, "id = ?", id).Error
 }
 
 func (r *ProjectRepository) GetAllProjectsByUserID(userID uuid.UUID) ([]models.Project, error) {
