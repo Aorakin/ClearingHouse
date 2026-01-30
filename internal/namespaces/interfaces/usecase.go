@@ -11,6 +11,8 @@ type NamespaceUsecase interface {
 	GetAllNamespaces() ([]models.Namespace, error)
 	AddMembers(request *dtos.AddMembersRequest, userID uuid.UUID) (*models.Namespace, error)
 	RemoveMembers(request *dtos.RemoveMembersRequest, userID uuid.UUID) (*models.Namespace, error)
+	UpdateNamespace(request *dtos.UpdateNamespaceRequest, userID uuid.UUID) (*models.Namespace, error)
+	DeleteNamespace(namespaceID uuid.UUID, userID uuid.UUID) error
 
 	GetAllUserNamespaces(projID uuid.UUID, userID uuid.UUID) ([]models.Namespace, error)
 	GetNamespace(namespaceID uuid.UUID, userID uuid.UUID) (*models.Namespace, error)

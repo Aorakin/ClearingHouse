@@ -239,3 +239,55 @@ func (h *NamespaceHandler) GetNamespacesByProjectID() gin.HandlerFunc {
 		c.JSON(http.StatusOK, namespaces)
 	}
 }
+func (h *NamespaceHandler) UpdateNamespace() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		var request dtos.UpdateNamespaceRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		namespace, err := h.namespaceUsecase.UpdateNamespace(&request, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, namespace)
+	}
+}
+
+func (h *NamespaceHandler) DeleteNamespace() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		namespaceID := c.Param("id")
+		if namespaceID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid namespace ID")))
+			return
+		}
+
+		namespaceUUID, err := uuid.Parse(namespaceID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("invalid namespace ID")))
+			return
+		}
+
+		if err := h.namespaceUsecase.DeleteNamespace(namespaceUUID, userID); err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "namespace deleted successfully"})
+	}
+}

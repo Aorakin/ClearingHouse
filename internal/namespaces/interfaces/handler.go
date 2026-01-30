@@ -9,6 +9,8 @@ type NamespaceHandler interface {
 	GetAllNamespaces() gin.HandlerFunc
 	AddMembers() gin.HandlerFunc
 	RemoveMembers() gin.HandlerFunc
+	UpdateNamespace() gin.HandlerFunc
+	DeleteNamespace() gin.HandlerFunc
 
 	GetAllUserNamespaces() gin.HandlerFunc
 	GetNamespace() gin.HandlerFunc

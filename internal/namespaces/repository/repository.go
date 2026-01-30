@@ -55,6 +55,10 @@ func (r *NamespaceRepository) UpdateNamespace(namespace *models.Namespace) error
 	return r.db.Save(namespace).Error
 }
 
+func (r *NamespaceRepository) DeleteNamespace(namespaceID uuid.UUID) error {
+	return r.db.Delete(&models.Namespace{}, "id = ?", namespaceID).Error
+}
+
 func (r *NamespaceRepository) GetAllNamespacesByUserID(userID uuid.UUID) ([]models.Namespace, error) {
 	var user models.User
 	if err := r.db.Debug().Preload("MemberNamespaces").First(&user, "id = ?", userID).Error; err != nil {

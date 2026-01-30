@@ -280,3 +280,82 @@ func (u *NamespaceUsecase) GetNamespacesByProjectID(projectID uuid.UUID, userID 
 
 	return namespaces, nil
 }
+
+func (u *NamespaceUsecase) UpdateNamespace(request *dtos.UpdateNamespaceRequest, userID uuid.UUID) (*models.Namespace, error) {
+	namespace, err := u.namespaceRepo.GetNamespaceByID(request.NamespaceID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	// Check if namespace belongs to a project
+	if namespace.ProjectID != nil {
+		proj, err := u.projRepo.GetProjectByID(*namespace.ProjectID)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(err)
+		}
+
+		// Only project admins can update namespace
+		if !helper.ContainsUserID(proj.Admins, userID) {
+			return nil, apiError.NewUnauthorizedError("user is not project admin")
+		}
+	} else {
+		// For private namespaces, only owner can update
+		if namespace.OwnerID != userID {
+			return nil, apiError.NewUnauthorizedError("user is not the namespace owner")
+		}
+	}
+
+	// Update only provided fields
+	if request.Name != "" {
+		namespace.Name = request.Name
+	}
+	if request.Description != "" {
+		namespace.Description = request.Description
+	}
+	if request.Credit != nil {
+		namespace.Credit = *request.Credit
+	}
+
+	if err := u.namespaceRepo.UpdateNamespace(namespace); err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	// Fetch updated namespace with associations
+	updatedNamespace, err := u.namespaceRepo.GetNamespaceByID(request.NamespaceID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	return updatedNamespace, nil
+}
+
+func (u *NamespaceUsecase) DeleteNamespace(namespaceID uuid.UUID, userID uuid.UUID) error {
+	namespace, err := u.namespaceRepo.GetNamespaceByID(namespaceID)
+	if err != nil {
+		return apiError.NewInternalServerError(err)
+	}
+
+	// Check if namespace belongs to a project
+	if namespace.ProjectID != nil {
+		proj, err := u.projRepo.GetProjectByID(*namespace.ProjectID)
+		if err != nil {
+			return apiError.NewInternalServerError(err)
+		}
+
+		// Only project admins can delete namespace
+		if !helper.ContainsUserID(proj.Admins, userID) {
+			return apiError.NewUnauthorizedError("user is not project admin")
+		}
+	} else {
+		// For private namespaces, only owner can delete
+		if namespace.OwnerID != userID {
+			return apiError.NewUnauthorizedError("user is not the namespace owner")
+		}
+	}
+
+	if err := u.namespaceRepo.DeleteNamespace(namespaceID); err != nil {
+		return apiError.NewInternalServerError(err)
+	}
+
+	return nil
+}
