@@ -43,7 +43,7 @@ func (r *OrganizationRepository) DeleteOrganization(id uuid.UUID) error {
 
 func (r *OrganizationRepository) GetOrganizations() ([]models.Organization, error) {
 	var organizations []models.Organization
-	if err := r.db.Find(&organizations).Error; err != nil {
+	if err := r.db.Preload("Members").Preload("Admins").Preload("Projects").Preload("ResourcePools").Preload("Quotas").Preload("GivenQuotas").Find(&organizations).Error; err != nil {
 		return nil, err
 	}
 	return organizations, nil
