@@ -43,7 +43,13 @@ func (r *NamespaceRepository) GetNamespaceByID(namespaceID uuid.UUID) (*models.N
 
 func (r *NamespaceRepository) GetAllNamespacesByProjectID(projectID uuid.UUID) ([]models.Namespace, error) {
 	var namespaces []models.Namespace
-	err := r.db.Preload("Owner").Preload("QuotaTemplate.Quotas.Resources.ResourceProp.Resource.ResourceType").Preload("Members").Where("project_id = ?", projectID).Find(&namespaces).Error
+	err := r.db.
+		Joins("LEFT JOIN projects ON projects.id = namespaces.project_id").
+		Where("namespaces.project_id = ? AND projects.deleted_at IS NULL", projectID).
+		Preload("Owner").
+		Preload("QuotaTemplate.Quotas.Resources.ResourceProp.Resource.ResourceType").
+		Preload("Members").
+		Find(&namespaces).Error
 	return namespaces, err
 }
 

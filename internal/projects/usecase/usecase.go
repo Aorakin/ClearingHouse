@@ -5,6 +5,7 @@ import (
 
 	"github.com/ClearingHouse/helper"
 	"github.com/ClearingHouse/internal/models"
+	namespaceInterfaces "github.com/ClearingHouse/internal/namespaces/interfaces"
 	orgInterfaces "github.com/ClearingHouse/internal/organizations/interfaces"
 	"github.com/ClearingHouse/internal/projects/dtos"
 	"github.com/ClearingHouse/internal/projects/interfaces"
@@ -14,16 +15,18 @@ import (
 )
 
 type ProjectUsecase struct {
-	projRepo interfaces.ProjectRepository
-	orgRepo  orgInterfaces.OrganizationRepository
-	userRepo userInterfaces.UsersRepository
+	projRepo      interfaces.ProjectRepository
+	orgRepo       orgInterfaces.OrganizationRepository
+	userRepo      userInterfaces.UsersRepository
+	namespaceRepo namespaceInterfaces.NamespaceRepository
 }
 
-func NewProjectUsecase(projRepo interfaces.ProjectRepository, orgRepo orgInterfaces.OrganizationRepository, userRepo userInterfaces.UsersRepository) interfaces.ProjectUsecase {
+func NewProjectUsecase(projRepo interfaces.ProjectRepository, orgRepo orgInterfaces.OrganizationRepository, userRepo userInterfaces.UsersRepository, namespaceRepo namespaceInterfaces.NamespaceRepository) interfaces.ProjectUsecase {
 	return &ProjectUsecase{
-		projRepo: projRepo,
-		orgRepo:  orgRepo,
-		userRepo: userRepo,
+		projRepo:      projRepo,
+		orgRepo:       orgRepo,
+		userRepo:      userRepo,
+		namespaceRepo: namespaceRepo,
 	}
 }
 
@@ -309,6 +312,16 @@ func (u *ProjectUsecase) DeleteProject(projectID uuid.UUID, userID uuid.UUID) er
 	// Only admins can delete project
 	if !helper.ContainsUserID(project.Admins, userID) {
 		return apiError.NewUnauthorizedError("user is not project admin")
+	}
+
+	// Check if project has any active namespaces
+	namespaces, err := u.namespaceRepo.GetAllNamespacesByProjectID(projectID)
+	if err != nil {
+		return apiError.NewInternalServerError(err.Error())
+	}
+
+	if len(namespaces) > 0 {
+		return apiError.NewBadRequestError("cannot delete project with existing namespaces")
 	}
 
 	if err := u.projRepo.DeleteProject(projectID); err != nil {
