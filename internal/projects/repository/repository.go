@@ -61,7 +61,7 @@ func (r *ProjectRepository) HasProjectQuotas(projectID uuid.UUID) (bool, error) 
 	var count int64
 
 	err := r.db.Table("project_quota").
-		Where("project_id = ?", projectID).
+		Where("project_id = ? AND deleted_at IS NULL", projectID).
 		Count(&count).Error
 
 	if err != nil {

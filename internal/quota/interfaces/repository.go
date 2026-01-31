@@ -31,6 +31,8 @@ type QuotaRepository interface {
 	CreateNamespaceQuota(quota *models.NamespaceQuota) error
 	GetNamespaceQuotaByNamespaceID(namespaceID uuid.UUID) ([]models.NamespaceQuota, error)
 	GetNamespaceQuotaByID(id uuid.UUID) (*models.NamespaceQuota, error)
+	DeleteNamespaceQuota(quotaID uuid.UUID) error
+	HasQuotaTemplatesByNamespaceQuotaID(namespaceQuotaID uuid.UUID) (bool, error)
 
 	CreateResourceProperty(resourceProperty *models.ResourceProperty) error
 

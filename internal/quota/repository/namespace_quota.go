@@ -161,3 +161,18 @@ func (r *QuotaRepository) GetNamespaceQuotaByNamespaceID(namespaceID uuid.UUID) 
 
 	return namespaceQuotas, nil
 }
+
+func (r *QuotaRepository) DeleteNamespaceQuota(quotaID uuid.UUID) error {
+	return r.db.Delete(&models.NamespaceQuota{}, "id = ?", quotaID).Error
+}
+
+func (r *QuotaRepository) HasQuotaTemplatesByNamespaceQuotaID(namespaceQuotaID uuid.UUID) (bool, error) {
+	var count int64
+	err := r.db.Table("namespace_quota_template_relations").
+		Where("namespace_quota_id = ?", namespaceQuotaID).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
