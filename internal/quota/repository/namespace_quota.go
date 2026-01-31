@@ -168,8 +168,24 @@ func (r *QuotaRepository) DeleteNamespaceQuota(quotaID uuid.UUID) error {
 
 func (r *QuotaRepository) HasQuotaTemplatesByNamespaceQuotaID(namespaceQuotaID uuid.UUID) (bool, error) {
 	var count int64
-	err := r.db.Table("namespace_quota_template_relations").
-		Where("namespace_quota_id = ?", namespaceQuotaID).
+	err := r.db.Table("namespace_quota_template_relations nqtr").
+		Joins("INNER JOIN namespace_quota_templates nqt ON nqt.id = nqtr.namespace_quota_template_id").
+		Where("nqtr.namespace_quota_id = ? AND nqt.deleted_at IS NULL", namespaceQuotaID).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (r *QuotaRepository) DeleteNamespaceQuotaTemplate(templateID uuid.UUID) error {
+	return r.db.Delete(&models.NamespaceQuotaTemplate{}, "id = ?", templateID).Error
+}
+
+func (r *QuotaRepository) HasNamespacesUsingTemplate(templateID uuid.UUID) (bool, error) {
+	var count int64
+	err := r.db.Model(&models.Namespace{}).
+		Where("quota_template_id = ? AND deleted_at IS NULL", templateID).
 		Count(&count).Error
 	if err != nil {
 		return false, err
