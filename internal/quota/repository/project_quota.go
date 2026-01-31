@@ -27,3 +27,18 @@ func (r *QuotaRepository) GetProjectQuotaByID(id uuid.UUID) (*models.ProjectQuot
 	}
 	return &projectQuota, nil
 }
+
+func (r *QuotaRepository) DeleteProjectQuota(quotaID uuid.UUID) error {
+	return r.db.Delete(&models.ProjectQuota{}, "id = ?", quotaID).Error
+}
+
+func (r *QuotaRepository) HasNamespaceQuotasByProjectQuotaID(projectQuotaID uuid.UUID) (bool, error) {
+	var count int64
+	err := r.db.Model(&models.NamespaceQuota{}).
+		Where("project_quota_id = ?", projectQuotaID).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}

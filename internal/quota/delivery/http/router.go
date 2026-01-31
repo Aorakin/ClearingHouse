@@ -17,6 +17,7 @@ func MapQuotaRoutes(quotaGroup *gin.RouterGroup, quotaHandler interfaces.QuotaHa
 	quotaGroup.GET("/project/:project_id", quotaHandler.GetProjectQuotas())
 	quotaGroup.GET("/project/:project_id/namespaces", quotaHandler.GetNamespaceQuotaInProject())
 	quotaGroup.POST("/project/internal", quotaHandler.CreateInternalProjectQuota())
+	quotaGroup.DELETE("/project/:quota_id", quotaHandler.DeleteProjectQuota())
 
 	quotaGroup.POST("/namespace", quotaHandler.CreateNamespaceQuota())
 	quotaGroup.GET("/namespace/:namespace_id", quotaHandler.GetNamespaceQuota())

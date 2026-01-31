@@ -24,6 +24,8 @@ type QuotaRepository interface {
 	CreateProjectQuota(quota *models.ProjectQuota) error
 	GetProjectQuotaByProjectID(projectID uuid.UUID) ([]models.ProjectQuota, error)
 	GetProjectQuotaByID(id uuid.UUID) (*models.ProjectQuota, error)
+	DeleteProjectQuota(quotaID uuid.UUID) error
+	HasNamespaceQuotasByProjectQuotaID(projectQuotaID uuid.UUID) (bool, error)
 
 	IsNamespaceQuotaExists(namespaceID uuid.UUID, nodeID uuid.UUID) (bool, error)
 	CreateNamespaceQuota(quota *models.NamespaceQuota) error
