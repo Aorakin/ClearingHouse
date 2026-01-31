@@ -27,4 +27,6 @@ type ResourcePoolRepository interface {
 	GetResourcePoolByID(id uuid.UUID) (*models.ResourcePool, error)
 	GetResourcePoolByOrgID(orgID uuid.UUID) ([]models.ResourcePool, error)
 	CreateResourcePool(resourcePool *models.ResourcePool) (*models.ResourcePool, error)
+	DeleteResourcePool(id uuid.UUID) error
+	HasActiveTickets(resourcePoolID uuid.UUID) (bool, error)
 }

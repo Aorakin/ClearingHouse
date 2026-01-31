@@ -12,6 +12,7 @@ func MapResourceRoutes(resourcesGroup *gin.RouterGroup, resourceHandler interfac
 
 	resourcesGroup.POST("/pool", resourceHandler.CreateResourcePool())
 	resourcesGroup.GET("/pool/:pool_id", resourceHandler.GetResourcePool())
+	resourcesGroup.DELETE("/pool/:pool_id", resourceHandler.DeleteResourcePool())
 	resourcesGroup.POST("/node", resourceHandler.CreateResourceNode())
 	resourcesGroup.GET("/node/:node_id", resourceHandler.GetResourceNode())
 	resourcesGroup.GET("/:resource_id", resourceHandler.GetResourceProperty())

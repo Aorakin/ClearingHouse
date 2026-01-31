@@ -39,3 +39,23 @@ func (r *ResourcePoolRepository) GetResourcePoolByID(id uuid.UUID) (*models.Reso
 	}
 	return &resourcePool, nil
 }
+
+func (r *ResourcePoolRepository) DeleteResourcePool(id uuid.UUID) error {
+	// GORM will perform soft delete automatically (sets deleted_at)
+	return r.db.Delete(&models.ResourcePool{}, "id = ?", id).Error
+}
+
+func (r *ResourcePoolRepository) HasActiveTickets(resourcePoolID uuid.UUID) (bool, error) {
+	var count int64
+
+	// Check for tickets with active statuses: pending, using, redeeming
+	err := r.db.Table("tickets").
+		Where("resource_pool_id = ? AND status IN ?", resourcePoolID, []string{"pending", "using", "redeeming"}).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
