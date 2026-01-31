@@ -27,3 +27,23 @@ func (r *ResourceRepository) GetResourceNodeOrganization(nodeID uuid.UUID) (*mod
 	}
 	return &resourceNode.ResourcePool.Organization, nil
 }
+
+func (r *ResourceRepository) DeleteResourceNode(nodeID uuid.UUID) error {
+	// GORM will perform soft delete automatically (sets deleted_at)
+	return r.db.Delete(&models.ResourceNode{}, "id = ?", nodeID).Error
+}
+
+func (r *ResourceRepository) HasActiveTicketsByNodeID(nodeID uuid.UUID) (bool, error) {
+	var count int64
+
+	// Check for tickets with active statuses: pending, using, redeeming
+	err := r.db.Table("tickets").
+		Where("node_id = ? AND status IN ?", nodeID, []string{"pending", "using", "redeeming"}).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}

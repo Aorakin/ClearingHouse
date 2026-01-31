@@ -166,3 +166,36 @@ func (u *ResourceUsecase) DeleteResourcePool(resourcePoolID uuid.UUID) error {
 
 	return nil
 }
+
+func (u *ResourceUsecase) DeleteResourceNode(nodeID uuid.UUID) error {
+	// Get resource node with all resources
+	resourceNode, err := u.resourceRepo.GetResourceNodeByID(nodeID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return apiError.NewNotFoundError("resource node not found")
+		}
+		return apiError.NewInternalServerError(err)
+	}
+
+	// Check if node has any resources
+	if len(resourceNode.Resources) > 0 {
+		return apiError.NewBadRequestError("cannot delete resource node with existing resources. Please delete all resources first")
+	}
+
+	// Check if node is being used by any active tickets
+	hasActiveTickets, err := u.resourceRepo.HasActiveTicketsByNodeID(nodeID)
+	if err != nil {
+		return apiError.NewInternalServerError(err)
+	}
+
+	if hasActiveTickets {
+		return apiError.NewBadRequestError("cannot delete resource node with active tickets. Please wait for all tickets to complete")
+	}
+
+	// Soft delete the resource node
+	if err := u.resourceRepo.DeleteResourceNode(nodeID); err != nil {
+		return apiError.NewInternalServerError(err)
+	}
+
+	return nil
+}

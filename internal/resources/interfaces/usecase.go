@@ -18,4 +18,5 @@ type ResourceUsecase interface {
 	DeleteResourcePool(resourcePoolID uuid.UUID) error
 	GetResourceNode(nodeID uuid.UUID) (*models.ResourceNode, error)
 	CreateResourceNode(request *dtos.CreateResourceNodeRequest) (*models.ResourceNode, error)
+	DeleteResourceNode(nodeID uuid.UUID) error
 }

@@ -16,6 +16,8 @@ type ResourceRepository interface {
 	CreateResourceNode(resourceNode *models.ResourceNode) (*models.ResourceNode, error)
 	GetResourceNodeByID(nodeID uuid.UUID) (*models.ResourceNode, error)
 	GetResourceNodeOrganization(nodeID uuid.UUID) (*models.Organization, error)
+	DeleteResourceNode(nodeID uuid.UUID) error
+	HasActiveTicketsByNodeID(nodeID uuid.UUID) (bool, error)
 }
 
 type ResourceTypeRepository interface {
