@@ -93,6 +93,35 @@ func (h *QuotaHandler) GetOrganizationQuotasByOrgID() gin.HandlerFunc {
 	}
 }
 
+func (h *QuotaHandler) DeleteOrganizationQuota() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		quotaID := c.Param("quota_id")
+		if quotaID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Quota ID is required")))
+			return
+		}
+
+		quotaUUID, err := uuid.Parse(quotaID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		if err := h.quotaUsecase.DeleteOrganizationQuota(quotaUUID, userID); err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Organization quota deleted successfully"})
+	}
+}
+
 func (h *QuotaHandler) CreateProjectQuota() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)

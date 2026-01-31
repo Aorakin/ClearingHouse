@@ -15,6 +15,10 @@ type QuotaRepository interface {
 	GetOrgUsage(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)
 	GetOrgQuotaQuantity(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)
 	DeleteOrganizationQuotasByOrgID(orgID uuid.UUID) error
+	DeleteOrganizationQuota(quotaID uuid.UUID) error
+	HasActiveQuotaUsage(orgID uuid.UUID) (bool, error)
+	HasProjectQuotasByOrgQuotaID(orgQuotaID uuid.UUID) (bool, error)
+	HasActiveUsageByOrgQuotaID(orgQuotaID uuid.UUID) (bool, error)
 
 	IsProjectQuotaExist(projectID uuid.UUID, nodeID uuid.UUID) (bool, error)
 	CreateProjectQuota(quota *models.ProjectQuota) error

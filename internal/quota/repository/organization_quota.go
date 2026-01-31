@@ -77,3 +77,55 @@ func (r *QuotaRepository) GetOrgQuotaQuantity(quotaID uuid.UUID, resourceID uuid
 func (r *QuotaRepository) DeleteOrganizationQuotasByOrgID(orgID uuid.UUID) error {
 	return r.db.Where("to_org_id = ?", orgID).Delete(&models.OrganizationQuota{}).Error
 }
+
+func (r *QuotaRepository) HasActiveQuotaUsage(orgID uuid.UUID) (bool, error) {
+	var count int64
+
+	err := r.db.Table("resource_quantities rq").
+		Joins("JOIN project_quota pq ON pq.id = rq.project_quota_id").
+		Joins("JOIN organization_quota oq ON oq.id = pq.organization_quota_id").
+		Where("oq.to_org_id = ? AND rq.quantity > 0", orgID).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (r *QuotaRepository) DeleteOrganizationQuota(quotaID uuid.UUID) error {
+	// GORM will perform soft delete automatically (sets deleted_at)
+	return r.db.Delete(&models.OrganizationQuota{}, "id = ?", quotaID).Error
+}
+
+func (r *QuotaRepository) HasProjectQuotasByOrgQuotaID(orgQuotaID uuid.UUID) (bool, error) {
+	var count int64
+
+	err := r.db.Table("project_quota").
+		Where("organization_quota_id = ?", orgQuotaID).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (r *QuotaRepository) HasActiveUsageByOrgQuotaID(orgQuotaID uuid.UUID) (bool, error) {
+	var count int64
+
+	// Check if there are any resource quantities allocated to projects from this org quota
+	// (not just the quantities defined in the org quota itself)
+	err := r.db.Table("resource_quantities rq").
+		Joins("JOIN project_quota pq ON pq.id = rq.project_quota_id").
+		Where("pq.organization_quota_id = ? AND rq.quantity > 0", orgQuotaID).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
