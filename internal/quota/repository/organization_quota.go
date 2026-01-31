@@ -103,7 +103,7 @@ func (r *QuotaRepository) HasProjectQuotasByOrgQuotaID(orgQuotaID uuid.UUID) (bo
 	var count int64
 
 	err := r.db.Table("project_quota").
-		Where("organization_quota_id = ?", orgQuotaID).
+		Where("organization_quota_id = ? AND deleted_at IS NULL", orgQuotaID).
 		Count(&count).Error
 
 	if err != nil {
@@ -120,7 +120,7 @@ func (r *QuotaRepository) HasActiveUsageByOrgQuotaID(orgQuotaID uuid.UUID) (bool
 	// (not just the quantities defined in the org quota itself)
 	err := r.db.Table("resource_quantities rq").
 		Joins("JOIN project_quota pq ON pq.id = rq.project_quota_id").
-		Where("pq.organization_quota_id = ? AND rq.quantity > 0", orgQuotaID).
+		Where("pq.organization_quota_id = ? AND pq.deleted_at IS NULL AND rq.quantity > 0", orgQuotaID).
 		Count(&count).Error
 
 	if err != nil {
