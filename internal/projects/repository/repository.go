@@ -57,6 +57,20 @@ func (r *ProjectRepository) DeleteProject(id uuid.UUID) error {
 	return r.db.Delete(&models.Project{}, "id = ?", id).Error
 }
 
+func (r *ProjectRepository) HasProjectQuotas(projectID uuid.UUID) (bool, error) {
+	var count int64
+
+	err := r.db.Table("project_quota").
+		Where("project_id = ?", projectID).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
 func (r *ProjectRepository) GetAllProjectsByUserID(userID uuid.UUID) ([]models.Project, error) {
 	var user models.User
 	if err := r.db.Preload("MemberProjects").First(&user, "id = ?", userID).Error; err != nil {

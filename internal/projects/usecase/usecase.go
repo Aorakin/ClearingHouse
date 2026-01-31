@@ -324,6 +324,16 @@ func (u *ProjectUsecase) DeleteProject(projectID uuid.UUID, userID uuid.UUID) er
 		return apiError.NewBadRequestError("cannot delete project with existing namespaces")
 	}
 
+	// Check if project has any project quotas
+	hasProjectQuotas, err := u.projRepo.HasProjectQuotas(projectID)
+	if err != nil {
+		return apiError.NewInternalServerError(err.Error())
+	}
+
+	if hasProjectQuotas {
+		return apiError.NewBadRequestError("cannot delete project with existing project quotas. Please delete all project quotas first")
+	}
+
 	if err := u.projRepo.DeleteProject(projectID); err != nil {
 		return apiError.NewInternalServerError(err.Error())
 	}

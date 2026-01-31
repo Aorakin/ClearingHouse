@@ -14,6 +14,7 @@ type ProjectRepository interface {
 	UpdateProject(project *models.Project) error
 	UpdateMembers(project *models.Project) error
 	DeleteProject(id uuid.UUID) error
+	HasProjectQuotas(projectID uuid.UUID) (bool, error)
 
 	GetAllProjectsByUserID(userID uuid.UUID) ([]models.Project, error)
 	GetProjectsByOrganizationID(orgID uuid.UUID) ([]models.Project, error)

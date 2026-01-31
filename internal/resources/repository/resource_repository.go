@@ -72,14 +72,16 @@ func (r *ResourceRepository) HasResourceProperties(resourceID uuid.UUID) (bool, 
 
 	// Check if resource has any resource properties with quantities that are still in active quotas
 	// Need to check all three types of quotas: organization, project, and namespace
+	// Also need to check that related projects are not deleted
 	err := r.db.Table("resource_properties rp").
 		Joins("JOIN resource_quantities rq ON rq.resource_prop_id = rp.id").
 		Joins("LEFT JOIN organization_quota oq ON oq.id = rq.organization_quota_id").
 		Joins("LEFT JOIN project_quota pq ON pq.id = rq.project_quota_id").
+		Joins("LEFT JOIN projects p ON p.id = pq.project_id").
 		Joins("LEFT JOIN namespace_quota nq ON nq.id = rq.namespace_quota_id").
 		Where("rp.resource_id = ?", resourceID).
 		Where("(rq.organization_quota_id IS NOT NULL AND oq.deleted_at IS NULL) OR " +
-			"(rq.project_quota_id IS NOT NULL AND pq.deleted_at IS NULL) OR " +
+			"(rq.project_quota_id IS NOT NULL AND pq.deleted_at IS NULL AND p.deleted_at IS NULL) OR " +
 			"(rq.namespace_quota_id IS NOT NULL AND nq.deleted_at IS NULL)").
 		Count(&count).Error
 
