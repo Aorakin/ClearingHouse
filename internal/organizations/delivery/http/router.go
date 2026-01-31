@@ -15,6 +15,8 @@ func MapOrganizationRoutes(orgGroup *gin.RouterGroup, orgHandler interfaces.Orga
 	orgGroup.DELETE("/:org-id", orgHandler.DeleteOrganization())
 	orgGroup.POST("/members", orgHandler.AddMembers())
 	orgGroup.POST("/rm-members", orgHandler.RemoveMembers())
+	orgGroup.POST("/admins", orgHandler.AddAdmins())
+	orgGroup.POST("/rm-admins", orgHandler.RemoveAdmins())
 	orgGroup.GET("/members", orgHandler.GetMembers())
 	orgGroup.GET("/:org-id/members", orgHandler.GetOrganizationMembers())
 }

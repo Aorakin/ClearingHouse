@@ -12,6 +12,7 @@ type OrganizationRepository interface {
 	DeleteOrganization(id uuid.UUID) error
 	GetOrganizations() ([]models.Organization, error)
 	UpdateMembers(org *models.Organization) error
+	UpdateAdmins(org *models.Organization) error
 	GetMembers() ([]models.User, error)
 	GetOrganizationMembers(orgID uuid.UUID) ([]models.User, error)
 }

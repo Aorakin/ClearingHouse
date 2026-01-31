@@ -11,6 +11,8 @@ type ProjectUsecase interface {
 	CreateProject(request *dtos.CreateProjectRequest, userID uuid.UUID) error
 	AddMembers(request *dtos.AddMembersRequest, userID uuid.UUID) (*models.Project, error)
 	RemoveMembers(request *dtos.RemoveMembersRequest, userID uuid.UUID) (*models.Project, error)
+	AddAdmins(request *dtos.AddAdminsRequest, userID uuid.UUID) (*models.Project, error)
+	RemoveAdmins(request *dtos.RemoveAdminsRequest, userID uuid.UUID) (*models.Project, error)
 
 	GetAllUserProjects(userID uuid.UUID) ([]models.Project, error)
 	GetProjectByID(projectID uuid.UUID, userID uuid.UUID) (*models.Project, error)

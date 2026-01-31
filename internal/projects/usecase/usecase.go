@@ -37,7 +37,7 @@ func (u *ProjectUsecase) CreateProject(request *dtos.CreateProjectRequest, userI
 	}
 
 	if !helper.ContainsUserID(org.Admins, userID) {
-		return apiError.NewUnauthorizedError("user is not project admin")
+		return apiError.NewUnauthorizedError("user is not org admin")
 	}
 
 	admin, err := u.userRepo.GetByID(userID)
@@ -189,8 +189,8 @@ func (u *ProjectUsecase) GetProjectsByOrganizationID(orgID uuid.UUID, userID uui
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	if !helper.ContainsUserID(org.Members, userID) && !helper.ContainsUserID(org.Admins, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not a member of this organization")
+	if !helper.ContainsUserID(org.Admins, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not organization admin")
 	}
 
 	projects, err := u.projRepo.GetProjectsByOrganizationID(orgID)
@@ -206,8 +206,8 @@ func (u *ProjectUsecase) GetProjectMembers(projectID uuid.UUID, userID uuid.UUID
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	if !helper.ContainsUserID(project.Members, userID) && !helper.ContainsUserID(project.Admins, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not project member")
+	if !helper.ContainsUserID(project.Admins, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project admin")
 	}
 
 	members, err := u.projRepo.GetProjectMembers(projectID)
@@ -224,8 +224,8 @@ func (u *ProjectUsecase) GetProjectByID(projectID uuid.UUID, userID uuid.UUID) (
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	if !helper.ContainsUserID(project.Members, userID) && !helper.ContainsUserID(project.Admins, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not project member")
+	if !helper.ContainsUserID(project.Admins, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project admin")
 	}
 
 	return project, nil
@@ -237,8 +237,8 @@ func (u *ProjectUsecase) GetProjectUsage(projectID uuid.UUID, userID uuid.UUID) 
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	if !helper.ContainsUserID(project.Members, userID) && !helper.ContainsUserID(project.Admins, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not project member")
+	if !helper.ContainsUserID(project.Admins, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project admin")
 	}
 
 	quotas, err := u.projRepo.GetProjectQuotaByType(projectID, userID)
@@ -339,4 +339,113 @@ func (u *ProjectUsecase) DeleteProject(projectID uuid.UUID, userID uuid.UUID) er
 	}
 
 	return nil
+}
+
+func (u *ProjectUsecase) AddAdmins(request *dtos.AddAdminsRequest, userID uuid.UUID) (*models.Project, error) {
+	project, err := u.projRepo.GetProjectByID(request.ProjectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	org, err := u.orgRepo.GetOrganizationByID(project.OrganizationID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	// Only project admins can add admins
+	if !helper.ContainsUserID(project.Admins, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project admin")
+	}
+
+	existing := make(map[uuid.UUID]struct{})
+	for _, a := range project.Admins {
+		existing[a.ID] = struct{}{}
+	}
+
+	seenReq := make(map[uuid.UUID]struct{})
+	for _, adminID := range request.Admins {
+		// Must be organization admin to become project admin
+		if !helper.ContainsUserID(org.Admins, adminID) {
+			return nil, apiError.NewBadRequestError(fmt.Sprintf("user %s is not an admin of the organization", adminID))
+		}
+		if _, found := existing[adminID]; found {
+			return nil, apiError.NewConflictError(fmt.Sprintf("user %s is already a project admin", adminID))
+		}
+		if _, found := seenReq[adminID]; found {
+			return nil, apiError.NewBadRequestError(fmt.Sprintf("duplicate user %s in request", adminID))
+		}
+		seenReq[adminID] = struct{}{}
+		if _, err := u.userRepo.GetByID(adminID); err != nil {
+			return nil, apiError.NewNotFoundError(fmt.Sprintf("user %s not found", adminID))
+		}
+	}
+
+	users, err := u.userRepo.GetByIDs(request.Admins)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	project.Admins = append(project.Admins, users...)
+
+	if err := u.projRepo.UpdateAdmins(project); err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	return project, nil
+}
+
+func (u *ProjectUsecase) RemoveAdmins(request *dtos.RemoveAdminsRequest, userID uuid.UUID) (*models.Project, error) {
+	project, err := u.projRepo.GetProjectByID(request.ProjectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	// Only project admins can remove admins
+	if !helper.ContainsUserID(project.Admins, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project admin")
+	}
+
+	// Create a map of admins to remove for quick lookup
+	removeMap := make(map[uuid.UUID]struct{})
+	seenReq := make(map[uuid.UUID]struct{})
+	for _, adminID := range request.Admins {
+		if _, found := seenReq[adminID]; found {
+			return nil, apiError.NewBadRequestError(fmt.Sprintf("duplicate user %s in request", adminID))
+		}
+		seenReq[adminID] = struct{}{}
+		removeMap[adminID] = struct{}{}
+	}
+
+	// Check if admins to remove exist in project
+	existing := make(map[uuid.UUID]struct{})
+	for _, a := range project.Admins {
+		existing[a.ID] = struct{}{}
+	}
+
+	for _, adminID := range request.Admins {
+		if _, found := existing[adminID]; !found {
+			return nil, apiError.NewNotFoundError(fmt.Sprintf("user %s is not an admin of this project", adminID))
+		}
+	}
+
+	// Filter out admins to remove
+	newAdmins := []models.User{}
+	for _, admin := range project.Admins {
+		if _, shouldRemove := removeMap[admin.ID]; !shouldRemove {
+			newAdmins = append(newAdmins, admin)
+		}
+	}
+
+	// Prevent removing all admins
+	if len(newAdmins) == 0 {
+		return nil, apiError.NewBadRequestError("cannot remove all admins from project. At least one admin must remain")
+	}
+
+	project.Admins = newAdmins
+
+	if err := u.projRepo.UpdateAdmins(project); err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	return project, nil
 }

@@ -7,6 +7,8 @@ type ProjectHandler interface {
 	GetAllProjects() gin.HandlerFunc
 	AddMembers() gin.HandlerFunc
 	RemoveMembers() gin.HandlerFunc
+	AddAdmins() gin.HandlerFunc
+	RemoveAdmins() gin.HandlerFunc
 	GetProject() gin.HandlerFunc
 	UpdateProject() gin.HandlerFunc
 	DeleteProject() gin.HandlerFunc

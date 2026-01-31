@@ -41,8 +41,8 @@ func (u *OrganizationUsecase) GetOrganizationByID(id uuid.UUID, userID uuid.UUID
 		return nil, apierror.NewInternalServerError(err)
 	}
 
-	if !helper.ContainsUserID(organization.Members, userID) {
-		return nil, apierror.NewUnauthorizedError("user is not organization member")
+	if !helper.ContainsUserID(organization.Admins, userID) {
+		return nil, apierror.NewUnauthorizedError("user is not organization admin")
 	}
 
 	return organization, nil
@@ -58,7 +58,7 @@ func (u *OrganizationUsecase) CreateOrganization(request *dtos.CreateOrganizatio
 		Name:        request.Name,
 		Description: request.Description,
 		Admins:      []models.User{*creator},
-		Members:     []models.User{*creator},
+		Members:     []models.User{},
 	}
 
 	org, err := u.orgRepo.CreateOrganization(organization)
@@ -246,4 +246,101 @@ func (u *OrganizationUsecase) GetOrganizationMembers(orgID uuid.UUID) ([]models.
 		return nil, apierror.NewInternalServerError(err)
 	}
 	return users, nil
+}
+
+func (u *OrganizationUsecase) AddAdmins(request *dtos.AddAdminsRequest, userID uuid.UUID) (*models.Organization, error) {
+	org, err := u.orgRepo.GetOrganizationByID(request.OrganizationID)
+	if err != nil {
+		return nil, apierror.NewInternalServerError(err)
+	}
+
+	if !helper.ContainsUserID(org.Admins, userID) {
+		return nil, apierror.NewUnauthorizedError("user is not organization admin")
+	}
+
+	existing := make(map[uuid.UUID]struct{})
+	for _, a := range org.Admins {
+		existing[a.ID] = struct{}{}
+	}
+
+	seenReq := make(map[uuid.UUID]struct{})
+	for _, adminID := range request.Admins {
+		if _, found := existing[adminID]; found {
+			return nil, apierror.NewConflictError(fmt.Sprintf("user %s is already an organization admin", adminID))
+		}
+		if _, found := seenReq[adminID]; found {
+			return nil, apierror.NewBadRequestError(fmt.Sprintf("duplicate user %s in request", adminID))
+		}
+		seenReq[adminID] = struct{}{}
+		if _, err := u.userRepo.GetByID(adminID); err != nil {
+			return nil, apierror.NewNotFoundError(fmt.Sprintf("user %s not found", adminID))
+		}
+	}
+
+	users, err := u.userRepo.GetByIDs(request.Admins)
+	if err != nil {
+		return nil, apierror.NewInternalServerError(err)
+	}
+	org.Admins = append(org.Admins, users...)
+
+	if err := u.orgRepo.UpdateAdmins(org); err != nil {
+		return nil, apierror.NewInternalServerError(err)
+	}
+
+	return org, nil
+}
+
+func (u *OrganizationUsecase) RemoveAdmins(request *dtos.RemoveAdminsRequest, userID uuid.UUID) (*models.Organization, error) {
+	org, err := u.orgRepo.GetOrganizationByID(request.OrganizationID)
+	if err != nil {
+		return nil, apierror.NewInternalServerError(err)
+	}
+
+	if !helper.ContainsUserID(org.Admins, userID) {
+		return nil, apierror.NewUnauthorizedError("user is not organization admin")
+	}
+
+	// Create a map of admins to remove for quick lookup
+	removeMap := make(map[uuid.UUID]struct{})
+	seenReq := make(map[uuid.UUID]struct{})
+	for _, adminID := range request.Admins {
+		if _, found := seenReq[adminID]; found {
+			return nil, apierror.NewBadRequestError(fmt.Sprintf("duplicate user %s in request", adminID))
+		}
+		seenReq[adminID] = struct{}{}
+		removeMap[adminID] = struct{}{}
+	}
+
+	// Check if admins to remove exist in organization
+	existing := make(map[uuid.UUID]struct{})
+	for _, a := range org.Admins {
+		existing[a.ID] = struct{}{}
+	}
+
+	for _, adminID := range request.Admins {
+		if _, found := existing[adminID]; !found {
+			return nil, apierror.NewNotFoundError(fmt.Sprintf("user %s is not an admin of this organization", adminID))
+		}
+	}
+
+	// Filter out admins to remove
+	newAdmins := []models.User{}
+	for _, admin := range org.Admins {
+		if _, shouldRemove := removeMap[admin.ID]; !shouldRemove {
+			newAdmins = append(newAdmins, admin)
+		}
+	}
+
+	// Prevent removing all admins
+	if len(newAdmins) == 0 {
+		return nil, apierror.NewBadRequestError("cannot remove all admins from organization. At least one admin must remain")
+	}
+
+	org.Admins = newAdmins
+
+	if err := u.orgRepo.UpdateAdmins(org); err != nil {
+		return nil, apierror.NewInternalServerError(err)
+	}
+
+	return org, nil
 }

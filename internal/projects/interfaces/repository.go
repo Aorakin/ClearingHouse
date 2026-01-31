@@ -13,6 +13,7 @@ type ProjectRepository interface {
 	GetProjectByID(id uuid.UUID) (*models.Project, error)
 	UpdateProject(project *models.Project) error
 	UpdateMembers(project *models.Project) error
+	UpdateAdmins(project *models.Project) error
 	DeleteProject(id uuid.UUID) error
 	HasProjectQuotas(projectID uuid.UUID) (bool, error)
 

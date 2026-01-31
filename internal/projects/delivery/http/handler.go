@@ -106,6 +106,54 @@ func (h *ProjectHandler) RemoveMembers() gin.HandlerFunc {
 	}
 }
 
+func (h *ProjectHandler) AddAdmins() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		var request dtos.AddAdminsRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err.Error())))
+			return
+		}
+
+		project, err := h.projUsecase.AddAdmins(&request, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, project)
+	}
+}
+
+func (h *ProjectHandler) RemoveAdmins() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		var request dtos.RemoveAdminsRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err.Error())))
+			return
+		}
+
+		project, err := h.projUsecase.RemoveAdmins(&request, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, project)
+	}
+}
+
 func (h *ProjectHandler) GetAllUserProjects() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)

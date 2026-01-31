@@ -53,6 +53,10 @@ func (r *OrganizationRepository) UpdateMembers(org *models.Organization) error {
 	return r.db.Model(org).Association("Members").Replace(org.Members)
 }
 
+func (r *OrganizationRepository) UpdateAdmins(org *models.Organization) error {
+	return r.db.Model(org).Association("Admins").Replace(org.Admins)
+}
+
 func (r *OrganizationRepository) GetMembers() ([]models.User, error) {
 	var users []models.User
 	if err := r.db.Find(&users).Error; err != nil {

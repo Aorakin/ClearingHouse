@@ -53,6 +53,10 @@ func (r *ProjectRepository) UpdateMembers(project *models.Project) error {
 	return r.db.Model(project).Association("Members").Replace(project.Members)
 }
 
+func (r *ProjectRepository) UpdateAdmins(project *models.Project) error {
+	return r.db.Model(project).Association("Admins").Replace(project.Admins)
+}
+
 func (r *ProjectRepository) DeleteProject(id uuid.UUID) error {
 	return r.db.Delete(&models.Project{}, "id = ?", id).Error
 }
