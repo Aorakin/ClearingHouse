@@ -12,6 +12,9 @@ type ResourceRepository interface {
 	GetResourcePoolByID(id uuid.UUID) (*models.ResourcePool, error)
 	GetResourcesByOrganizationID(orgID uuid.UUID) ([]models.Resource, error)
 	GetResourcesByNodeID(nodeID uuid.UUID) ([]models.Resource, error)
+	DeleteResource(resourceID uuid.UUID) error
+	HasResourceProperties(resourceID uuid.UUID) (bool, error)
+	HasActiveTicketsByResourceID(resourceID uuid.UUID) (bool, error)
 
 	CreateResourceNode(resourceNode *models.ResourceNode) (*models.ResourceNode, error)
 	GetResourceNodeByID(nodeID uuid.UUID) (*models.ResourceNode, error)

@@ -270,3 +270,26 @@ func (h *ResourceHandler) DeleteResourceNode() gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Resource node deleted successfully"})
 	}
 }
+
+func (h *ResourceHandler) DeleteResource() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		resourceID := c.Param("resource_id")
+		if resourceID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Resource ID is required")))
+			return
+		}
+
+		resourceUUID, err := uuid.Parse(resourceID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		if err := h.ResourceUsecase.DeleteResource(resourceUUID); err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Resource deleted successfully"})
+	}
+}
