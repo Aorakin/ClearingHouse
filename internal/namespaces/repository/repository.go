@@ -65,6 +65,17 @@ func (r *NamespaceRepository) DeleteNamespace(namespaceID uuid.UUID) error {
 	return r.db.Delete(&models.Namespace{}, "id = ?", namespaceID).Error
 }
 
+func (r *NamespaceRepository) HasActiveTicketsByNamespaceID(namespaceID uuid.UUID) (bool, error) {
+	var count int64
+	err := r.db.Model(&models.Ticket{}).
+		Where("namespace_id = ? AND deleted_at IS NULL AND status NOT IN ?", namespaceID, []string{"completed", "cancelled", "rejected"}).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 func (r *NamespaceRepository) GetAllNamespacesByUserID(userID uuid.UUID) ([]models.Namespace, error) {
 	var user models.User
 	if err := r.db.Debug().Preload("MemberNamespaces").First(&user, "id = ?", userID).Error; err != nil {

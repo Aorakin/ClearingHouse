@@ -94,3 +94,32 @@ func (h *QuotaHandler) DeleteNamespaceQuotaTemplate() gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Namespace quota template deleted successfully"})
 	}
 }
+
+func (h *QuotaHandler) UnassignQuotaTemplateFromNamespace() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		namespaceID := c.Param("namespace_id")
+		if namespaceID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Namespace ID is required")))
+			return
+		}
+
+		namespaceUUID, err := uuid.Parse(namespaceID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		if err := h.quotaUsecase.UnassignQuotaTemplateFromNamespace(namespaceUUID, userID); err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Quota template unassigned successfully"})
+	}
+}

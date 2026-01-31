@@ -353,6 +353,20 @@ func (u *NamespaceUsecase) DeleteNamespace(namespaceID uuid.UUID, userID uuid.UU
 		}
 	}
 
+	// Check if namespace has assigned quota template
+	if namespace.QuotaTemplateID != nil {
+		return apiError.NewBadRequestError("cannot delete namespace: quota template is assigned. Please unassign quota template first")
+	}
+
+	// Check if namespace has active tickets
+	hasActiveTickets, err := u.namespaceRepo.HasActiveTicketsByNamespaceID(namespaceID)
+	if err != nil {
+		return apiError.NewInternalServerError(err)
+	}
+	if hasActiveTickets {
+		return apiError.NewBadRequestError("cannot delete namespace: active tickets are still using this namespace")
+	}
+
 	if err := u.namespaceRepo.DeleteNamespace(namespaceID); err != nil {
 		return apiError.NewInternalServerError(err)
 	}

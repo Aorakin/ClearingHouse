@@ -85,6 +85,10 @@ func (r *QuotaRepository) AssignQuotaToNamespace(namespaceID uuid.UUID, quotaTem
 	return r.db.Save(&namespace).Error
 }
 
+func (r *QuotaRepository) UnassignQuotaTemplateFromNamespace(namespaceID uuid.UUID) error {
+	return r.db.Model(&models.Namespace{}).Where("id = ?", namespaceID).Update("quota_template_id", nil).Error
+}
+
 func (r *QuotaRepository) IsAssigned(namespaceID uuid.UUID, quotaID uuid.UUID) (bool, error) {
 	var namespace models.Namespace
 	if err := r.db.First(&namespace, "id = ?", namespaceID).Error; err != nil {

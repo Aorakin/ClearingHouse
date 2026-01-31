@@ -14,6 +14,7 @@ type NamespaceRepository interface {
 	UpdateNamespace(namespace *models.Namespace) error
 	UpdateMembers(namespace *models.Namespace) error
 	DeleteNamespace(namespaceID uuid.UUID) error
+	HasActiveTicketsByNamespaceID(namespaceID uuid.UUID) (bool, error)
 
 	GetAllNamespacesByProjectID(projectID uuid.UUID) ([]models.Namespace, error)
 	GetAllNamespacesByUserID(userID uuid.UUID) ([]models.Namespace, error)
