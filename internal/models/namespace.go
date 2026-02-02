@@ -13,6 +13,6 @@ type Namespace struct {
 	QuotaTemplateID *uuid.UUID              `gorm:"type:uuid" json:"quota_template_id"`
 	QuotaTemplate   *NamespaceQuotaTemplate `gorm:"foreignKey:QuotaTemplateID" json:"quota_template"`
 	Members         []User                  `gorm:"many2many:namespace_members;" json:"namespace_members"`
-	OwnerID         uuid.UUID               `gorm:"type:uuid;not null" json:"owner_id"`
+	OwnerID         uuid.UUID               `gorm:"type:uuid" json:"owner_id"`
 	Owner           *User                   `gorm:"foreignKey:OwnerID" json:"owner"`
 }
