@@ -237,8 +237,8 @@ func (u *ProjectUsecase) GetProjectUsage(projectID uuid.UUID, userID uuid.UUID) 
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	if !helper.ContainsUserID(project.Admins, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not project admin")
+	if !helper.ContainsUserID(project.Admins, userID) && !helper.ContainsUserID(project.Members, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project admin or member")
 	}
 
 	quotas, err := u.projRepo.GetProjectQuotaByType(projectID, userID)
