@@ -47,7 +47,7 @@ func (u *NamespaceUsecase) CreateNamespace(request *dtos.CreateNamespaceRequest,
 		Credit:      request.Credit,
 		ProjectID:   &request.ProjectID,
 		OrgID:       proj.OrganizationID,
-		OwnerID:     userID,
+		OwnerID:     &userID,
 	}
 
 	err = u.namespaceRepo.Create(&namespace)
@@ -149,7 +149,7 @@ func (u *NamespaceUsecase) RemoveMembers(req *dtos.RemoveMembersRequest, userID 
 			return nil, apiError.NewNotFoundError(fmt.Sprintf("user %s is not a member of this namespace", memberID))
 		}
 		// Prevent removing namespace owner
-		if namespace.OwnerID == memberID {
+		if namespace.OwnerID != nil && *namespace.OwnerID == memberID {
 			return nil, apiError.NewBadRequestError(fmt.Sprintf("user %s is the namespace owner and cannot be removed", memberID))
 		}
 	}
@@ -186,7 +186,7 @@ func (u *NamespaceUsecase) GetNamespace(namespaceID uuid.UUID, userID uuid.UUID)
 	}
 
 	// Check if user is owner or member
-	if namespace.OwnerID != userID && !helper.ContainsUserID(namespace.Members, userID) {
+	if (namespace.OwnerID == nil || *namespace.OwnerID != userID) && !helper.ContainsUserID(namespace.Members, userID) {
 		return nil, apiError.NewUnauthorizedError("user is not namespace owner or member")
 	}
 
@@ -300,7 +300,7 @@ func (u *NamespaceUsecase) UpdateNamespace(request *dtos.UpdateNamespaceRequest,
 		}
 	} else {
 		// For private namespaces, only owner can update
-		if namespace.OwnerID != userID {
+		if namespace.OwnerID == nil || *namespace.OwnerID != userID {
 			return nil, apiError.NewUnauthorizedError("user is not the namespace owner")
 		}
 	}
@@ -348,7 +348,7 @@ func (u *NamespaceUsecase) DeleteNamespace(namespaceID uuid.UUID, userID uuid.UU
 		}
 	} else {
 		// For private namespaces, only owner can delete
-		if namespace.OwnerID != userID {
+		if namespace.OwnerID == nil || *namespace.OwnerID != userID {
 			return apiError.NewUnauthorizedError("user is not the namespace owner")
 		}
 	}

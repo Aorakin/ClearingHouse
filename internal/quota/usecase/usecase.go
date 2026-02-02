@@ -84,7 +84,7 @@ func (u *QuotaUsecase) isNamespaceMember(namespaceID uuid.UUID, userID uuid.UUID
 	}
 
 	// Allow both owners and members
-	if namespace.OwnerID == user.ID || helper.ContainsUserID(namespace.Members, user.ID) {
+	if (namespace.OwnerID == nil || *namespace.OwnerID != user.ID) && !helper.ContainsUserID(namespace.Members, userID) {
 		return nil
 	}
 
