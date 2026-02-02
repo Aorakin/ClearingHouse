@@ -152,10 +152,6 @@ func (u *ProjectUsecase) RemoveMembers(request *dtos.RemoveMembersRequest, userI
 		if _, found := existing[memberID]; !found {
 			return nil, apiError.NewNotFoundError(fmt.Sprintf("user %s is not a member of this project", memberID))
 		}
-		// // Prevent removing admins through member removal
-		// if helper.ContainsUserID(project.Admins, memberID) {
-		// 	return nil, apiError.NewBadRequestError(fmt.Sprintf("user %s is an admin and cannot be removed as a member directly", memberID))
-		// }
 	}
 
 	// Filter out members to remove
