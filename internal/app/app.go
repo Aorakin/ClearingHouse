@@ -35,7 +35,7 @@ func (s *App) Run() error {
 	}
 
 	s.gin.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"}, // your frontend URL
+		AllowOrigins:     []string{"http://localhost:3000", "https://ch-admin.onepointfive.life"}, // your frontend URL
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
