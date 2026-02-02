@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/ClearingHouse/helper"
 	"github.com/ClearingHouse/internal/models"
@@ -238,6 +239,7 @@ func (u *ProjectUsecase) GetProjectUsage(projectID uuid.UUID, userID uuid.UUID) 
 	}
 
 	if !helper.ContainsUserID(project.Admins, userID) && !helper.ContainsUserID(project.Members, userID) {
+		log.Println("Unauthorized access attempt by user:", userID)
 		return nil, apiError.NewUnauthorizedError("user is not project admin or member")
 	}
 
