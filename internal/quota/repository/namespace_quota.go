@@ -11,6 +11,22 @@ func (r *QuotaRepository) CreateNamespaceQuotaTemplate(template *models.Namespac
 	return r.db.Create(template).Error
 }
 
+func (r *QuotaRepository) UpdateNamespaceQuotaTemplate(templateID uuid.UUID, name, description string) error {
+	updates := make(map[string]interface{})
+	if name != "" {
+		updates["name"] = name
+	}
+	if description != "" {
+		updates["description"] = description
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	return r.db.Model(&models.NamespaceQuotaTemplate{}).Where("id = ?", templateID).Updates(updates).Error
+}
+
 func (r *QuotaRepository) AddQuotasToTemplate(templateID uuid.UUID, quotaIDs []uuid.UUID) error {
 	var template models.NamespaceQuotaTemplate
 	if err := r.db.First(&template, "id = ?", templateID).Error; err != nil {
