@@ -6,7 +6,6 @@ type AuthHandler interface {
 	GoogleCallback() gin.HandlerFunc
 	GoogleLogin() gin.HandlerFunc
 	GoogleRegister() gin.HandlerFunc
-	GoogleRegisterCallback() gin.HandlerFunc
 	Logout() gin.HandlerFunc
 	RefreshToken() gin.HandlerFunc
 	GetMe() gin.HandlerFunc
