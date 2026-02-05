@@ -3,12 +3,14 @@ package usecase
 import (
 	"context"
 	"log"
+	"time"
 
 	"errors"
 
 	"github.com/ClearingHouse/config"
 	"github.com/ClearingHouse/internal/auth"
 	"github.com/ClearingHouse/internal/auth/interfaces"
+	authRepo "github.com/ClearingHouse/internal/auth/repository"
 	"github.com/ClearingHouse/internal/models"
 	userInterfaces "github.com/ClearingHouse/internal/users/interfaces"
 	"github.com/gin-gonic/gin"
@@ -17,12 +19,14 @@ import (
 )
 
 type AuthUsecase struct {
-	userRepo userInterfaces.UsersRepository
+	userRepo      userInterfaces.UsersRepository
+	blacklistRepo *authRepo.TokenBlacklistRepository
 }
 
-func NewAuthUsecase(userRepo userInterfaces.UsersRepository) interfaces.AuthUsecase {
+func NewAuthUsecase(userRepo userInterfaces.UsersRepository, blacklistRepo *authRepo.TokenBlacklistRepository) interfaces.AuthUsecase {
 	return &AuthUsecase{
-		userRepo: userRepo,
+		userRepo:      userRepo,
+		blacklistRepo: blacklistRepo,
 	}
 }
 
@@ -123,6 +127,15 @@ func (u *AuthUsecase) GenerateTokens(user *models.User) (accessToken string, ref
 
 // Refresh endpoint handler
 func (u *AuthUsecase) RefreshAccessToken(refreshToken string) (string, error) {
+	// Check if token is blacklisted
+	isBlacklisted, err := u.blacklistRepo.IsBlacklisted(refreshToken)
+	if err != nil {
+		return "", err
+	}
+	if isBlacklisted {
+		return "", errors.New("token has been revoked")
+	}
+
 	claims, err := auth.VerifyRefreshToken(refreshToken)
 	if err != nil {
 		return "", err
@@ -143,6 +156,19 @@ func (u *AuthUsecase) RefreshAccessToken(refreshToken string) (string, error) {
 
 func (u *AuthUsecase) GetUserByID(userID uuid.UUID) (*models.User, error) {
 	return u.userRepo.GetByID(userID)
+}
+
+func (u *AuthUsecase) BlacklistToken(token string) error {
+	// Verify the token to get its expiration time
+	claims, err := auth.VerifyRefreshToken(token)
+	if err != nil {
+		// If token is invalid/expired, no need to blacklist
+		return nil
+	}
+
+	// Add to blacklist with expiration time
+	expiresAt := time.Unix(claims.ExpiresAt.Unix(), 0)
+	return u.blacklistRepo.AddToBlacklist(token, expiresAt)
 }
 
 // func (u *AuthUsecase) GenerateToken(email string) (string, error) {

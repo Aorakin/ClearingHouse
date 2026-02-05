@@ -14,4 +14,5 @@ type AuthUsecase interface {
 	GetUserByID(userID uuid.UUID) (*models.User, error)
 	GenerateTokens(user *models.User) (accessToken string, refreshToken string, err error)
 	RefreshAccessToken(refreshToken string) (string, error)
+	BlacklistToken(token string) error
 }

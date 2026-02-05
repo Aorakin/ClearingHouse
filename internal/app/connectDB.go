@@ -44,6 +44,7 @@ func InitDataBase() (*gorm.DB, error) {
 		&models.ResourceProperty{},
 		&models.Ticket{},
 		&models.TicketResource{},
+		&models.TokenBlacklist{},
 	)
 	return DB, nil
 }

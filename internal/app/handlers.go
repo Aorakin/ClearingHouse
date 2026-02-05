@@ -21,6 +21,7 @@ import (
 	NamespaceUsecase "github.com/ClearingHouse/internal/namespaces/usecase"
 
 	AuthHttp "github.com/ClearingHouse/internal/auth/delivery/http"
+	AuthRepository "github.com/ClearingHouse/internal/auth/repository"
 	AuthUsecase "github.com/ClearingHouse/internal/auth/usecase"
 
 	UserHttp "github.com/ClearingHouse/internal/users/delivery/http"
@@ -66,6 +67,7 @@ func (a *App) MapHandlers() error {
 	projRepo := ProjectRepository.NewProjectRepository(a.postgresDB)
 	namespaceRepo := NamespaceRepository.NewNamespaceRepository(a.postgresDB)
 	userRepo := UserRepository.NewUsersRepository(a.postgresDB)
+	tokenBlacklistRepo := AuthRepository.NewTokenBlacklistRepository(a.postgresDB)
 	ticketRepo := TicketRepository.NewTicketRepository(a.postgresDB)
 	privNamespaceRepo := PrivateNamespaceRepository.NewPrivateNamespaceRepository(a.postgresDB)
 
@@ -75,7 +77,7 @@ func (a *App) MapHandlers() error {
 	projUsecase := ProjectUsecase.NewProjectUsecase(projRepo, orgRepo, userRepo, namespaceRepo)
 	namespaceUsecase := NamespaceUsecase.NewNamespaceUsecase(namespaceRepo, userRepo, projRepo, quotaRepo)
 	userUsecase := UserUsecase.NewUsersUsecase(userRepo)
-	authUsecase := AuthUsecase.NewAuthUsecase(userRepo)
+	authUsecase := AuthUsecase.NewAuthUsecase(userRepo, tokenBlacklistRepo)
 	ticketUsecase := TicketUsecase.NewTicketUsecase(namespaceRepo, ticketRepo, quotaRepo, userRepo, resourceRepo)
 	privNamespaceUsecase := PrivateNamespaceUsecase.NewPrivateNamespaceUsecase(privNamespaceRepo, namespaceRepo, orgRepo, userRepo, quotaRepo, resourceRepo)
 

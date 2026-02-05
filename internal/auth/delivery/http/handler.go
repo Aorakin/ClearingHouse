@@ -84,6 +84,21 @@ func (h *AuthHandler) GoogleCallback() gin.HandlerFunc {
 
 func (h *AuthHandler) Logout() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Get refresh token from Authorization header
+		authHeader := c.GetHeader("Authorization")
+		if authHeader != "" {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
+				refreshToken := parts[1]
+				// Blacklist the refresh token
+				if err := h.authUsecase.BlacklistToken(refreshToken); err != nil {
+					// Log error but don't fail logout
+					c.JSON(response.ErrorResponseBuilder(apiError.NewInternalServerError(err)))
+					return
+				}
+			}
+		}
+
 		// Clear the access token cookie
 		c.SetCookie("access_token", "", -1, "/", ".localhost", true, true)
 		// Clear the refresh token cookie
