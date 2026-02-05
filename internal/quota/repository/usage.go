@@ -13,7 +13,7 @@ import (
 func (r *QuotaRepository) GetNamespaceUsageByType(namespaceID uuid.UUID, quotaID uuid.UUID) (*dtos.ResourceUsageResponse, error) {
 	var tickets []models.Ticket
 
-	if err := r.db.
+	if err := r.db.Debug().
 		Where("tickets.namespace_id = ? and tickets.quota_id = ? and status IN ?", namespaceID, quotaID, enum.UsingStatuses).
 		Preload("Resources.Resource.ResourceType").
 		Find(&tickets).Error; err != nil {
