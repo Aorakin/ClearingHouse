@@ -23,7 +23,7 @@ type App struct {
 
 func NewApp(postgresDB *gorm.DB) *App {
 	return &App{
-		gin:        gin.New(),
+		gin:        gin.Default(), // Includes Logger and Recovery middleware
 		postgresDB: postgresDB,
 	}
 }
