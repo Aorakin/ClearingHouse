@@ -210,10 +210,6 @@ func (u *OrganizationUsecase) RemoveMembers(request *dtos.RemoveMembersRequest, 
 		if _, found := existing[memberID]; !found {
 			return nil, apierror.NewNotFoundError(fmt.Sprintf("user %s is not a member of this organization", memberID))
 		}
-		// Prevent removing admins through member removal
-		if helper.ContainsUserID(org.Admins, memberID) {
-			return nil, apierror.NewBadRequestError(fmt.Sprintf("user %s is an admin and cannot be removed as a member directly", memberID))
-		}
 	}
 
 	// Filter out members to remove

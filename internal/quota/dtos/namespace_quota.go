@@ -8,3 +8,9 @@ type CreateNamespaceQuotaTemplateRequest struct {
 	ProjectID   uuid.UUID   `json:"project_id" binding:"required,uuid"`
 	QuotaIDs    []uuid.UUID `json:"quota_ids" binding:"required"`
 }
+
+type UpdateNamespaceQuotaTemplateRequest struct {
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	QuotaIDs    []uuid.UUID `json:"quota_ids"`
+}

@@ -148,10 +148,6 @@ func (u *NamespaceUsecase) RemoveMembers(req *dtos.RemoveMembersRequest, userID 
 		if _, found := existing[memberID]; !found {
 			return nil, apiError.NewNotFoundError(fmt.Sprintf("user %s is not a member of this namespace", memberID))
 		}
-		// Prevent removing namespace owner
-		if namespace.OwnerID != nil && *namespace.OwnerID == memberID {
-			return nil, apiError.NewBadRequestError(fmt.Sprintf("user %s is the namespace owner and cannot be removed", memberID))
-		}
 	}
 
 	// Filter out members to remove

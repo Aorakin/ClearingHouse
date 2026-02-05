@@ -98,6 +98,61 @@ func (u *QuotaUsecase) GetNamespaceQuotaTemplate(quotaTemplateID uuid.UUID) (*mo
 	return quotaTemplate, nil
 }
 
+func (u *QuotaUsecase) UpdateNamespaceQuotaTemplate(quotaTemplateID uuid.UUID, request *dtos.UpdateNamespaceQuotaTemplateRequest, userID uuid.UUID) (*models.NamespaceQuotaTemplate, error) {
+	// Get the existing template to check project ownership
+	existingTemplate, err := u.quotaRepo.GetNamespaceQuotaTemplateByID(quotaTemplateID)
+	if err != nil {
+		return nil, apiError.NewNotFoundError(fmt.Errorf("failed to find quota template: %w", err))
+	}
+
+	// Verify user is project admin
+	if err := u.isProjAdmin(existingTemplate.ProjectID, userID); err != nil {
+		return nil, err
+	}
+
+	// Update basic fields (name and description)
+	if err := u.quotaRepo.UpdateNamespaceQuotaTemplate(quotaTemplateID, request.Name, request.Description); err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to update namespace quota template: %w", err))
+	}
+
+	// Update quota associations if provided
+	if request.QuotaIDs != nil && len(request.QuotaIDs) > 0 {
+		// Validate that all quotas belong to the same project
+		namespaceQuotas, err := u.quotaRepo.GetNamespaceQuotasByIDs(request.QuotaIDs, existingTemplate.ProjectID)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get namespace quotas: %w", err))
+		}
+
+		// Remove old quota associations
+		if len(existingTemplate.Quotas) > 0 {
+			oldQuotaIDs := make([]uuid.UUID, len(existingTemplate.Quotas))
+			for i, quota := range existingTemplate.Quotas {
+				oldQuotaIDs[i] = quota.ID
+			}
+			if err := u.quotaRepo.RemoveQuotasFromTemplate(quotaTemplateID, oldQuotaIDs); err != nil {
+				return nil, apiError.NewInternalServerError(fmt.Errorf("failed to remove old quotas from template: %w", err))
+			}
+		}
+
+		// Add new quota associations
+		newQuotaIDs := make([]uuid.UUID, len(namespaceQuotas))
+		for i, quota := range namespaceQuotas {
+			newQuotaIDs[i] = quota.ID
+		}
+		if err := u.quotaRepo.AddQuotasToTemplate(quotaTemplateID, newQuotaIDs); err != nil {
+			return nil, apiError.NewInternalServerError(fmt.Errorf("failed to add quotas to template: %w", err))
+		}
+	}
+
+	// Fetch and return the updated template
+	updatedTemplate, err := u.quotaRepo.GetNamespaceQuotaTemplateByID(quotaTemplateID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to fetch updated template: %w", err))
+	}
+
+	return updatedTemplate, nil
+}
+
 func (u *QuotaUsecase) GetNamespaceQuotaTemplatesByProjectID(projectID uuid.UUID, userID uuid.UUID) ([]models.NamespaceQuotaTemplate, error) {
 	if err := u.isProjAdmin(projectID, userID); err != nil {
 		return nil, err
