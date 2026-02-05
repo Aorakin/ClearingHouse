@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"log"
 	"sort"
 
 	"github.com/ClearingHouse/internal/models"
@@ -18,6 +19,8 @@ func (r *QuotaRepository) GetNamespaceUsageByType(namespaceID uuid.UUID, quotaID
 		Find(&tickets).Error; err != nil {
 		return nil, err
 	}
+
+	log.Println("Tickets found:", len(tickets))
 
 	typeAgg := make(map[uuid.UUID]dtos.ResourceUsage)
 	for _, t := range tickets {
