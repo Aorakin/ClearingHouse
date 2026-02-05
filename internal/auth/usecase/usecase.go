@@ -30,6 +30,10 @@ func (u *AuthUsecase) GenerateGoogleLoginURL(state string) string {
 	return config.GoogleOauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
 }
 
+func (u *AuthUsecase) GenerateGoogleRegisterURL(state string) string {
+	return config.GoogleOauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
+}
+
 func (u *AuthUsecase) HandleGoogleCallback(code string, c *gin.Context) (*models.User, error) {
 	token, err := config.GoogleOauthConfig.Exchange(context.TODO(), code)
 	if err != nil {
@@ -49,6 +53,41 @@ func (u *AuthUsecase) HandleGoogleCallback(code string, c *gin.Context) (*models
 		return nil, errors.New("invalid user data from Google")
 	}
 
+	// Only find existing users, don't create new ones
+	user, err := u.userRepo.GetByEmail(email)
+	if err != nil {
+		return nil, errors.New("user not registered. Please register first before logging in")
+	}
+
+	return user, nil
+}
+
+func (u *AuthUsecase) HandleGoogleRegisterCallback(code string, c *gin.Context) (*models.User, error) {
+	token, err := config.GoogleOauthConfig.Exchange(context.TODO(), code)
+	if err != nil {
+		return nil, err
+	}
+
+	googleUser, err := u.userRepo.GetUserGoogle(token)
+	if err != nil {
+		return nil, err
+	}
+
+	email, emailOk := googleUser["email"].(string)
+	firstName, firstNameOk := googleUser["given_name"].(string)
+	lastName, lastNameOk := googleUser["family_name"].(string)
+	log.Println(email, firstName, lastName)
+	if !emailOk || !firstNameOk || !lastNameOk {
+		return nil, errors.New("invalid user data from Google")
+	}
+
+	// Create new user - check if user already exists first
+	existingUser, err := u.userRepo.GetByEmail(email)
+	if err == nil && existingUser != nil {
+		return nil, errors.New("user already registered. Please login instead")
+	}
+
+	// Create new user
 	user, err := u.userRepo.FindOrCreateUser(email, firstName, lastName)
 	if err != nil {
 		return nil, err
@@ -56,6 +95,7 @@ func (u *AuthUsecase) HandleGoogleCallback(code string, c *gin.Context) (*models
 
 	return user, nil
 }
+
 func (u *AuthUsecase) GenerateTokens(user *models.User) (accessToken string, refreshToken string, err error) {
 	privateKey, err := auth.LoadPrivateKey("token_private.pem")
 	if err != nil {

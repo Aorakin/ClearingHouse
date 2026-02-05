@@ -9,6 +9,8 @@ import (
 func MapAuthRoutes(authGroup *gin.RouterGroup, authHandler interfaces.AuthHandler) {
 	authGroup.GET("/callback/google", authHandler.GoogleCallback())
 	authGroup.GET("/login/google", authHandler.GoogleLogin())
+	authGroup.GET("/register/google", authHandler.GoogleRegister())
+	authGroup.GET("/callback/google/register", authHandler.GoogleRegisterCallback())
 	authGroup.GET("/logout", authHandler.Logout())
 	authGroup.GET("/refresh-token", authHandler.RefreshToken())
 	authGroup.Use(middleware.AuthMiddleware())

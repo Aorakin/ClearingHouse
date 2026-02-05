@@ -28,6 +28,13 @@ func (h *AuthHandler) GoogleLogin() gin.HandlerFunc {
 	}
 }
 
+func (h *AuthHandler) GoogleRegister() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		url := h.authUsecase.GenerateGoogleRegisterURL("state-token-register")
+		c.Redirect(http.StatusTemporaryRedirect, url)
+	}
+}
+
 func (h *AuthHandler) GoogleCallback() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		code := c.Query("code")
@@ -51,6 +58,32 @@ func (h *AuthHandler) GoogleCallback() gin.HandlerFunc {
 		c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", ".localhost", true, true)
 
 		c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
+	}
+}
+
+func (h *AuthHandler) GoogleRegisterCallback() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		code := c.Query("code")
+		if code == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("no code provided")))
+			return
+		}
+
+		user, err := h.authUsecase.HandleGoogleRegisterCallback(code, c)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewInternalServerError(err)))
+			return
+		}
+
+		accessToken, refreshToken, err := h.authUsecase.GenerateTokens(user)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewInternalServerError(err)))
+			return
+		}
+		c.SetCookie("access_token", accessToken, 3600, "/", ".localhost", true, true)
+		c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", ".localhost", true, true)
+
+		c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "access_token": accessToken, "refresh_token": refreshToken})
 	}
 }
 
