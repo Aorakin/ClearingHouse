@@ -81,19 +81,25 @@ func (u *AuthUsecase) HandleGoogleRegisterCallback(code string, c *gin.Context) 
 		return nil, errors.New("invalid user data from Google")
 	}
 
-	// Create new user - check if user already exists first
+	// Check if user already exists - registration should fail if user exists
 	existingUser, err := u.userRepo.GetByEmail(email)
-	if err == nil && existingUser != nil {
+	if existingUser != nil {
 		return nil, errors.New("user already registered. Please login instead")
 	}
 
-	// Create new user
-	user, err := u.userRepo.FindOrCreateUser(email, firstName, lastName)
+	// Create new user only if they don't exist
+	newUser := &models.User{
+		Email:     email,
+		FirstName: firstName,
+		LastName:  lastName,
+	}
+
+	err = u.userRepo.Create(newUser)
 	if err != nil {
 		return nil, err
 	}
 
-	return user, nil
+	return newUser, nil
 }
 
 func (u *AuthUsecase) GenerateTokens(user *models.User) (accessToken string, refreshToken string, err error) {
