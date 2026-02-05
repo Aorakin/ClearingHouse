@@ -49,6 +49,11 @@ func (h *AuthHandler) GoogleCallback() gin.HandlerFunc {
 		if state == "register" {
 			user, err := h.authUsecase.HandleGoogleRegisterCallback(code, c)
 			if err != nil {
+				// Check if user already exists
+				if strings.Contains(err.Error(), "already registered") {
+					c.JSON(response.ErrorResponseBuilder(apiError.NewConflictError("User already registered. Please login instead")))
+					return
+				}
 				c.JSON(response.ErrorResponseBuilder(apiError.NewInternalServerError(err)))
 				return
 			}
@@ -66,6 +71,11 @@ func (h *AuthHandler) GoogleCallback() gin.HandlerFunc {
 		// Handle login flow
 		user, err := h.authUsecase.HandleGoogleCallback(code, c)
 		if err != nil {
+			// Check if user is not registered
+			if strings.Contains(err.Error(), "not registered") {
+				c.JSON(response.ErrorResponseBuilder(apiError.NewNotFoundError("User not registered. Please register first before logging in")))
+				return
+			}
 			c.JSON(response.ErrorResponseBuilder(apiError.NewInternalServerError(err)))
 			return
 		}
