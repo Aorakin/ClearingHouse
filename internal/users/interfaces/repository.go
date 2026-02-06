@@ -12,6 +12,7 @@ type UsersRepository interface {
 	Delete(uuid.UUID) error
 	GetByID(uuid.UUID) (*models.User, error)
 	GetByUsername(string) (*models.User, error)
+	GetByEmail(email string) (*models.User, error)
 	FindOrCreateUser(email string, firstName string, lastName string) (*models.User, error)
 	GetByIDs(userIDs []uuid.UUID) ([]models.User, error)
 	Update(*models.User) error

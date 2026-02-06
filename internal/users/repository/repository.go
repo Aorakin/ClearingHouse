@@ -72,6 +72,14 @@ func (r *UsersRepository) GetByUsername(username string) (*models.User, error) {
 	return user, nil
 }
 
+func (r *UsersRepository) GetByEmail(email string) (*models.User, error) {
+	var user *models.User
+	if err := r.db.Where("email = ?", email).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func (r *UsersRepository) FindOrCreateUser(email, firstName, lastName string) (*models.User, error) {
 	var user models.User
 
