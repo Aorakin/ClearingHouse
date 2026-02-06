@@ -20,6 +20,7 @@ type QuotaUsecase interface {
 
 	CreateNamespaceQuota(request *dtos.CreateNamespaceQuotaRequest, userID uuid.UUID) (*models.NamespaceQuota, error)
 	GetNamespaceQuota(namespaceID uuid.UUID) ([]dtos.NamespaceQuotaResponse, error)
+	UpdateNamespaceQuota(quotaID uuid.UUID, request *dtos.UpdateNamespaceQuotaRequest, userID uuid.UUID) (*models.NamespaceQuota, error)
 	CreateNamespaceQuotaTemplate(request *dtos.CreateNamespaceQuotaTemplateRequest, userID uuid.UUID) (*models.NamespaceQuotaTemplate, error)
 	GetNamespaceQuotaTemplate(quotaTemplateID uuid.UUID) (*models.NamespaceQuotaTemplate, error)
 	GetNamespaceQuotaTemplatesByProjectID(projectID uuid.UUID, userID uuid.UUID) ([]models.NamespaceQuotaTemplate, error)

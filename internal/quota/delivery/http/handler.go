@@ -219,6 +219,42 @@ func (h *QuotaHandler) GetNamespaceQuota() gin.HandlerFunc {
 	}
 }
 
+func (h *QuotaHandler) UpdateNamespaceQuota() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		quotaID := c.Param("quota_id")
+		if quotaID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Quota ID is required")))
+			return
+		}
+
+		quotaUUID, err := uuid.Parse(quotaID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		var request dtos.UpdateNamespaceQuotaRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		quota, err := h.quotaUsecase.UpdateNamespaceQuota(quotaUUID, &request, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, quota)
+	}
+}
+
 func (h *QuotaHandler) CreateNamespaceQuotaTemplate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)

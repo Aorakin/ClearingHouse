@@ -65,6 +65,103 @@ func (u *QuotaUsecase) GetNamespaceQuota(namespaceID uuid.UUID) ([]dtos.Namespac
 	return response, nil
 }
 
+func (u *QuotaUsecase) UpdateNamespaceQuota(quotaID uuid.UUID, request *dtos.UpdateNamespaceQuotaRequest, userID uuid.UUID) (*models.NamespaceQuota, error) {
+	// Get existing namespace quota
+	existingQuota, err := u.quotaRepo.GetNamespaceQuotaByID(quotaID)
+	if err != nil {
+		return nil, apiError.NewNotFoundError(fmt.Errorf("failed to find namespace quota: %w", err))
+	}
+
+	// Verify user is project admin
+	if existingQuota.ProjectID == nil {
+		return nil, apiError.NewBadRequestError(errors.New("namespace quota has no associated project"))
+	}
+	if err := u.isProjAdmin(*existingQuota.ProjectID, userID); err != nil {
+		return nil, err
+	}
+
+	// Get project quota to validate resources
+	if existingQuota.ProjectQuotaID == nil {
+		return nil, apiError.NewBadRequestError(errors.New("namespace quota has no associated project quota"))
+	}
+	projectQuota, err := u.quotaRepo.GetProjectQuotaByID(*existingQuota.ProjectQuotaID)
+	if err != nil {
+		return nil, apiError.NewNotFoundError(fmt.Errorf("failed to find project quota: %w", err))
+	}
+
+	// Build map of available project quota resources
+	quotaResourcesMap := make(map[uuid.UUID]models.ResourceQuantity)
+	for _, resource := range projectQuota.Resources {
+		quotaResourcesMap[resource.ResourceProp.ResourceID] = resource
+	}
+
+	// Update basic fields (name and description)
+	if err := u.quotaRepo.UpdateNamespaceQuota(quotaID, request.Name, request.Description); err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to update namespace quota: %w", err))
+	}
+
+	// Update resources if provided
+	if request.Resources != nil && len(request.Resources) > 0 {
+		// Validate the requested resources
+		if err := u.validateUpdateNamespaceQuotaResources(request.Resources, quotaResourcesMap); err != nil {
+			return nil, err
+		}
+
+		// Get existing resource quantities
+		existingQuantities, err := u.quotaRepo.GetResourceQuantitiesByNamespaceQuotaID(quotaID)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get existing resource quantities: %w", err))
+		}
+
+		// Build map of existing quantities by resource ID
+		existingQuantitiesMap := make(map[uuid.UUID]models.ResourceQuantity)
+		for _, qty := range existingQuantities {
+			existingQuantitiesMap[qty.ResourceProp.ResourceID] = qty
+		}
+
+		// Update existing resources or create new ones
+		for _, resource := range request.Resources {
+			if existingQty, exists := existingQuantitiesMap[resource.ResourceID]; exists {
+				// Update existing resource quantity
+				if err := u.quotaRepo.UpdateResourceQuantity(existingQty.ID, resource.Quantity); err != nil {
+					return nil, apiError.NewInternalServerError(fmt.Errorf("failed to update resource quantity: %w", err))
+				}
+			} else {
+				// Create new resource quantity
+				resourceQuantity := models.ResourceQuantity{
+					NamespaceQuotaID: &quotaID,
+					ResourcePropID:   quotaResourcesMap[resource.ResourceID].ResourceProp.ID,
+					Quantity:         resource.Quantity,
+				}
+				if err := u.quotaRepo.CreateResourceQuantity(&resourceQuantity); err != nil {
+					return nil, apiError.NewInternalServerError(fmt.Errorf("failed to create resource quantity: %w", err))
+				}
+			}
+		}
+
+		// Delete resources that are no longer in the request
+		requestedResourceIDs := make(map[uuid.UUID]bool)
+		for _, resource := range request.Resources {
+			requestedResourceIDs[resource.ResourceID] = true
+		}
+		for resourceID, existingQty := range existingQuantitiesMap {
+			if !requestedResourceIDs[resourceID] {
+				if err := u.quotaRepo.UpdateResourceQuantity(existingQty.ID, 0); err != nil {
+					return nil, apiError.NewInternalServerError(fmt.Errorf("failed to remove resource quantity: %w", err))
+				}
+			}
+		}
+	}
+
+	// Fetch and return the updated quota
+	updatedQuota, err := u.quotaRepo.GetNamespaceQuotaByID(quotaID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get updated namespace quota: %w", err))
+	}
+
+	return updatedQuota, nil
+}
+
 func (u *QuotaUsecase) CreateNamespaceQuotaTemplate(request *dtos.CreateNamespaceQuotaTemplateRequest, userID uuid.UUID) (*models.NamespaceQuotaTemplate, error) {
 	if err := u.isProjAdmin(request.ProjectID, userID); err != nil {
 		return nil, err
@@ -231,6 +328,35 @@ func (u *QuotaUsecase) GetNamespaceQuotaInProject(userID uuid.UUID, projectID uu
 		})
 	}
 	return response, nil
+}
+
+func (u *QuotaUsecase) validateUpdateNamespaceQuotaResources(resources []dtos.Resource, quotaResourcesMap map[uuid.UUID]models.ResourceQuantity) error {
+	if len(resources) == 0 {
+		return apiError.NewBadRequestError(errors.New("at least one resource quota is required"))
+	}
+
+	seenResources := make(map[uuid.UUID]struct{})
+	for _, r := range resources {
+		if _, exists := quotaResourcesMap[r.ResourceID]; !exists {
+			// Build list of available resource IDs for better error message
+			availableResources := make([]uuid.UUID, 0, len(quotaResourcesMap))
+			for resourceID := range quotaResourcesMap {
+				availableResources = append(availableResources, resourceID)
+			}
+			return apiError.NewBadRequestError(fmt.Errorf("resource %s not found in project quota. Available resources: %v", r.ResourceID, availableResources))
+		}
+
+		if _, duplicate := seenResources[r.ResourceID]; duplicate {
+			return apiError.NewBadRequestError(fmt.Errorf("duplicate resource ID: %s", r.ResourceID))
+		}
+		seenResources[r.ResourceID] = struct{}{}
+
+		if r.Quantity > quotaResourcesMap[r.ResourceID].Quantity {
+			return apiError.NewBadRequestError(fmt.Errorf("requested quantity %d exceeds available quantity %d for resource %s", r.Quantity, quotaResourcesMap[r.ResourceID].Quantity, r.ResourceID))
+		}
+	}
+
+	return nil
 }
 
 func (u *QuotaUsecase) validateNamespaceQuotaRequest(request *dtos.CreateNamespaceQuotaRequest, quotaResourcesMap map[uuid.UUID]models.ResourceQuantity) error {

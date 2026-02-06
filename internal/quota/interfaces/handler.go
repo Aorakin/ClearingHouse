@@ -16,6 +16,7 @@ type QuotaHandler interface {
 
 	CreateNamespaceQuota() gin.HandlerFunc
 	GetNamespaceQuota() gin.HandlerFunc
+	UpdateNamespaceQuota() gin.HandlerFunc
 	CreateNamespaceQuotaTemplate() gin.HandlerFunc
 	GetNamespaceQuotaTemplate() gin.HandlerFunc
 	GetNamespaceQuotaTemplatesByProjectID() gin.HandlerFunc

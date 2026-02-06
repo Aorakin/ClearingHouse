@@ -186,6 +186,39 @@ func (r *QuotaRepository) DeleteNamespaceQuota(quotaID uuid.UUID) error {
 	return r.db.Delete(&models.NamespaceQuota{}, "id = ?", quotaID).Error
 }
 
+func (r *QuotaRepository) UpdateNamespaceQuota(quotaID uuid.UUID, name, description string) error {
+	updates := make(map[string]interface{})
+	if name != "" {
+		updates["name"] = name
+	}
+	if description != "" {
+		updates["description"] = description
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	return r.db.Model(&models.NamespaceQuota{}).Where("id = ?", quotaID).Updates(updates).Error
+}
+
+func (r *QuotaRepository) UpdateResourceQuantity(quantityID uuid.UUID, quantity uint) error {
+	return r.db.Model(&models.ResourceQuantity{}).Where("id = ?", quantityID).Update("quantity", quantity).Error
+}
+
+func (r *QuotaRepository) DeleteResourceQuantitiesByNamespaceQuotaID(namespaceQuotaID uuid.UUID) error {
+	return r.db.Where("namespace_quota_id = ?", namespaceQuotaID).Delete(&models.ResourceQuantity{}).Error
+}
+
+func (r *QuotaRepository) GetResourceQuantitiesByNamespaceQuotaID(namespaceQuotaID uuid.UUID) ([]models.ResourceQuantity, error) {
+	var quantities []models.ResourceQuantity
+	err := r.db.Preload("ResourceProp").Where("namespace_quota_id = ?", namespaceQuotaID).Find(&quantities).Error
+	if err != nil {
+		return nil, err
+	}
+	return quantities, nil
+}
+
 func (r *QuotaRepository) HasQuotaTemplatesByNamespaceQuotaID(namespaceQuotaID uuid.UUID) (bool, error) {
 	var count int64
 	err := r.db.Table("namespace_quota_template_relations nqtr").
