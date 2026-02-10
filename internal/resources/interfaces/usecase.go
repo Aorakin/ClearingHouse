@@ -16,8 +16,10 @@ type ResourceUsecase interface {
 	GetResourceProperty(resourceID uuid.UUID) (*models.Resource, error)
 	DeleteResource(resourceID uuid.UUID) error
 	GetResourcePool(resourcePoolID uuid.UUID) (*models.ResourcePool, error)
+	UpdateResourcePool(resourcePoolID uuid.UUID, request *dtos.UpdateResourcePoolRequest) (*models.ResourcePool, error)
 	DeleteResourcePool(resourcePoolID uuid.UUID) error
 	GetResourceNode(nodeID uuid.UUID) (*models.ResourceNode, error)
 	CreateResourceNode(request *dtos.CreateResourceNodeRequest) (*models.ResourceNode, error)
+	UpdateResourceNode(nodeID uuid.UUID, request *dtos.UpdateResourceNodeRequest) (*models.ResourceNode, error)
 	DeleteResourceNode(nodeID uuid.UUID) error
 }

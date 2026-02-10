@@ -19,6 +19,7 @@ type ResourceRepository interface {
 	CreateResourceNode(resourceNode *models.ResourceNode) (*models.ResourceNode, error)
 	GetResourceNodeByID(nodeID uuid.UUID) (*models.ResourceNode, error)
 	GetResourceNodeOrganization(nodeID uuid.UUID) (*models.Organization, error)
+	UpdateResourceNode(resourceNode *models.ResourceNode) (*models.ResourceNode, error)
 	DeleteResourceNode(nodeID uuid.UUID) error
 	HasActiveTicketsByNodeID(nodeID uuid.UUID) (bool, error)
 }
@@ -32,6 +33,7 @@ type ResourcePoolRepository interface {
 	GetResourcePoolByID(id uuid.UUID) (*models.ResourcePool, error)
 	GetResourcePoolByOrgID(orgID uuid.UUID) ([]models.ResourcePool, error)
 	CreateResourcePool(resourcePool *models.ResourcePool) (*models.ResourcePool, error)
+	UpdateResourcePool(resourcePool *models.ResourcePool) (*models.ResourcePool, error)
 	DeleteResourcePool(id uuid.UUID) error
 	HasActiveTickets(resourcePoolID uuid.UUID) (bool, error)
 }

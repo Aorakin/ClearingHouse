@@ -82,12 +82,57 @@ func (u *ResourceUsecase) GetResourcePool(resourcePoolID uuid.UUID) (*models.Res
 	return resourcePool, nil
 }
 
+func (u *ResourceUsecase) UpdateResourcePool(resourcePoolID uuid.UUID, request *dtos.UpdateResourcePoolRequest) (*models.ResourcePool, error) {
+	// Get existing resource pool
+	resourcePool, err := u.poolRepo.GetResourcePoolByID(resourcePoolID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, apiError.NewNotFoundError("resource pool not found")
+		}
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	// Update fields
+	resourcePool.Name = request.Name
+	resourcePool.GlideletURN = request.GlideletURN
+
+	// Save changes
+	updatedPool, err := u.poolRepo.UpdateResourcePool(resourcePool)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	return updatedPool, nil
+}
+
 func (u *ResourceUsecase) GetResourceNode(nodeID uuid.UUID) (*models.ResourceNode, error) {
 	resourceNode, err := u.resourceRepo.GetResourceNodeByID(nodeID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err)
 	}
 	return resourceNode, nil
+}
+
+func (u *ResourceUsecase) UpdateResourceNode(nodeID uuid.UUID, request *dtos.UpdateResourceNodeRequest) (*models.ResourceNode, error) {
+	// Get existing resource node
+	resourceNode, err := u.resourceRepo.GetResourceNodeByID(nodeID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, apiError.NewNotFoundError("resource node not found")
+		}
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	// Update fields
+	resourceNode.Name = request.Name
+
+	// Save changes
+	updatedNode, err := u.resourceRepo.UpdateResourceNode(resourceNode)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err)
+	}
+
+	return updatedNode, nil
 }
 
 func (u *ResourceUsecase) GetResources(orgID uuid.UUID) ([]models.ResourcePool, error) {

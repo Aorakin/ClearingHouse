@@ -40,6 +40,13 @@ func (r *ResourcePoolRepository) GetResourcePoolByID(id uuid.UUID) (*models.Reso
 	return &resourcePool, nil
 }
 
+func (r *ResourcePoolRepository) UpdateResourcePool(resourcePool *models.ResourcePool) (*models.ResourcePool, error) {
+	if err := r.db.Save(resourcePool).Error; err != nil {
+		return nil, err
+	}
+	return resourcePool, nil
+}
+
 func (r *ResourcePoolRepository) DeleteResourcePool(id uuid.UUID) error {
 	// GORM will perform soft delete automatically (sets deleted_at)
 	return r.db.Delete(&models.ResourcePool{}, "id = ?", id).Error

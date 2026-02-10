@@ -184,6 +184,36 @@ func (h *ResourceHandler) GetResourcePool() gin.HandlerFunc {
 	}
 }
 
+func (h *ResourceHandler) UpdateResourcePool() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		resourcePoolID := c.Param("pool_id")
+		if resourcePoolID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Resource Pool ID is required")))
+			return
+		}
+
+		resourcePoolUUID, err := uuid.Parse(resourcePoolID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		var request dtos.UpdateResourcePoolRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		resourcePool, err := h.ResourceUsecase.UpdateResourcePool(resourcePoolUUID, &request)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, resourcePool)
+	}
+}
+
 func (h *ResourceHandler) GetResourceNode() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		nodeID := c.Param("node_id")
@@ -203,6 +233,36 @@ func (h *ResourceHandler) GetResourceNode() gin.HandlerFunc {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
+		c.JSON(http.StatusOK, resourceNode)
+	}
+}
+
+func (h *ResourceHandler) UpdateResourceNode() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		nodeID := c.Param("node_id")
+		if nodeID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Resource Node ID is required")))
+			return
+		}
+
+		nodeUUID, err := uuid.Parse(nodeID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		var request dtos.UpdateResourceNodeRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		resourceNode, err := h.ResourceUsecase.UpdateResourceNode(nodeUUID, &request)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
 		c.JSON(http.StatusOK, resourceNode)
 	}
 }

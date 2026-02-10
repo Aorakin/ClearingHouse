@@ -28,6 +28,13 @@ func (r *ResourceRepository) GetResourceNodeOrganization(nodeID uuid.UUID) (*mod
 	return &resourceNode.ResourcePool.Organization, nil
 }
 
+func (r *ResourceRepository) UpdateResourceNode(resourceNode *models.ResourceNode) (*models.ResourceNode, error) {
+	if err := r.db.Save(resourceNode).Error; err != nil {
+		return nil, err
+	}
+	return resourceNode, nil
+}
+
 func (r *ResourceRepository) DeleteResourceNode(nodeID uuid.UUID) error {
 	// GORM will perform soft delete automatically (sets deleted_at)
 	return r.db.Delete(&models.ResourceNode{}, "id = ?", nodeID).Error

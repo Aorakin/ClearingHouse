@@ -9,6 +9,15 @@ type UpdateResourceRequest struct {
 	Name     string `json:"name" binding:"required"`
 }
 
+type UpdateResourcePoolRequest struct {
+	Name        string `json:"name" binding:"required"`
+	GlideletURN string `json:"glidelet_urn" binding:"required"`
+}
+
+type UpdateResourceNodeRequest struct {
+	Name string `json:"name" binding:"required"`
+}
+
 type CreateResourcePoolRequest struct {
 	OrganizationID uuid.UUID `json:"organization_id" binding:"required,uuid"`
 	Name           string    `json:"name" binding:"required"`
