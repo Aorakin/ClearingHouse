@@ -41,8 +41,8 @@ func (u *OrganizationUsecase) GetOrganizationByID(id uuid.UUID, userID uuid.UUID
 		return nil, apierror.NewInternalServerError(err)
 	}
 
-	if !helper.ContainsUserID(organization.Admins, userID) {
-		return nil, apierror.NewUnauthorizedError("user is not organization admin")
+	if !helper.ContainsUserID(organization.Admins, userID) && !helper.ContainsUserID(organization.Members, userID) {
+		return nil, apierror.NewUnauthorizedError("user is not organization admin or member")
 	}
 
 	return organization, nil

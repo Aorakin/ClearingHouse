@@ -186,8 +186,8 @@ func (u *ProjectUsecase) GetProjectsByOrganizationID(orgID uuid.UUID, userID uui
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	if !helper.ContainsUserID(org.Admins, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not organization admin")
+	if !helper.ContainsUserID(org.Admins, userID) && !helper.ContainsUserID(org.Members, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not organization admin or member")
 	}
 
 	projects, err := u.projRepo.GetProjectsByOrganizationID(orgID)
@@ -203,8 +203,8 @@ func (u *ProjectUsecase) GetProjectMembers(projectID uuid.UUID, userID uuid.UUID
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	if !helper.ContainsUserID(project.Admins, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not project admin")
+	if !helper.ContainsUserID(project.Admins, userID) && !helper.ContainsUserID(project.Members, userID) {
+		return nil, apiError.NewUnauthorizedError("user is not project admin or member")
 	}
 
 	members, err := u.projRepo.GetProjectMembers(projectID)

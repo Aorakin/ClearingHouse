@@ -72,6 +72,24 @@ func (u *QuotaUsecase) isProjAdmin(projID uuid.UUID, userID uuid.UUID) error {
 	return nil
 }
 
+func (u *QuotaUsecase) isProjMember(projID uuid.UUID, userID uuid.UUID) error {
+	proj, err := u.projRepo.GetProjectByID(projID)
+	if err != nil {
+		return apiError.NewNotFoundError(fmt.Errorf("failed to get project: %w", err))
+	}
+
+	user, err := u.userRepo.GetByID(userID)
+	if err != nil {
+		return apiError.NewNotFoundError(fmt.Errorf("failed to get user: %w", err))
+	}
+
+	if !helper.ContainsUserID(proj.Members, user.ID) {
+		return apiError.NewForbiddenError(fmt.Errorf("user is not a member of the project"))
+	}
+
+	return nil
+}
+
 func (u *QuotaUsecase) isNamespaceMember(namespaceID uuid.UUID, userID uuid.UUID) error {
 	namespace, err := u.namespaceRepo.GetNamespaceByID(namespaceID)
 	if err != nil {
@@ -92,8 +110,25 @@ func (u *QuotaUsecase) isNamespaceMember(namespaceID uuid.UUID, userID uuid.UUID
 }
 
 func (u *QuotaUsecase) GetUsage(quotaID uuid.UUID, namespaceID uuid.UUID, userID uuid.UUID) (interface{}, error) {
-	if err := u.isNamespaceMember(namespaceID, userID); err != nil {
-		return nil, err
+	// Check if user is a namespace member
+	namespaceErr := u.isNamespaceMember(namespaceID, userID)
+
+	// If not a namespace member, check if they're a project member
+	if namespaceErr != nil {
+		namespace, err := u.namespaceRepo.GetNamespaceByID(namespaceID)
+		if err != nil {
+			return nil, apiError.NewNotFoundError(fmt.Errorf("failed to get namespace: %w", err))
+		}
+
+		// If namespace belongs to a project, check project membership
+		if namespace.ProjectID != nil {
+			if err := u.isProjMember(*namespace.ProjectID, userID); err != nil {
+				return nil, apiError.NewForbiddenError(fmt.Errorf("user is not a member of the namespace or its project"))
+			}
+		} else {
+			// No project associated, return original namespace error
+			return nil, namespaceErr
+		}
 	}
 
 	isAssigned, err := u.quotaRepo.IsAssigned(namespaceID, quotaID)

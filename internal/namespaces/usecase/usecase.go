@@ -182,8 +182,21 @@ func (u *NamespaceUsecase) GetNamespace(namespaceID uuid.UUID, userID uuid.UUID)
 	}
 
 	// Check if user is owner or member
-	if (namespace.OwnerID == nil || *namespace.OwnerID != userID) && !helper.ContainsUserID(namespace.Members, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not namespace owner or member")
+	isOwner := namespace.OwnerID != nil && *namespace.OwnerID == userID
+	isMember := helper.ContainsUserID(namespace.Members, userID)
+	isProjectAdmin := false
+
+	// If namespace belongs to a project, check if user is project admin
+	if namespace.ProjectID != nil {
+		proj, err := u.projRepo.GetProjectByID(*namespace.ProjectID)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(err)
+		}
+		isProjectAdmin = helper.ContainsUserID(proj.Admins, userID)
+	}
+
+	if !isOwner && !isMember && !isProjectAdmin {
+		return nil, apiError.NewUnauthorizedError("user is not namespace owner, member, or project admin")
 	}
 
 	log.Printf("Namespace members: %+v", namespace.Members)
