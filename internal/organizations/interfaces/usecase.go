@@ -7,7 +7,7 @@ import (
 )
 
 type OrganizationUsecase interface {
-	GetAllOrganizations() ([]models.Organization, error)
+	GetAllOrganizations() ([]orgDtos.OrganizationResponse, error)
 	GetOrganizationByID(orgID uuid.UUID, userID uuid.UUID) (*orgDtos.OrganizationResponse, error)
 	CreateOrganization(request *orgDtos.CreateOrganization, userID uuid.UUID) (*models.Organization, error)
 	UpdateOrganization(orgID uuid.UUID, request *orgDtos.UpdateOrganization, userID uuid.UUID) (*models.Organization, error)

@@ -62,12 +62,75 @@ func (u *ProjectUsecase) CreateProject(request *dtos.CreateProjectRequest, userI
 	return nil
 }
 
-func (u *ProjectUsecase) GetAllProjects() ([]models.Project, error) {
+func (u *ProjectUsecase) GetAllProjects() ([]dtos.ProjectResponse, error) {
 	projects, err := u.projRepo.GetAllProjects()
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
-	return projects, nil
+
+	var projectResponses []dtos.ProjectResponse
+	for _, project := range projects {
+		// Get all namespaces for this project
+		namespaces, err := u.namespaceRepo.GetAllNamespacesByProjectID(project.ID)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get namespaces: %w", err).Error())
+		}
+
+		// Aggregate resources by resource type
+		typeAgg := make(map[uuid.UUID]namespaceDtos.ResourceQuota)
+
+		for _, namespace := range namespaces {
+			// Skip namespaces without quota template
+			if namespace.QuotaTemplate == nil {
+				continue
+			}
+
+			// Iterate through all quotas in the template
+			for _, quota := range namespace.QuotaTemplate.Quotas {
+				// Iterate through all resources in the quota
+				for _, resource := range quota.Resources {
+					rt := resource.ResourceProp.Resource.ResourceType
+					rtID := rt.ID
+
+					// Initialize if not exists
+					if _, ok := typeAgg[rtID]; !ok {
+						typeAgg[rtID] = namespaceDtos.ResourceQuota{
+							TypeID: rtID,
+							Type:   rt.Name,
+							Quota:  0,
+						}
+					}
+
+					// Add to existing quota
+					tmp := typeAgg[rtID]
+					tmp.Quota += float64(resource.Quantity)
+					typeAgg[rtID] = tmp
+				}
+			}
+		}
+
+		// Convert map to slice
+		var resourceQuotas []namespaceDtos.ResourceQuota
+		for _, v := range typeAgg {
+			resourceQuotas = append(resourceQuotas, v)
+		}
+
+		// Build response
+		projectResponse := dtos.ProjectResponse{
+			ID:             project.ID,
+			CreatedAt:      project.CreatedAt,
+			UpdatedAt:      project.UpdatedAt,
+			Name:           project.Name,
+			Description:    project.Description,
+			OrganizationID: project.OrganizationID,
+			Members:        project.Members,
+			Admins:         project.Admins,
+			ResourceQuotas: resourceQuotas,
+		}
+		projectResponses = append(projectResponses, projectResponse)
+	}
+
+	return projectResponses, nil
 }
 
 func (u *ProjectUsecase) AddMembers(request *dtos.AddMembersRequest, userID uuid.UUID) (*models.Project, error) {
@@ -172,16 +235,78 @@ func (u *ProjectUsecase) RemoveMembers(request *dtos.RemoveMembersRequest, userI
 	return project, nil
 }
 
-func (u *ProjectUsecase) GetAllUserProjects(userID uuid.UUID) ([]models.Project, error) {
+func (u *ProjectUsecase) GetAllUserProjects(userID uuid.UUID) ([]dtos.ProjectResponse, error) {
 	projects, err := u.projRepo.GetAllProjectsByUserID(userID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	return projects, nil
+	var projectResponses []dtos.ProjectResponse
+	for _, project := range projects {
+		// Get all namespaces for this project
+		namespaces, err := u.namespaceRepo.GetAllNamespacesByProjectID(project.ID)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get namespaces: %w", err).Error())
+		}
+
+		// Aggregate resources by resource type
+		typeAgg := make(map[uuid.UUID]namespaceDtos.ResourceQuota)
+
+		for _, namespace := range namespaces {
+			// Skip namespaces without quota template
+			if namespace.QuotaTemplate == nil {
+				continue
+			}
+
+			// Iterate through all quotas in the template
+			for _, quota := range namespace.QuotaTemplate.Quotas {
+				// Iterate through all resources in the quota
+				for _, resource := range quota.Resources {
+					rt := resource.ResourceProp.Resource.ResourceType
+					rtID := rt.ID
+
+					// Initialize if not exists
+					if _, ok := typeAgg[rtID]; !ok {
+						typeAgg[rtID] = namespaceDtos.ResourceQuota{
+							TypeID: rtID,
+							Type:   rt.Name,
+							Quota:  0,
+						}
+					}
+
+					// Add to existing quota
+					tmp := typeAgg[rtID]
+					tmp.Quota += float64(resource.Quantity)
+					typeAgg[rtID] = tmp
+				}
+			}
+		}
+
+		// Convert map to slice
+		var resourceQuotas []namespaceDtos.ResourceQuota
+		for _, v := range typeAgg {
+			resourceQuotas = append(resourceQuotas, v)
+		}
+
+		// Build response
+		projectResponse := dtos.ProjectResponse{
+			ID:             project.ID,
+			CreatedAt:      project.CreatedAt,
+			UpdatedAt:      project.UpdatedAt,
+			Name:           project.Name,
+			Description:    project.Description,
+			OrganizationID: project.OrganizationID,
+			Members:        project.Members,
+			Admins:         project.Admins,
+			ResourceQuotas: resourceQuotas,
+		}
+		projectResponses = append(projectResponses, projectResponse)
+	}
+
+	return projectResponses, nil
 }
 
-func (u *ProjectUsecase) GetProjectsByOrganizationID(orgID uuid.UUID, userID uuid.UUID) ([]models.Project, error) {
+func (u *ProjectUsecase) GetProjectsByOrganizationID(orgID uuid.UUID, userID uuid.UUID) ([]dtos.ProjectResponse, error) {
 	org, err := u.orgRepo.GetOrganizationByID(orgID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err.Error())
@@ -195,7 +320,70 @@ func (u *ProjectUsecase) GetProjectsByOrganizationID(orgID uuid.UUID, userID uui
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
-	return projects, nil
+
+	var projectResponses []dtos.ProjectResponse
+	for _, project := range projects {
+		// Get all namespaces for this project
+		namespaces, err := u.namespaceRepo.GetAllNamespacesByProjectID(project.ID)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get namespaces: %w", err).Error())
+		}
+
+		// Aggregate resources by resource type
+		typeAgg := make(map[uuid.UUID]namespaceDtos.ResourceQuota)
+
+		for _, namespace := range namespaces {
+			// Skip namespaces without quota template
+			if namespace.QuotaTemplate == nil {
+				continue
+			}
+
+			// Iterate through all quotas in the template
+			for _, quota := range namespace.QuotaTemplate.Quotas {
+				// Iterate through all resources in the quota
+				for _, resource := range quota.Resources {
+					rt := resource.ResourceProp.Resource.ResourceType
+					rtID := rt.ID
+
+					// Initialize if not exists
+					if _, ok := typeAgg[rtID]; !ok {
+						typeAgg[rtID] = namespaceDtos.ResourceQuota{
+							TypeID: rtID,
+							Type:   rt.Name,
+							Quota:  0,
+						}
+					}
+
+					// Add to existing quota
+					tmp := typeAgg[rtID]
+					tmp.Quota += float64(resource.Quantity)
+					typeAgg[rtID] = tmp
+				}
+			}
+		}
+
+		// Convert map to slice
+		var resourceQuotas []namespaceDtos.ResourceQuota
+		for _, v := range typeAgg {
+			resourceQuotas = append(resourceQuotas, v)
+		}
+
+		// Build response
+		projectResponse := dtos.ProjectResponse{
+			ID:             project.ID,
+			CreatedAt:      project.CreatedAt,
+			UpdatedAt:      project.UpdatedAt,
+			Name:           project.Name,
+			Description:    project.Description,
+			OrganizationID: project.OrganizationID,
+			Members:        project.Members,
+			Admins:         project.Admins,
+			ResourceQuotas: resourceQuotas,
+		}
+		projectResponses = append(projectResponses, projectResponse)
+	}
+
+	return projectResponses, nil
 }
 
 func (u *ProjectUsecase) GetProjectMembers(projectID uuid.UUID, userID uuid.UUID) ([]models.User, error) {

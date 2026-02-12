@@ -7,16 +7,16 @@ import (
 )
 
 type ProjectUsecase interface {
-	GetAllProjects() ([]models.Project, error)
+	GetAllProjects() ([]projectDtos.ProjectResponse, error)
 	CreateProject(request *projectDtos.CreateProjectRequest, userID uuid.UUID) error
 	AddMembers(request *projectDtos.AddMembersRequest, userID uuid.UUID) (*models.Project, error)
 	RemoveMembers(request *projectDtos.RemoveMembersRequest, userID uuid.UUID) (*models.Project, error)
 	AddAdmins(request *projectDtos.AddAdminsRequest, userID uuid.UUID) (*models.Project, error)
 	RemoveAdmins(request *projectDtos.RemoveAdminsRequest, userID uuid.UUID) (*models.Project, error)
 
-	GetAllUserProjects(userID uuid.UUID) ([]models.Project, error)
+	GetAllUserProjects(userID uuid.UUID) ([]projectDtos.ProjectResponse, error)
 	GetProjectByID(projectID uuid.UUID, userID uuid.UUID) (*projectDtos.ProjectResponse, error)
-	GetProjectsByOrganizationID(orgID uuid.UUID, userID uuid.UUID) ([]models.Project, error)
+	GetProjectsByOrganizationID(orgID uuid.UUID, userID uuid.UUID) ([]projectDtos.ProjectResponse, error)
 	GetProjectMembers(projectID uuid.UUID, userID uuid.UUID) ([]models.User, error)
 
 	GetProjectUsage(projectID uuid.UUID, userID uuid.UUID) (*projectDtos.ProjectUsageResponse, error)
