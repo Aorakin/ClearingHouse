@@ -61,7 +61,7 @@ func (r *QuotaRepository) RemoveQuotasFromTemplate(templateID uuid.UUID, quotaID
 
 func (r *QuotaRepository) GetNamespaceQuotaTemplateByID(templateID uuid.UUID) (*models.NamespaceQuotaTemplate, error) {
 	var template models.NamespaceQuotaTemplate
-	if err := r.db.Preload("Quotas").Where("id = ?", templateID).First(&template).Error; err != nil {
+	if err := r.db.Preload("Quotas.Resources.ResourceProp.Resource.ResourceType").Where("id = ?", templateID).First(&template).Error; err != nil {
 		return nil, err
 	}
 

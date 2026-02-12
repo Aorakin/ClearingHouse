@@ -5,8 +5,11 @@ import (
 
 	"github.com/ClearingHouse/helper"
 	"github.com/ClearingHouse/internal/models"
+	namespaceDtos "github.com/ClearingHouse/internal/namespaces/dtos"
+	namespaceInterfaces "github.com/ClearingHouse/internal/namespaces/interfaces"
 	"github.com/ClearingHouse/internal/organizations/dtos"
 	"github.com/ClearingHouse/internal/organizations/interfaces"
+	projectInterfaces "github.com/ClearingHouse/internal/projects/interfaces"
 	quotaInterfaces "github.com/ClearingHouse/internal/quota/interfaces"
 	userInterfaces "github.com/ClearingHouse/internal/users/interfaces"
 	apierror "github.com/ClearingHouse/pkg/api_error"
@@ -14,16 +17,20 @@ import (
 )
 
 type OrganizationUsecase struct {
-	orgRepo   interfaces.OrganizationRepository
-	userRepo  userInterfaces.UsersRepository
-	quotaRepo quotaInterfaces.QuotaRepository
+	orgRepo       interfaces.OrganizationRepository
+	userRepo      userInterfaces.UsersRepository
+	quotaRepo     quotaInterfaces.QuotaRepository
+	projectRepo   projectInterfaces.ProjectRepository
+	namespaceRepo namespaceInterfaces.NamespaceRepository
 }
 
-func NewOrganizationUsecase(orgRepo interfaces.OrganizationRepository, userRepo userInterfaces.UsersRepository, quotaRepo quotaInterfaces.QuotaRepository) interfaces.OrganizationUsecase {
+func NewOrganizationUsecase(orgRepo interfaces.OrganizationRepository, userRepo userInterfaces.UsersRepository, quotaRepo quotaInterfaces.QuotaRepository, projectRepo projectInterfaces.ProjectRepository, namespaceRepo namespaceInterfaces.NamespaceRepository) interfaces.OrganizationUsecase {
 	return &OrganizationUsecase{
-		orgRepo:   orgRepo,
-		userRepo:  userRepo,
-		quotaRepo: quotaRepo,
+		orgRepo:       orgRepo,
+		userRepo:      userRepo,
+		quotaRepo:     quotaRepo,
+		projectRepo:   projectRepo,
+		namespaceRepo: namespaceRepo,
 	}
 }
 
@@ -35,7 +42,7 @@ func (u *OrganizationUsecase) GetAllOrganizations() ([]models.Organization, erro
 	return orgs, nil
 }
 
-func (u *OrganizationUsecase) GetOrganizationByID(id uuid.UUID, userID uuid.UUID) (*models.Organization, error) {
+func (u *OrganizationUsecase) GetOrganizationByID(id uuid.UUID, userID uuid.UUID) (*dtos.OrganizationResponse, error) {
 	organization, err := u.orgRepo.GetOrganizationByID(id)
 	if err != nil {
 		return nil, apierror.NewInternalServerError(err)
@@ -45,7 +52,74 @@ func (u *OrganizationUsecase) GetOrganizationByID(id uuid.UUID, userID uuid.UUID
 		return nil, apierror.NewUnauthorizedError("user is not organization admin or member")
 	}
 
-	return organization, nil
+	// Get all projects for this organization
+	projects, err := u.projectRepo.GetProjectsByOrganizationID(id)
+	if err != nil {
+		return nil, apierror.NewInternalServerError(fmt.Errorf("failed to get projects: %w", err))
+	}
+
+	// Aggregate resources by resource type across all projects
+	typeAgg := make(map[uuid.UUID]namespaceDtos.ResourceQuota)
+
+	// Loop through each project
+	for _, project := range projects {
+		// Get all namespaces for this project with preloaded quota templates
+		namespaces, err := u.namespaceRepo.GetAllNamespacesByProjectID(project.ID)
+		if err != nil {
+			return nil, apierror.NewInternalServerError(fmt.Errorf("failed to get namespaces for project %s: %w", project.ID, err))
+		}
+
+		// Loop through namespaces
+		for _, namespace := range namespaces {
+			// Skip namespaces without quota template
+			if namespace.QuotaTemplate == nil {
+				continue
+			}
+
+			// Iterate through all quotas in the template
+			for _, quota := range namespace.QuotaTemplate.Quotas {
+				// Iterate through all resources in the quota
+				for _, resource := range quota.Resources {
+					rt := resource.ResourceProp.Resource.ResourceType
+					rtID := rt.ID
+
+					// Initialize if not exists
+					if _, ok := typeAgg[rtID]; !ok {
+						typeAgg[rtID] = namespaceDtos.ResourceQuota{
+							TypeID: rtID,
+							Type:   rt.Name,
+							Quota:  0,
+						}
+					}
+
+					// Add to existing quota
+					tmp := typeAgg[rtID]
+					tmp.Quota += float64(resource.Quantity)
+					typeAgg[rtID] = tmp
+				}
+			}
+		}
+	}
+
+	// Convert map to slice
+	var resourceQuotas []namespaceDtos.ResourceQuota
+	for _, v := range typeAgg {
+		resourceQuotas = append(resourceQuotas, v)
+	}
+
+	// Build response
+	response := &dtos.OrganizationResponse{
+		ID:             organization.ID,
+		CreatedAt:      organization.CreatedAt,
+		UpdatedAt:      organization.UpdatedAt,
+		Name:           organization.Name,
+		Description:    organization.Description,
+		Members:        organization.Members,
+		Admins:         organization.Admins,
+		ResourceQuotas: resourceQuotas,
+	}
+
+	return response, nil
 }
 
 func (u *OrganizationUsecase) CreateOrganization(request *dtos.CreateOrganization, userID uuid.UUID) (*models.Organization, error) {

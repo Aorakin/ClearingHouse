@@ -6,6 +6,7 @@ import (
 
 	"github.com/ClearingHouse/helper"
 	"github.com/ClearingHouse/internal/models"
+	namespaceDtos "github.com/ClearingHouse/internal/namespaces/dtos"
 	namespaceInterfaces "github.com/ClearingHouse/internal/namespaces/interfaces"
 	orgInterfaces "github.com/ClearingHouse/internal/organizations/interfaces"
 	"github.com/ClearingHouse/internal/projects/dtos"
@@ -215,7 +216,7 @@ func (u *ProjectUsecase) GetProjectMembers(projectID uuid.UUID, userID uuid.UUID
 	return members, nil
 }
 
-func (u *ProjectUsecase) GetProjectByID(projectID uuid.UUID, userID uuid.UUID) (*models.Project, error) {
+func (u *ProjectUsecase) GetProjectByID(projectID uuid.UUID, userID uuid.UUID) (*dtos.ProjectResponse, error) {
 	project, err := u.projRepo.GetProjectByID(projectID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err.Error())
@@ -225,7 +226,65 @@ func (u *ProjectUsecase) GetProjectByID(projectID uuid.UUID, userID uuid.UUID) (
 		return nil, apiError.NewUnauthorizedError("user is not project admin or member")
 	}
 
-	return project, nil
+	// Get all namespaces for this project with preloaded quota templates
+	namespaces, err := u.namespaceRepo.GetAllNamespacesByProjectID(projectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get namespaces: %w", err).Error())
+	}
+
+	// Aggregate resources by resource type
+	typeAgg := make(map[uuid.UUID]namespaceDtos.ResourceQuota)
+
+	for _, namespace := range namespaces {
+		// Skip namespaces without quota template
+		if namespace.QuotaTemplate == nil {
+			continue
+		}
+
+		// Iterate through all quotas in the template
+		for _, quota := range namespace.QuotaTemplate.Quotas {
+			// Iterate through all resources in the quota
+			for _, resource := range quota.Resources {
+				rt := resource.ResourceProp.Resource.ResourceType
+				rtID := rt.ID
+
+				// Initialize if not exists
+				if _, ok := typeAgg[rtID]; !ok {
+					typeAgg[rtID] = namespaceDtos.ResourceQuota{
+						TypeID: rtID,
+						Type:   rt.Name,
+						Quota:  0,
+					}
+				}
+
+				// Add to existing quota
+				tmp := typeAgg[rtID]
+				tmp.Quota += float64(resource.Quantity)
+				typeAgg[rtID] = tmp
+			}
+		}
+	}
+
+	// Convert map to slice
+	var resourceQuotas []namespaceDtos.ResourceQuota
+	for _, v := range typeAgg {
+		resourceQuotas = append(resourceQuotas, v)
+	}
+
+	// Build response
+	response := &dtos.ProjectResponse{
+		ID:             project.ID,
+		CreatedAt:      project.CreatedAt,
+		UpdatedAt:      project.UpdatedAt,
+		Name:           project.Name,
+		Description:    project.Description,
+		OrganizationID: project.OrganizationID,
+		Members:        project.Members,
+		Admins:         project.Admins,
+		ResourceQuotas: resourceQuotas,
+	}
+
+	return response, nil
 }
 
 func (u *ProjectUsecase) GetProjectUsage(projectID uuid.UUID, userID uuid.UUID) (*dtos.ProjectUsageResponse, error) {
