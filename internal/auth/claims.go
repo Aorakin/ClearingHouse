@@ -3,10 +3,11 @@ package auth
 import "github.com/golang-jwt/jwt/v5"
 
 type AccessClaims struct {
-	UserID    string `json:"user_id"`
-	Email     string `json:"email"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	UserID       string `json:"user_id"`
+	Email        string `json:"email"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
+	IsSuperAdmin bool   `json:"is_super_admin"`
 	jwt.RegisteredClaims
 }
 

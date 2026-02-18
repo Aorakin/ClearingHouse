@@ -60,6 +60,7 @@ func (h *OrganizationHandler) GetAllOrganizations() gin.HandlerFunc {
 func (h *OrganizationHandler) GetOrganizationByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
+		isSuperAdmin := c.MustGet("isSuperAdmin").(bool)
 		if userID == uuid.Nil {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
@@ -77,7 +78,7 @@ func (h *OrganizationHandler) GetOrganizationByID() gin.HandlerFunc {
 			return
 		}
 
-		org, uErr := h.organizationUsecase.GetOrganizationByID(orgID, userID)
+		org, uErr := h.organizationUsecase.GetOrganizationByID(orgID, userID, isSuperAdmin)
 		if uErr != nil {
 			c.JSON(response.ErrorResponseBuilder(uErr))
 			return

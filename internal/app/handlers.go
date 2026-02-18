@@ -39,6 +39,9 @@ import (
 	PrivateNamespaceHttp "github.com/ClearingHouse/internal/private_namespaces/delivery/http"
 	PrivateNamespaceRepository "github.com/ClearingHouse/internal/private_namespaces/repository"
 	PrivateNamespaceUsecase "github.com/ClearingHouse/internal/private_namespaces/usecase"
+
+	AdminHttp "github.com/ClearingHouse/internal/admin/delivery/http"
+	AdminUsecase "github.com/ClearingHouse/internal/admin/usecase"
 )
 
 func (a *App) MapHandlers() error {
@@ -60,6 +63,7 @@ func (a *App) MapHandlers() error {
 	userGroup := a.gin.Group("/users")
 	ticketGroup := a.gin.Group("/tickets")
 	privNamespaceGroup := namespacesGroup.Group("/private")
+	adminGroup := a.gin.Group("/admin")
 
 	orgRepo := OrganizationRepository.NewOrganizationRepository(a.postgresDB)
 	resourcePoolRepo, resourceRepo, resourceTypeRepo := ResourceRepository.NewResourceRepository(a.postgresDB)
@@ -80,6 +84,7 @@ func (a *App) MapHandlers() error {
 	authUsecase := AuthUsecase.NewAuthUsecase(userRepo, tokenBlacklistRepo)
 	ticketUsecase := TicketUsecase.NewTicketUsecase(namespaceRepo, ticketRepo, quotaRepo, userRepo, resourceRepo)
 	privNamespaceUsecase := PrivateNamespaceUsecase.NewPrivateNamespaceUsecase(privNamespaceRepo, namespaceRepo, orgRepo, userRepo, quotaRepo, resourceRepo)
+	adminUsecase := AdminUsecase.NewAdminUsecase(userRepo)
 
 	orgHandler := OrganizationHttp.NewOrganizationHandler(orgUsecase)
 	resourceHandler := ResourceHttp.NewResourceHandler(resourceUsecase)
@@ -90,6 +95,7 @@ func (a *App) MapHandlers() error {
 	authHandler := AuthHttp.NewAuthHandler(authUsecase)
 	ticketHandler := TicketHttp.NewTicketHandler(ticketUsecase)
 	privNamespaceHandler := PrivateNamespaceHttp.NewPrivateNamespaceHandler(privNamespaceUsecase, namespaceUsecase)
+	adminHandler := AdminHttp.NewAdminHandler(adminUsecase)
 
 	OrganizationHttp.MapOrganizationRoutes(organizationsGroup, orgHandler)
 	ResourceHttp.MapResourceRoutes(resourcesGroup, resourceHandler)
@@ -100,6 +106,7 @@ func (a *App) MapHandlers() error {
 	AuthHttp.MapAuthRoutes(authGroup, authHandler)
 	TicketHttp.MapTicketRoutes(ticketGroup, ticketHandler)
 	PrivateNamespaceHttp.MapPrivateNamespaceRoutes(privNamespaceGroup, privNamespaceHandler)
+	AdminHttp.MapAdminRoutes(adminGroup, adminHandler)
 
 	return nil
 }

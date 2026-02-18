@@ -26,12 +26,13 @@ func init() {
 }
 
 // GenerateAccessToken - RS512, 15 min expiry
-func GenerateAccessToken(userID, email, firstName, lastName string, privateKey *rsa.PrivateKey) (string, error) {
+func GenerateAccessToken(userID, email, firstName, lastName string, isSuperAdmin bool, privateKey *rsa.PrivateKey) (string, error) {
 	claims := AccessClaims{
-		UserID:    userID,
-		Email:     email,
-		FirstName: firstName,
-		LastName:  lastName,
+		UserID:       userID,
+		Email:        email,
+		FirstName:    firstName,
+		LastName:     lastName,
+		IsSuperAdmin: isSuperAdmin,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "clearing-house-auth",
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

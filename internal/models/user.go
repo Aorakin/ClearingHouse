@@ -7,6 +7,7 @@ type User struct {
 	Email               string         `json:"email"`
 	FirstName           string         `json:"first_name"`
 	LastName            string         `json:"last_name"`
+	IsSuperAdmin        bool           `json:"is_super_admin" gorm:"default:false"`
 	MemberOrganizations []Organization `gorm:"many2many:organization_members;" json:"-"`
 	AdminOrganizations  []Organization `gorm:"many2many:organization_admins;" json:"-"`
 	MemberProjects      []Project      `gorm:"many2many:project_members;" json:"-"`

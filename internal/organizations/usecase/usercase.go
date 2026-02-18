@@ -114,13 +114,13 @@ func (u *OrganizationUsecase) GetAllOrganizations() ([]dtos.OrganizationResponse
 	return orgResponses, nil
 }
 
-func (u *OrganizationUsecase) GetOrganizationByID(id uuid.UUID, userID uuid.UUID) (*dtos.OrganizationResponse, error) {
+func (u *OrganizationUsecase) GetOrganizationByID(id uuid.UUID, userID uuid.UUID, isSuperAdmin bool) (*dtos.OrganizationResponse, error) {
 	organization, err := u.orgRepo.GetOrganizationByID(id)
 	if err != nil {
 		return nil, apierror.NewInternalServerError(err)
 	}
 
-	if !helper.ContainsUserID(organization.Admins, userID) && !helper.ContainsUserID(organization.Members, userID) {
+	if !isSuperAdmin && !helper.ContainsUserID(organization.Admins, userID) && !helper.ContainsUserID(organization.Members, userID) {
 		return nil, apierror.NewUnauthorizedError("user is not organization admin or member")
 	}
 
@@ -220,10 +220,6 @@ func (u *OrganizationUsecase) UpdateOrganization(orgID uuid.UUID, request *dtos.
 		return nil, apierror.NewInternalServerError(err)
 	}
 
-	if !helper.ContainsUserID(org.Admins, userID) {
-		return nil, apierror.NewUnauthorizedError("user is not organization admin")
-	}
-
 	org.Name = request.Name
 	org.Description = request.Description
 
@@ -239,10 +235,6 @@ func (u *OrganizationUsecase) DeleteOrganization(orgID uuid.UUID, userID uuid.UU
 	org, err := u.orgRepo.GetOrganizationByID(orgID)
 	if err != nil {
 		return apierror.NewInternalServerError(err)
-	}
-
-	if !helper.ContainsUserID(org.Admins, userID) {
-		return apierror.NewUnauthorizedError("user is not organization admin")
 	}
 
 	// Prevent deletion if organization has projects

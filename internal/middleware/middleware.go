@@ -78,6 +78,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		firstname, _ := claims["first_name"].(string)
 		lastname, _ := claims["last_name"].(string)
 		email, _ := claims["email"].(string)
+		isSuperAdmin, _ := claims["is_super_admin"].(bool)
 
 		if userID == uuid.Nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "missing user_id in token"})
@@ -90,7 +91,20 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Set("firstname", firstname)
 		c.Set("lastname", lastname)
 		c.Set("email", email)
+		c.Set("isSuperAdmin", isSuperAdmin)
 
+		c.Next()
+	}
+}
+
+func SuperAdminMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		isSuperAdmin, exists := c.Get("isSuperAdmin")
+		if !exists || !isSuperAdmin.(bool) {
+			c.JSON(http.StatusForbidden, gin.H{"message": "super admin access required"})
+			c.Abort()
+			return
+		}
 		c.Next()
 	}
 }

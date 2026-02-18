@@ -112,7 +112,7 @@ func (u *AuthUsecase) GenerateTokens(user *models.User) (accessToken string, ref
 		return "", "", err
 	}
 
-	accessToken, err = auth.GenerateAccessToken(user.ID.String(), user.Email, user.FirstName, user.LastName, privateKey)
+	accessToken, err = auth.GenerateAccessToken(user.ID.String(), user.Email, user.FirstName, user.LastName, user.IsSuperAdmin, privateKey)
 	if err != nil {
 		return "", "", err
 	}
@@ -151,7 +151,7 @@ func (u *AuthUsecase) RefreshAccessToken(refreshToken string) (string, error) {
 		return "", err
 	}
 
-	return auth.GenerateAccessToken(user.ID.String(), user.Email, user.FirstName, user.LastName, privateKey)
+	return auth.GenerateAccessToken(user.ID.String(), user.Email, user.FirstName, user.LastName, user.IsSuperAdmin, privateKey)
 }
 
 func (u *AuthUsecase) GetUserByID(userID uuid.UUID) (*models.User, error) {
