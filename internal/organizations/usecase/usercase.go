@@ -104,6 +104,7 @@ func (u *OrganizationUsecase) GetAllOrganizations() ([]dtos.OrganizationResponse
 			UpdatedAt:      organization.UpdatedAt,
 			Name:           organization.Name,
 			Description:    organization.Description,
+			Domain:         organization.Domain,
 			Members:        organization.Members,
 			Admins:         organization.Admins,
 			ResourceQuotas: resourceQuotas,
@@ -186,6 +187,7 @@ func (u *OrganizationUsecase) GetOrganizationByID(id uuid.UUID, userID uuid.UUID
 		UpdatedAt:      organization.UpdatedAt,
 		Name:           organization.Name,
 		Description:    organization.Description,
+		Domain:         organization.Domain,
 		Members:        organization.Members,
 		Admins:         organization.Admins,
 		ResourceQuotas: resourceQuotas,
@@ -203,6 +205,7 @@ func (u *OrganizationUsecase) CreateOrganization(request *dtos.CreateOrganizatio
 	organization := &models.Organization{
 		Name:        request.Name,
 		Description: request.Description,
+		Domain:      request.Domain,
 		Admins:      []models.User{*creator},
 		Members:     []models.User{},
 	}
@@ -222,6 +225,7 @@ func (u *OrganizationUsecase) UpdateOrganization(orgID uuid.UUID, request *dtos.
 
 	org.Name = request.Name
 	org.Description = request.Description
+	org.Domain = request.Domain
 
 	updatedOrg, err := u.orgRepo.UpdateOrganization(org)
 	if err != nil {

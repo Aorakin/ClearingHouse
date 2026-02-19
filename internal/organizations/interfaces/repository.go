@@ -8,6 +8,7 @@ import (
 type OrganizationRepository interface {
 	CreateOrganization(org *models.Organization) (*models.Organization, error)
 	GetOrganizationByID(id uuid.UUID) (*models.Organization, error)
+	GetOrganizationByDomain(domain string) (*models.Organization, error)
 	UpdateOrganization(org *models.Organization) (*models.Organization, error)
 	DeleteOrganization(id uuid.UUID) error
 	GetOrganizations() ([]models.Organization, error)

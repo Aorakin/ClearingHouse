@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ClearingHouse/internal/auth/dtos"
 	"github.com/ClearingHouse/internal/auth/interfaces"
 	apiError "github.com/ClearingHouse/pkg/api_error"
 	"github.com/ClearingHouse/pkg/response"
@@ -79,6 +80,36 @@ func (h *AuthHandler) GoogleCallback() gin.HandlerFunc {
 		c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", ".localhost", true, true)
 
 		c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
+	}
+}
+
+// ManualRegister handles manual user registration for testing without OAuth
+func (h *AuthHandler) ManualRegister() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req dtos.ManualRegisterRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err.Error())))
+			return
+		}
+
+		user, err := h.authUsecase.ManualRegister(req.Email, req.FirstName, req.LastName)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err.Error())))
+			return
+		}
+
+		accessToken, refreshToken, err := h.authUsecase.GenerateTokens(user)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewInternalServerError(err)))
+			return
+		}
+
+		c.JSON(http.StatusCreated, gin.H{
+			"message":       "User registered successfully",
+			"access_token":  accessToken,
+			"refresh_token": refreshToken,
+			"user":          user,
+		})
 	}
 }
 

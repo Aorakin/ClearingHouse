@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"errors"
@@ -12,6 +13,7 @@ import (
 	"github.com/ClearingHouse/internal/auth/interfaces"
 	authRepo "github.com/ClearingHouse/internal/auth/repository"
 	"github.com/ClearingHouse/internal/models"
+	orgInterfaces "github.com/ClearingHouse/internal/organizations/interfaces"
 	userInterfaces "github.com/ClearingHouse/internal/users/interfaces"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -21,12 +23,14 @@ import (
 type AuthUsecase struct {
 	userRepo      userInterfaces.UsersRepository
 	blacklistRepo *authRepo.TokenBlacklistRepository
+	orgRepo       orgInterfaces.OrganizationRepository
 }
 
-func NewAuthUsecase(userRepo userInterfaces.UsersRepository, blacklistRepo *authRepo.TokenBlacklistRepository) interfaces.AuthUsecase {
+func NewAuthUsecase(userRepo userInterfaces.UsersRepository, blacklistRepo *authRepo.TokenBlacklistRepository, orgRepo orgInterfaces.OrganizationRepository) interfaces.AuthUsecase {
 	return &AuthUsecase{
 		userRepo:      userRepo,
 		blacklistRepo: blacklistRepo,
+		orgRepo:       orgRepo,
 	}
 }
 
@@ -85,13 +89,11 @@ func (u *AuthUsecase) HandleGoogleRegisterCallback(code string, c *gin.Context) 
 		return nil, errors.New("invalid user data from Google")
 	}
 
-	// Check if user already exists - registration should fail if user exists
 	existingUser, err := u.userRepo.GetByEmail(email)
 	if existingUser != nil {
 		return nil, errors.New("user already registered. Please login instead")
 	}
 
-	// Create new user only if they don't exist
 	newUser := &models.User{
 		Email:     email,
 		FirstName: firstName,
@@ -101,6 +103,63 @@ func (u *AuthUsecase) HandleGoogleRegisterCallback(code string, c *gin.Context) 
 	err = u.userRepo.Create(newUser)
 	if err != nil {
 		return nil, err
+	}
+
+	// Extract domain from email
+	emailParts := strings.Split(email, "@")
+	if len(emailParts) == 2 {
+		domain := emailParts[1]
+		org, err := u.orgRepo.GetOrganizationByDomain(domain)
+		if err == nil && org != nil {
+			// Add user to organization members
+			org.Members = append(org.Members, *newUser)
+			err = u.orgRepo.UpdateMembers(org)
+			if err != nil {
+				log.Printf("Failed to auto-add user to organization: %v", err)
+				// Don't fail registration if auto-add fails
+			} else {
+				log.Printf("User %s auto-added to organization %s based on domain %s", email, org.Name, domain)
+			}
+		}
+	}
+
+	return newUser, nil
+}
+
+// ManualRegister creates a user without OAuth for testing purposes
+func (u *AuthUsecase) ManualRegister(email, firstName, lastName string) (*models.User, error) {
+	existingUser, err := u.userRepo.GetByEmail(email)
+	if existingUser != nil {
+		return nil, errors.New("user already registered. Please login instead")
+	}
+
+	newUser := &models.User{
+		Email:     email,
+		FirstName: firstName,
+		LastName:  lastName,
+	}
+
+	err = u.userRepo.Create(newUser)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract domain from email
+	emailParts := strings.Split(email, "@")
+	if len(emailParts) == 2 {
+		domain := emailParts[1]
+		org, err := u.orgRepo.GetOrganizationByDomain(domain)
+		if err == nil && org != nil {
+			// Add user to organization members
+			org.Members = append(org.Members, *newUser)
+			err = u.orgRepo.UpdateMembers(org)
+			if err != nil {
+				log.Printf("Failed to auto-add user to organization: %v", err)
+				// Don't fail registration if auto-add fails
+			} else {
+				log.Printf("User %s auto-added to organization %s based on domain %s", email, org.Name, domain)
+			}
+		}
 	}
 
 	return newUser, nil
