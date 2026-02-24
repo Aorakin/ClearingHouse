@@ -14,6 +14,7 @@ type OrganizationResponse struct {
 	UpdatedAt      time.Time            `json:"updated_at"`
 	Name           string               `json:"name"`
 	Description    string               `json:"description"`
+	Domain         string               `json:"domain"`
 	Members        []models.User        `json:"members"`
 	Admins         []models.User        `json:"admins"`
 	ResourceQuotas []dtos.ResourceQuota `json:"resource_quotas"`

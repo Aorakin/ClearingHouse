@@ -28,6 +28,14 @@ func (r *OrganizationRepository) GetOrganizationByID(id uuid.UUID) (*models.Orga
 	}
 	return &org, nil
 }
+
+func (r *OrganizationRepository) GetOrganizationByDomain(domain string) (*models.Organization, error) {
+	var org models.Organization
+	if err := r.db.Preload("Members").Preload("Admins").Where("domain = ? AND domain != ''", domain).First(&org).Error; err != nil {
+		return nil, err
+	}
+	return &org, nil
+}
 func (r *OrganizationRepository) UpdateOrganization(org *models.Organization) (*models.Organization, error) {
 	if err := r.db.Save(org).Error; err != nil {
 		return nil, err

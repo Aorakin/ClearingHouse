@@ -81,7 +81,7 @@ func (a *App) MapHandlers() error {
 	projUsecase := ProjectUsecase.NewProjectUsecase(projRepo, orgRepo, userRepo, namespaceRepo)
 	namespaceUsecase := NamespaceUsecase.NewNamespaceUsecase(namespaceRepo, userRepo, projRepo, quotaRepo)
 	userUsecase := UserUsecase.NewUsersUsecase(userRepo)
-	authUsecase := AuthUsecase.NewAuthUsecase(userRepo, tokenBlacklistRepo)
+	authUsecase := AuthUsecase.NewAuthUsecase(userRepo, tokenBlacklistRepo, orgRepo)
 	ticketUsecase := TicketUsecase.NewTicketUsecase(namespaceRepo, ticketRepo, quotaRepo, userRepo, resourceRepo)
 	privNamespaceUsecase := PrivateNamespaceUsecase.NewPrivateNamespaceUsecase(privNamespaceRepo, namespaceRepo, orgRepo, userRepo, quotaRepo, resourceRepo)
 	adminUsecase := AdminUsecase.NewAdminUsecase(userRepo)
