@@ -246,6 +246,7 @@ func (h *OrganizationHandler) GetOrganizationMembers() gin.HandlerFunc {
 func (h *OrganizationHandler) AddAdmins() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
+		isSuperAdmin := c.MustGet("isSuperAdmin").(bool)
 		if userID == uuid.Nil {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
@@ -257,7 +258,7 @@ func (h *OrganizationHandler) AddAdmins() gin.HandlerFunc {
 			return
 		}
 
-		org, err := h.organizationUsecase.AddAdmins(&request, userID)
+		org, err := h.organizationUsecase.AddAdmins(&request, userID, isSuperAdmin)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
@@ -270,6 +271,7 @@ func (h *OrganizationHandler) AddAdmins() gin.HandlerFunc {
 func (h *OrganizationHandler) RemoveAdmins() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
+		isSuperAdmin := c.MustGet("isSuperAdmin").(bool)
 		if userID == uuid.Nil {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
@@ -281,7 +283,7 @@ func (h *OrganizationHandler) RemoveAdmins() gin.HandlerFunc {
 			return
 		}
 
-		org, err := h.organizationUsecase.RemoveAdmins(&request, userID)
+		org, err := h.organizationUsecase.RemoveAdmins(&request, userID, isSuperAdmin)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return

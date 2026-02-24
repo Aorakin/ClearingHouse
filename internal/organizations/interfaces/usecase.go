@@ -14,8 +14,8 @@ type OrganizationUsecase interface {
 	DeleteOrganization(orgID uuid.UUID, userID uuid.UUID) error
 	AddMembers(request *orgDtos.AddMembersRequest, userID uuid.UUID) (*models.Organization, error)
 	RemoveMembers(request *orgDtos.RemoveMembersRequest, userID uuid.UUID) (*models.Organization, error)
-	AddAdmins(request *orgDtos.AddAdminsRequest, userID uuid.UUID) (*models.Organization, error)
-	RemoveAdmins(request *orgDtos.RemoveAdminsRequest, userID uuid.UUID) (*models.Organization, error)
+	AddAdmins(request *orgDtos.AddAdminsRequest, userID uuid.UUID, isSuperAdmin bool) (*models.Organization, error)
+	RemoveAdmins(request *orgDtos.RemoveAdminsRequest, userID uuid.UUID, isSuperAdmin bool) (*models.Organization, error)
 	GetMembers() ([]models.User, error)
 	GetOrganizationMembers(orgID uuid.UUID) ([]models.User, error)
 }

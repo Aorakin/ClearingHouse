@@ -197,16 +197,12 @@ func (u *OrganizationUsecase) GetOrganizationByID(id uuid.UUID, userID uuid.UUID
 }
 
 func (u *OrganizationUsecase) CreateOrganization(request *dtos.CreateOrganization, userID uuid.UUID) (*models.Organization, error) {
-	creator, err := u.userRepo.GetByID(userID)
-	if err != nil {
-		return nil, apierror.NewInternalServerError(err)
-	}
 
 	organization := &models.Organization{
 		Name:        request.Name,
 		Description: request.Description,
 		Domain:      request.Domain,
-		Admins:      []models.User{*creator},
+		Admins:      []models.User{},
 		Members:     []models.User{},
 	}
 
@@ -386,14 +382,14 @@ func (u *OrganizationUsecase) GetOrganizationMembers(orgID uuid.UUID) ([]models.
 	return users, nil
 }
 
-func (u *OrganizationUsecase) AddAdmins(request *dtos.AddAdminsRequest, userID uuid.UUID) (*models.Organization, error) {
+func (u *OrganizationUsecase) AddAdmins(request *dtos.AddAdminsRequest, userID uuid.UUID, isSuperAdmin bool) (*models.Organization, error) {
 	org, err := u.orgRepo.GetOrganizationByID(request.OrganizationID)
 	if err != nil {
 		return nil, apierror.NewInternalServerError(err)
 	}
 
-	if !helper.ContainsUserID(org.Admins, userID) {
-		return nil, apierror.NewUnauthorizedError("user is not organization admin")
+	if !isSuperAdmin {
+		return nil, apierror.NewUnauthorizedError("only super admin can add organization admins")
 	}
 
 	existing := make(map[uuid.UUID]struct{})
@@ -428,14 +424,14 @@ func (u *OrganizationUsecase) AddAdmins(request *dtos.AddAdminsRequest, userID u
 	return org, nil
 }
 
-func (u *OrganizationUsecase) RemoveAdmins(request *dtos.RemoveAdminsRequest, userID uuid.UUID) (*models.Organization, error) {
+func (u *OrganizationUsecase) RemoveAdmins(request *dtos.RemoveAdminsRequest, userID uuid.UUID, isSuperAdmin bool) (*models.Organization, error) {
 	org, err := u.orgRepo.GetOrganizationByID(request.OrganizationID)
 	if err != nil {
 		return nil, apierror.NewInternalServerError(err)
 	}
 
-	if !helper.ContainsUserID(org.Admins, userID) {
-		return nil, apierror.NewUnauthorizedError("user is not organization admin")
+	if !isSuperAdmin {
+		return nil, apierror.NewUnauthorizedError("only super admin can remove organization admins")
 	}
 
 	// Create a map of admins to remove for quick lookup
@@ -467,11 +463,6 @@ func (u *OrganizationUsecase) RemoveAdmins(request *dtos.RemoveAdminsRequest, us
 		if _, shouldRemove := removeMap[admin.ID]; !shouldRemove {
 			newAdmins = append(newAdmins, admin)
 		}
-	}
-
-	// Prevent removing all admins
-	if len(newAdmins) == 0 {
-		return nil, apierror.NewBadRequestError("cannot remove all admins from organization. At least one admin must remain")
 	}
 
 	org.Admins = newAdmins
