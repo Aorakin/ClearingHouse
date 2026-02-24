@@ -329,7 +329,7 @@ func (u *TicketUsecase) StopTicket(request *dtos.StopTicketsRequest) ([]models.T
 		if t.Status != "running" {
 			return nil, apiError.NewBadRequestError("ticket is not in running status")
 		}
-		endTime := time.Now()
+		endTime := request.StopTime
 		err = u.ticketRepo.StopTicket(ticketID, endTime)
 		if err != nil {
 			return nil, apiError.NewInternalServerError(err)
@@ -356,4 +356,8 @@ func (u *TicketUsecase) StopTicket(request *dtos.StopTicketsRequest) ([]models.T
 		tickets = append(tickets, *t)
 	}
 	return tickets, nil
+}
+
+func (u *TicketUsecase) ResetTickets(ticketIDs []uuid.UUID) error {
+	return u.ticketRepo.ResetTickets(ticketIDs)
 }

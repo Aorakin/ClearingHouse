@@ -217,3 +217,22 @@ func (h *TicketHandler) DeleteTicket() gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "ticket deleted successfully"})
 	}
 }
+
+func (h *TicketHandler) ResetTickets() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var request dtos.ResetTicketsRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		err := h.ticketUsecase.ResetTickets(request.TicketIDs)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "tickets reset successfully"})
+	}
+
+}

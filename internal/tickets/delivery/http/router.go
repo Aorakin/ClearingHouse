@@ -10,6 +10,7 @@ func MapTicketRoutes(ticketGroup *gin.RouterGroup, ticketHandler interfaces.Tick
 	ticketGroup.PATCH("/start", ticketHandler.StartTicket())
 	ticketGroup.PATCH("/stop-pending", ticketHandler.StopPendingTicket())
 	ticketGroup.PATCH("/stop", ticketHandler.StopTicket())
+	ticketGroup.PATCH("/reset", ticketHandler.ResetTickets())
 	ticketGroup.Use(middleware.AuthMiddleware())
 	ticketGroup.POST("/", ticketHandler.CreateTicket())
 	ticketGroup.GET("/:ticket-id", ticketHandler.GetTicket())
@@ -17,4 +18,5 @@ func MapTicketRoutes(ticketGroup *gin.RouterGroup, ticketHandler interfaces.Tick
 	ticketGroup.GET("/namespace/:namespace_id", ticketHandler.GetNamespaceTickets())
 	ticketGroup.GET("/user", ticketHandler.GetUserTickets())
 	ticketGroup.DELETE("/:ticket-id", ticketHandler.DeleteTicket())
+
 }
