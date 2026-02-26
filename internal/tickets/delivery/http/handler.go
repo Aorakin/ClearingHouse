@@ -78,6 +78,8 @@ func (h *TicketHandler) StartTicket() gin.HandlerFunc {
 			return
 		}
 
+		log.Printf("Received StartTicketsRequest: %+v", request)
+
 		tickets, err := h.ticketUsecase.StartTicket(&request)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
