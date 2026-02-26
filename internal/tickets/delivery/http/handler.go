@@ -120,6 +120,7 @@ func (h *TicketHandler) StopTicket() gin.HandlerFunc {
 
 		tickets, err := h.ticketUsecase.StopTicket(&request)
 		if err != nil {
+			log.Printf("[STOP TICKET ERROR] %s", err.Error())
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
