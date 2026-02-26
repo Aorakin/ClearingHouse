@@ -138,13 +138,6 @@ func (r *NamespaceRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*d
 		return nil, err
 	}
 
-	log.Printf("Fetched %d quotas for namespace %s", len(quotas), namespaceID)
-	log.Printf("Quotas: %+v", quotas)
-
-	for _, q := range quotas {
-		log.Printf("Quota ID: %s, Name: %s", q.ID, q.Name)
-	}
-
 	typeAgg := make(map[uuid.UUID]dtos.ResourceQuota)
 	for _, quota := range quotas {
 		for _, res := range quota.Resources {
