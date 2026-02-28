@@ -113,17 +113,21 @@ func (u *QuotaUsecase) GetUsage(quotaID uuid.UUID, namespaceID uuid.UUID, userID
 	// Check if user is a namespace member
 	namespaceErr := u.isNamespaceMember(namespaceID, userID)
 
-	// If not a namespace member, check if they're a project member
+	// If not a namespace member, check if they're a project member or admin
 	if namespaceErr != nil {
 		namespace, err := u.namespaceRepo.GetNamespaceByID(namespaceID)
 		if err != nil {
 			return nil, apiError.NewNotFoundError(fmt.Errorf("failed to get namespace: %w", err))
 		}
 
-		// If namespace belongs to a project, check project membership
+		// If namespace belongs to a project, check project membership or admin status
 		if namespace.ProjectID != nil {
-			if err := u.isProjMember(*namespace.ProjectID, userID); err != nil {
-				return nil, apiError.NewForbiddenError(fmt.Errorf("user is not a member of the namespace or its project"))
+			memberErr := u.isProjMember(*namespace.ProjectID, userID)
+			if memberErr != nil {
+				// If not a member, check if they're an admin
+				if err := u.isProjAdmin(*namespace.ProjectID, userID); err != nil {
+					return nil, apiError.NewForbiddenError(fmt.Errorf("user is not a member or admin of the namespace or its project"))
+				}
 			}
 		} else {
 			// No project associated, return original namespace error
