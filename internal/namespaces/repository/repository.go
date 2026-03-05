@@ -49,6 +49,7 @@ func (r *NamespaceRepository) GetAllNamespacesByProjectID(projectID uuid.UUID) (
 		Preload("Owner").
 		Preload("QuotaTemplate.Quotas.Resources.ResourceProp.Resource.ResourceType").
 		Preload("Members").
+		Order("namespaces.name DESC").
 		Find(&namespaces).Error
 	return namespaces, err
 }
