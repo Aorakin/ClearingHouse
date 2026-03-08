@@ -1,4 +1,1426 @@
-info:
-  contact: {}
-paths: {}
 swagger: "2.0"
+info:
+  title: "ClearingHouse API"
+  description: "API สำหรับจัดการ Organizations, Projects, Namespaces, Resources และ Quotas"
+  version: "1.0"
+  contact: {}
+basePath: ""
+schemes:
+  - http
+  - https
+securityDefinitions:
+  BearerAuth:
+    type: apiKey
+    name: Authorization
+    in: header
+    description: "JWT token (ใส่เป็น 'Bearer {token}')"
+
+paths:
+  # Home
+  /:
+    get:
+      tags:
+        - "Home"
+      summary: "Welcome endpoint"
+      description: "ตรวจสอบสถานะ API"
+      responses:
+        200:
+          description: "Success"
+
+  # ========== Authentication ==========
+  /auth/login/google:
+    get:
+      tags:
+        - "Authentication"
+      summary: "เริ่มต้นการ Login ด้วย Google OAuth"
+      responses:
+        302:
+          description: "Redirect to Google OAuth"
+
+  /auth/callback/google:
+    get:
+      tags:
+        - "Authentication"
+      summary: "Google OAuth callback สำหรับ Login"
+      responses:
+        200:
+          description: "Success"
+
+  /auth/register/google:
+    get:
+      tags:
+        - "Authentication"
+      summary: "เริ่มต้นการ Register ด้วย Google OAuth"
+      responses:
+        302:
+          description: "Redirect to Google OAuth"
+
+  /auth/register/manual:
+    post:
+      tags:
+        - "Authentication"
+      summary: "ลงทะเบียนด้วย Email/Password"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+              password:
+                type: string
+              first_name:
+                type: string
+              last_name:
+                type: string
+      responses:
+        201:
+          description: "Created"
+
+  /auth/logout:
+    get:
+      tags:
+        - "Authentication"
+      summary: "Logout"
+      responses:
+        200:
+          description: "Success"
+
+  /auth/refresh-token:
+    get:
+      tags:
+        - "Authentication"
+      summary: "Refresh JWT token"
+      responses:
+        200:
+          description: "Success"
+
+  /auth/me:
+    get:
+      tags:
+        - "Authentication"
+      summary: "ดึงข้อมูล User ที่ Login อยู่"
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: "Success"
+
+  # ========== Organizations ==========
+  /organizations/:
+    get:
+      tags:
+        - "Organizations"
+      summary: "ดึงรายการ Organization ทั้งหมด"
+      responses:
+        200:
+          description: "Success"
+    post:
+      tags:
+        - "Organizations"
+      summary: "สร้าง Organization ใหม่ (Super Admin only)"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              abbreviation:
+                type: string
+      responses:
+        201:
+          description: "Created"
+
+  /organizations/{org-id}:
+    get:
+      tags:
+        - "Organizations"
+      summary: "ดึงข้อมูล Organization ตาม ID"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: org-id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+    put:
+      tags:
+        - "Organizations"
+      summary: "แก้ไข Organization (Super Admin only)"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: org-id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+    delete:
+      tags:
+        - "Organizations"
+      summary: "ลบ Organization (Super Admin only)"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: org-id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /organizations/members:
+    post:
+      tags:
+        - "Organizations"
+      summary: "เพิ่ม Members เข้า Organization"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              organization_id:
+                type: string
+              user_ids:
+                type: array
+                items:
+                  type: string
+      responses:
+        200:
+          description: "Success"
+    get:
+      tags:
+        - "Organizations"
+      summary: "ดึงรายการ Members ของ User"
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: "Success"
+
+  /organizations/rm-members:
+    post:
+      tags:
+        - "Organizations"
+      summary: "ลบ Members ออกจาก Organization"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  /organizations/admins:
+    post:
+      tags:
+        - "Organizations"
+      summary: "เพิ่ม Admins เข้า Organization"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  /organizations/rm-admins:
+    post:
+      tags:
+        - "Organizations"
+      summary: "ลบ Admins ออกจาก Organization"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  /organizations/{org-id}/members:
+    get:
+      tags:
+        - "Organizations"
+      summary: "ดึงรายการ Members ของ Organization"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: org-id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  # ========== Projects ==========
+  /projects/:
+    get:
+      tags:
+        - "Projects"
+      summary: "ดึงรายการ Project ทั้งหมด (public)"
+      responses:
+        200:
+          description: "Success"
+    post:
+      tags:
+        - "Projects"
+      summary: "สร้าง Project ใหม่"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        201:
+          description: "Created"
+    put:
+      tags:
+        - "Projects"
+      summary: "แก้ไข Project"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  /projects/all:
+    get:
+      tags:
+        - "Projects"
+      summary: "ดึงรายการ Project ทั้งหมดของ User"
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: "Success"
+
+  /projects/organization/{orgId}:
+    get:
+      tags:
+        - "Projects"
+      summary: "ดึงรายการ Project ตาม Organization ID"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: orgId
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /projects/{id}:
+    get:
+      tags:
+        - "Projects"
+      summary: "ดึงข้อมูล Project ตาม ID"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+    delete:
+      tags:
+        - "Projects"
+      summary: "ลบ Project"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /projects/{id}/members:
+    get:
+      tags:
+        - "Projects"
+      summary: "ดึงรายการ Members ของ Project"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /projects/{id}/usage:
+    get:
+      tags:
+        - "Projects"
+      summary: "ดึงข้อมูลการใช้งาน Resources ของ Project"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /projects/members:
+    post:
+      tags:
+        - "Projects"
+      summary: "เพิ่ม Members เข้า Project"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  /projects/rm-members:
+    post:
+      tags:
+        - "Projects"
+      summary: "ลบ Members ออกจาก Project"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  /projects/admins:
+    post:
+      tags:
+        - "Projects"
+      summary: "เพิ่ม Admins เข้า Project"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  /projects/rm-admins:
+    post:
+      tags:
+        - "Projects"
+      summary: "ลบ Admins ออกจาก Project"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  # ========== Namespaces ==========
+  /namespaces/:
+    get:
+      tags:
+        - "Namespaces"
+      summary: "ดึงรายการ Namespace ทั้งหมด (public)"
+      responses:
+        200:
+          description: "Success"
+    post:
+      tags:
+        - "Namespaces"
+      summary: "สร้าง Namespace ใหม่"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        201:
+          description: "Created"
+    put:
+      tags:
+        - "Namespaces"
+      summary: "แก้ไข Namespace"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  /namespaces/all/{id}:
+    get:
+      tags:
+        - "Namespaces"
+      summary: "ดึงรายการ Namespace ทั้งหมดของ User"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /namespaces/project/{projectId}:
+    get:
+      tags:
+        - "Namespaces"
+      summary: "ดึงรายการ Namespace ตาม Project ID"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /namespaces/{id}:
+    get:
+      tags:
+        - "Namespaces"
+      summary: "ดึงข้อมูล Namespace ตาม ID"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+    delete:
+      tags:
+        - "Namespaces"
+      summary: "ลบ Namespace"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /namespaces/{id}/usage:
+    get:
+      tags:
+        - "Namespaces"
+      summary: "ดึงข้อมูลการใช้งาน Resources ของ Namespace"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /namespaces/members:
+    post:
+      tags:
+        - "Namespaces"
+      summary: "เพิ่ม Members เข้า Namespace"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  /namespaces/rm-members:
+    post:
+      tags:
+        - "Namespaces"
+      summary: "ลบ Members ออกจาก Namespace"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  # ========== Resources ==========
+  /resources/:
+    post:
+      tags:
+        - "Resources"
+      summary: "สร้าง Resource"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        201:
+          description: "Created"
+
+  /resources/{resource_id}:
+    get:
+      tags:
+        - "Resources"
+      summary: "ดึงข้อมูล Resource Property"
+      parameters:
+        - in: path
+          name: resource_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+    patch:
+      tags:
+        - "Resources"
+      summary: "แก้ไข Resource"
+      parameters:
+        - in: path
+          name: resource_id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+    delete:
+      tags:
+        - "Resources"
+      summary: "ลบ Resource"
+      parameters:
+        - in: path
+          name: resource_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /resources/org/{org_id}:
+    get:
+      tags:
+        - "Resources"
+      summary: "ดึงรายการ Resources ตาม Organization ID"
+      parameters:
+        - in: path
+          name: org_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /resources/type:
+    post:
+      tags:
+        - "Resources"
+      summary: "สร้าง Resource Type"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        201:
+          description: "Created"
+    get:
+      tags:
+        - "Resources"
+      summary: "ดึงรายการ Resource Types ทั้งหมด"
+      responses:
+        200:
+          description: "Success"
+
+  /resources/pool:
+    post:
+      tags:
+        - "Resources"
+      summary: "สร้าง Resource Pool"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        201:
+          description: "Created"
+
+  /resources/pool/{pool_id}:
+    get:
+      tags:
+        - "Resources"
+      summary: "ดึงข้อมูล Resource Pool"
+      parameters:
+        - in: path
+          name: pool_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+    patch:
+      tags:
+        - "Resources"
+      summary: "แก้ไข Resource Pool"
+      parameters:
+        - in: path
+          name: pool_id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+    delete:
+      tags:
+        - "Resources"
+      summary: "ลบ Resource Pool"
+      parameters:
+        - in: path
+          name: pool_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /resources/node:
+    post:
+      tags:
+        - "Resources"
+      summary: "สร้าง Resource Node"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        201:
+          description: "Created"
+
+  /resources/node/{node_id}:
+    get:
+      tags:
+        - "Resources"
+      summary: "ดึงข้อมูล Resource Node"
+      parameters:
+        - in: path
+          name: node_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+    patch:
+      tags:
+        - "Resources"
+      summary: "แก้ไข Resource Node"
+      parameters:
+        - in: path
+          name: node_id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+    delete:
+      tags:
+        - "Resources"
+      summary: "ลบ Resource Node"
+      parameters:
+        - in: path
+          name: node_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  # ========== Quota ==========
+  /quota/organization:
+    post:
+      tags:
+        - "Quota"
+      summary: "สร้าง Organization Quota"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        201:
+          description: "Created"
+    get:
+      tags:
+        - "Quota"
+      summary: "ดึงข้อมูล Organization Quota"
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: "Success"
+
+  /quota/organization/{org_id}:
+    get:
+      tags:
+        - "Quota"
+      summary: "ดึงข้อมูล Organization Quotas ตาม Org ID"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: org_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /quota/organization/{quota_id}:
+    delete:
+      tags:
+        - "Quota"
+      summary: "ลบ Organization Quota"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: quota_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /quota/project:
+    post:
+      tags:
+        - "Quota"
+      summary: "สร้าง Project Quota"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        201:
+          description: "Created"
+
+  /quota/project/internal:
+    post:
+      tags:
+        - "Quota"
+      summary: "สร้าง Internal Project Quota"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        201:
+          description: "Created"
+
+  /quota/project/{project_id}:
+    get:
+      tags:
+        - "Quota"
+      summary: "ดึงข้อมูล Project Quotas"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /quota/project/{project_id}/namespaces:
+    get:
+      tags:
+        - "Quota"
+      summary: "ดึงข้อมูล Namespace Quota ใน Project"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /quota/project/{quota_id}:
+    delete:
+      tags:
+        - "Quota"
+      summary: "ลบ Project Quota"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: quota_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /quota/namespace:
+    post:
+      tags:
+        - "Quota"
+      summary: "สร้าง Namespace Quota"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        201:
+          description: "Created"
+
+  /quota/namespace/{namespace_id}:
+    get:
+      tags:
+        - "Quota"
+      summary: "ดึงข้อมูล Namespace Quota"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: namespace_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /quota/namespace/{quota_id}:
+    put:
+      tags:
+        - "Quota"
+      summary: "แก้ไข Namespace Quota"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: quota_id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+    delete:
+      tags:
+        - "Quota"
+      summary: "ลบ Namespace Quota"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: quota_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /quota/namespace/template:
+    post:
+      tags:
+        - "Quota"
+      summary: "สร้าง Namespace Quota Template"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        201:
+          description: "Created"
+
+  /quota/namespace/template/{quota_template_id}:
+    get:
+      tags:
+        - "Quota"
+      summary: "ดึงข้อมูล Namespace Quota Template"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: quota_template_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+    put:
+      tags:
+        - "Quota"
+      summary: "แก้ไข Namespace Quota Template"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: quota_template_id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+    delete:
+      tags:
+        - "Quota"
+      summary: "ลบ Namespace Quota Template"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: quota_template_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /quota/namespace/template/project/{project_id}:
+    get:
+      tags:
+        - "Quota"
+      summary: "ดึงรายการ Quota Templates ตาม Project ID"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /quota/namespace/template/assign:
+    post:
+      tags:
+        - "Quota"
+      summary: "กำหนด Quota Template ให้กับ Namespace"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  /quota/namespace/template/unassign/{namespace_id}:
+    delete:
+      tags:
+        - "Quota"
+      summary: "ยกเลิกการกำหนด Quota Template จาก Namespace"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: namespace_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /quota/{quota_id}/usage/{namespace_id}:
+    get:
+      tags:
+        - "Quota"
+      summary: "ดึงข้อมูลการใช้งาน Quota"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: quota_id
+          required: true
+          type: string
+        - in: path
+          name: namespace_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  # ========== Tickets ==========
+  /tickets/:
+    post:
+      tags:
+        - "Tickets"
+      summary: "สร้าง Ticket ใหม่"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        201:
+          description: "Created"
+
+  /tickets/{ticket-id}:
+    get:
+      tags:
+        - "Tickets"
+      summary: "ดึงข้อมูล Ticket ตาม ID"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: ticket-id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+    delete:
+      tags:
+        - "Tickets"
+      summary: "ลบ Ticket"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: ticket-id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /tickets/{ticket-id}/cancel:
+    patch:
+      tags:
+        - "Tickets"
+      summary: "ยกเลิก Ticket"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: ticket-id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /tickets/namespace/{namespace_id}:
+    get:
+      tags:
+        - "Tickets"
+      summary: "ดึงรายการ Tickets ของ Namespace"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: namespace_id
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success"
+
+  /tickets/user:
+    get:
+      tags:
+        - "Tickets"
+      summary: "ดึงรายการ Tickets ของ User"
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: "Success"
+
+  /tickets/start:
+    patch:
+      tags:
+        - "Tickets"
+      summary: "เริ่มต้น Ticket"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  /tickets/stop-pending:
+    patch:
+      tags:
+        - "Tickets"
+      summary: "หยุด Pending Ticket"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  /tickets/stop:
+    patch:
+      tags:
+        - "Tickets"
+      summary: "หยุด Ticket"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: "Success"
+
+  # ========== Admin ==========
+  /admin/super-admins:
+    post:
+      tags:
+        - "Admin"
+      summary: "กำหนด Super Admin"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              user_id:
+                type: string
+      responses:
+        200:
+          description: "Success"
+
+  /admin/revoke-super-admins:
+    post:
+      tags:
+        - "Admin"
+      summary: "ยกเลิก Super Admin"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              user_id:
+                type: string
+      responses:
+        200:
+          description: "Success"
+
+  # ========== Users (Legacy) ==========
+  /users/auth/google:
+    get:
+      tags:
+        - "Users (Legacy)"
+      summary: "[เก่า] Login ด้วย Google"
+      responses:
+        302:
+          description: "Redirect"
+
+  /users/auth/callback/google:
+    get:
+      tags:
+        - "Users (Legacy)"
+      summary: "[เก่า] Google OAuth callback"
+      responses:
+        200:
+          description: "Success"
+
+  /users/logout:
+    post:
+      tags:
+        - "Users (Legacy)"
+      summary: "[เก่า] Logout"
+      responses:
+        200:
+          description: "Success"
+
+  /users/testsession:
+    get:
+      tags:
+        - "Users (Legacy)"
+      summary: "[เก่า] ทดสอบ Session"
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: "Success"
+
+tags:
+  - name: "Home"
+    description: "Home endpoints"
+  - name: "Authentication"
+    description: "การจัดการ Authentication และ Authorization"
+  - name: "Organizations"
+    description: "การจัดการ Organizations และ Members"
+  - name: "Projects"
+    description: "การจัดการ Projects และ Members"
+  - name: "Namespaces"
+    description: "การจัดการ Namespaces และ Members"
+  - name: "Resources"
+    description: "การจัดการ Resources, Resource Types, Pools และ Nodes"
+  - name: "Quota"
+    description: "การจัดการ Quotas สำหรับ Organization, Project และ Namespace"
+  - name: "Tickets"
+    description: "การจัดการ Tickets และ Lifecycle"
+  - name: "Admin"
+    description: "การจัดการ Super Admin"
+  - name: "Users (Legacy)"
+    description: "Endpoints เก่าที่อาจจะถูกแทนที่ด้วย /auth"

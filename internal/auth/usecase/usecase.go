@@ -106,22 +106,22 @@ func (u *AuthUsecase) HandleGoogleRegisterCallback(code string, c *gin.Context) 
 	}
 
 	// Extract domain from email
-	emailParts := strings.Split(email, "@")
-	if len(emailParts) == 2 {
-		domain := emailParts[1]
-		org, err := u.orgRepo.GetOrganizationByDomain(domain)
-		if err == nil && org != nil {
-			// Add user to organization members
-			org.Members = append(org.Members, *newUser)
-			err = u.orgRepo.UpdateMembers(org)
-			if err != nil {
-				log.Printf("Failed to auto-add user to organization: %v", err)
-				// Don't fail registration if auto-add fails
-			} else {
-				log.Printf("User %s auto-added to organization %s based on domain %s", email, org.Name, domain)
-			}
-		}
-	}
+	// emailParts := strings.Split(email, "@")
+	// if len(emailParts) == 2 {
+	// 	domain := emailParts[1]
+	// 	org, err := u.orgRepo.GetOrganizationByDomain(domain)
+	// 	if err == nil && org != nil {
+	// 		// Add user to organization members
+	// 		org.Members = append(org.Members, *newUser)
+	// 		err = u.orgRepo.UpdateMembers(org)
+	// 		if err != nil {
+	// 			log.Printf("Failed to auto-add user to organization: %v", err)
+	// 			// Don't fail registration if auto-add fails
+	// 		} else {
+	// 			log.Printf("User %s auto-added to organization %s based on domain %s", email, org.Name, domain)
+	// 		}
+	// 	}
+	// }
 
 	return newUser, nil
 }

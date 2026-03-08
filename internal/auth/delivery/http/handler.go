@@ -60,6 +60,8 @@ func (h *AuthHandler) GoogleCallback() gin.HandlerFunc {
 			}
 			c.SetCookie("access_token", accessToken, 3600, "/", "localhost", false, true)
 			c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", "localhost", false, true)
+			c.SetCookie("access_token", accessToken, 3600, "/", ".ch-admin", false, true)
+			c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", ".ch-admin", false, true)
 			c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "access_token": accessToken, "refresh_token": refreshToken})
 			return
 		}
@@ -78,6 +80,8 @@ func (h *AuthHandler) GoogleCallback() gin.HandlerFunc {
 		}
 		c.SetCookie("access_token", accessToken, 3600, "/", ".localhost", true, true)
 		c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", ".localhost", true, true)
+		c.SetCookie("access_token", accessToken, 3600, "/", ".ch-admin", true, true)
+		c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", ".ch-admin", true, true)
 
 		c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
 	}

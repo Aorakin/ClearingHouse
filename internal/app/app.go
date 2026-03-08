@@ -55,8 +55,13 @@ func (s *App) Run() error {
 		return err
 	}
 
-	// Serve Swagger UI
-	s.gin.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// Serve Swagger files (YAML and JSON) in /docs path to avoid route conflict
+	s.gin.StaticFile("/docs/swagger.json", "./docs/swagger.json")
+	s.gin.StaticFile("/docs/swagger.yaml", "./docs/swagger.yaml")
+
+	// Serve Swagger UI using the swagger.json file
+	url := ginSwagger.URL("/docs/swagger.json")
+	s.gin.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	serverURL := fmt.Sprintf(":%s", "8080")
 	return s.gin.Run(serverURL)
