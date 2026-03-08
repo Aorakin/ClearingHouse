@@ -45,9 +45,9 @@ func (u *TicketUsecase) validateCreateTicketRequest(request *dtos.CreateTicketRe
 			return nil, 0, apiError.NewForbiddenError(fmt.Errorf("namespace usage exceeds quota limit for resource"))
 		}
 
-		if request.Duration < 1800 {
-			return nil, 0, apiError.NewBadRequestError(fmt.Errorf("duration must be greater than 1800 seconds"))
-		}
+		// if request.Duration < 1800 {
+		// 	return nil, 0, apiError.NewBadRequestError(fmt.Errorf("duration must be greater than 1800 seconds"))
+		// }
 		if request.Duration > resourceQuantity.ResourceProp.MaxDuration {
 			return nil, 0, apiError.NewForbiddenError(fmt.Errorf("duration exceeds max limit for resource"))
 		}
@@ -329,7 +329,7 @@ func (u *TicketUsecase) StopTicket(request *dtos.StopTicketsRequest) ([]models.T
 		if t.Status != "running" {
 			return nil, apiError.NewBadRequestError("ticket is not in running status")
 		}
-		endTime := time.Now()
+		endTime := request.StopTime
 		err = u.ticketRepo.StopTicket(ticketID, endTime)
 		if err != nil {
 			return nil, apiError.NewInternalServerError(err)
@@ -356,4 +356,8 @@ func (u *TicketUsecase) StopTicket(request *dtos.StopTicketsRequest) ([]models.T
 		tickets = append(tickets, *t)
 	}
 	return tickets, nil
+}
+
+func (u *TicketUsecase) ResetTickets(ticketIDs []uuid.UUID) error {
+	return u.ticketRepo.ResetTickets(ticketIDs)
 }

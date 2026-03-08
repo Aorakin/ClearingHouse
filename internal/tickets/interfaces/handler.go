@@ -12,4 +12,5 @@ type TicketHandler interface {
 	CancelTicket() gin.HandlerFunc
 	DeleteTicket() gin.HandlerFunc
 	StopPendingTicket() gin.HandlerFunc
+	ResetTickets() gin.HandlerFunc
 }

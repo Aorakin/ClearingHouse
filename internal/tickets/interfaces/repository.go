@@ -23,4 +23,5 @@ type TicketRepository interface {
 	StopTicket(ticketID uuid.UUID, stopTime time.Time) error
 	CancelTicket(ticketID uuid.UUID, cancelTime time.Time) error
 	DeleteTicket(ticketID uuid.UUID) error
+	ResetTickets(ticketIDs []uuid.UUID) error
 }

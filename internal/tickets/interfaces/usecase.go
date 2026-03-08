@@ -16,4 +16,5 @@ type TicketUsecase interface {
 	GetTicket(ticketID uuid.UUID, userID uuid.UUID) (*models.Ticket, error)
 	CancelTicket(ticketID uuid.UUID, userID uuid.UUID) error
 	DeleteTicket(ticketID uuid.UUID, userID uuid.UUID) error
+	ResetTickets(ticketIDs []uuid.UUID) error
 }

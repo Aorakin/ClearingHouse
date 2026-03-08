@@ -52,7 +52,7 @@ func (u *TicketUsecase) FormatGliderSpec(ticket *models.Ticket) dtos.GliderSpec 
 
 	return dtos.GliderSpec{
 		Type:      dtos.ResourceUnitTypeCPU,
-		PoolID:    ticket.NodeID.String(),
+		PoolID:    ticket.ResourcePoolID.String(),
 		Resources: resources,
 	}
 }

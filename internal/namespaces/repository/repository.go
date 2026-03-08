@@ -49,6 +49,7 @@ func (r *NamespaceRepository) GetAllNamespacesByProjectID(projectID uuid.UUID) (
 		Preload("Owner").
 		Preload("QuotaTemplate.Quotas.Resources.ResourceProp.Resource.ResourceType").
 		Preload("Members").
+		Order("namespaces.name DESC").
 		Find(&namespaces).Error
 	return namespaces, err
 }
@@ -136,13 +137,6 @@ func (r *NamespaceRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*d
 		Find(&quotas).Error
 	if err != nil {
 		return nil, err
-	}
-
-	log.Printf("Fetched %d quotas for namespace %s", len(quotas), namespaceID)
-	log.Printf("Quotas: %+v", quotas)
-
-	for _, q := range quotas {
-		log.Printf("Quota ID: %s, Name: %s", q.ID, q.Name)
 	}
 
 	typeAgg := make(map[uuid.UUID]dtos.ResourceQuota)

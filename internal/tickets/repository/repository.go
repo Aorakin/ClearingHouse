@@ -126,3 +126,11 @@ func (r *TicketRepository) DeleteTicket(ticketID uuid.UUID) error {
 	}
 	return r.db.Delete(&models.Ticket{}, "id = ?", ticketID).Error
 }
+
+func (r *TicketRepository) ResetTickets(ticketIDs []uuid.UUID) error {
+	return r.db.Model(&models.Ticket{}).Where("id IN ?", ticketIDs).Updates(map[string]interface{}{
+		"status":     "created",
+		"start_time": nil,
+		"end_time":   nil,
+	}).Error
+}

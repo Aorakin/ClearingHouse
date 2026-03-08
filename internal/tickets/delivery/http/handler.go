@@ -1,6 +1,7 @@
 package http
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/ClearingHouse/internal/tickets/dtos"
@@ -77,6 +78,8 @@ func (h *TicketHandler) StartTicket() gin.HandlerFunc {
 			return
 		}
 
+		log.Printf("Received StartTicketsRequest: %+v", request)
+
 		tickets, err := h.ticketUsecase.StartTicket(&request)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
@@ -115,8 +118,11 @@ func (h *TicketHandler) StopTicket() gin.HandlerFunc {
 			return
 		}
 
+		log.Printf("Received StopTicketsRequest: %+v", request)
+
 		tickets, err := h.ticketUsecase.StopTicket(&request)
 		if err != nil {
+			log.Printf("[STOP TICKET ERROR] %s", err.Error())
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
 		}
@@ -216,4 +222,23 @@ func (h *TicketHandler) DeleteTicket() gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{"message": "ticket deleted successfully"})
 	}
+}
+
+func (h *TicketHandler) ResetTickets() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var request dtos.ResetTicketsRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		err := h.ticketUsecase.ResetTickets(request.TicketIDs)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "tickets reset successfully"})
+	}
+
 }
