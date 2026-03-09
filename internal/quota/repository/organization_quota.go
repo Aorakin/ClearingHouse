@@ -12,6 +12,7 @@ func (r *QuotaRepository) CreateOrgQuota(quota *models.OrganizationQuota) error 
 func (r *QuotaRepository) GetOrganizationByRelationship(fromOrgID uuid.UUID, toOrgID uuid.UUID) ([]models.OrganizationQuota, error) {
 	var organizations []models.OrganizationQuota
 	err := r.db.Preload("Resources.ResourceProp").Where("from_org_id = ? AND to_org_id = ?", fromOrgID, toOrgID).
+		Order("name").
 		Find(&organizations).Error
 	if err != nil {
 		return nil, err
@@ -26,6 +27,7 @@ func (r *QuotaRepository) GetOrganizationQuotasByOrgID(orgID uuid.UUID) ([]model
 		Preload("FromOrg").
 		Preload("ToOrg").
 		Where("from_org_id = ? OR to_org_id = ?", orgID, orgID).
+		Order("name").
 		Find(&organizations).Error
 	if err != nil {
 		return nil, err

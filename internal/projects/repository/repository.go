@@ -26,7 +26,7 @@ func (r *ProjectRepository) CreateProject(project *models.Project) error {
 
 func (r *ProjectRepository) GetAllProjects() ([]models.Project, error) {
 	var projects []models.Project
-	err := r.db.Find(&projects).Error
+	err := r.db.Order("name").Find(&projects).Error
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,10 @@ func (r *ProjectRepository) GetAllProjects() ([]models.Project, error) {
 
 func (r *ProjectRepository) GetProjectByID(id uuid.UUID) (*models.Project, error) {
 	var project models.Project
-	err := r.db.Preload("Admins").Preload("Members").First(&project, "id = ?", id).Error
+	err := r.db.
+		Preload("Admins", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Preload("Members", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		First(&project, "id = ?", id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +80,7 @@ func (r *ProjectRepository) HasProjectQuotas(projectID uuid.UUID) (bool, error) 
 
 func (r *ProjectRepository) GetAllProjectsByUserID(userID uuid.UUID) ([]models.Project, error) {
 	var user models.User
-	if err := r.db.Preload("MemberProjects").First(&user, "id = ?", userID).Error; err != nil {
+	if err := r.db.Preload("MemberProjects", func(db *gorm.DB) *gorm.DB { return db.Order("name") }).First(&user, "id = ?", userID).Error; err != nil {
 		return nil, err
 	}
 	return user.MemberProjects, nil
@@ -85,7 +88,12 @@ func (r *ProjectRepository) GetAllProjectsByUserID(userID uuid.UUID) ([]models.P
 
 func (r *ProjectRepository) GetProjectsByOrganizationID(orgID uuid.UUID) ([]models.Project, error) {
 	var projects []models.Project
-	err := r.db.Preload("Admins").Preload("Members").Where("organization_id = ?", orgID).Find(&projects).Error
+	err := r.db.
+		Preload("Admins", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Preload("Members", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Where("organization_id = ?", orgID).
+		Order("name").
+		Find(&projects).Error
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +102,7 @@ func (r *ProjectRepository) GetProjectsByOrganizationID(orgID uuid.UUID) ([]mode
 
 func (r *ProjectRepository) GetProjectMembers(projectID uuid.UUID) ([]models.User, error) {
 	var project models.Project
-	if err := r.db.Preload("Members").First(&project, "id = ?", projectID).Error; err != nil {
+	if err := r.db.Preload("Members", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).First(&project, "id = ?", projectID).Error; err != nil {
 		return nil, err
 	}
 	return project.Members, nil
@@ -183,6 +191,10 @@ func (r *ProjectRepository) GetProjectUsageByType(projectID uuid.UUID, userID uu
 	for _, v := range typeAgg {
 		result = append(result, v)
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Type < result[j].Type
+	})
 
 	return &dtos.ResourceUsageResponse{ResourceUsages: result}, nil
 }

@@ -106,7 +106,7 @@ func (r *UsersRepository) FindOrCreateUser(email, firstName, lastName string) (*
 
 func (r *UsersRepository) GetByIDs(userIDs []uuid.UUID) ([]models.User, error) {
 	var users []models.User
-	if err := r.db.Where("id IN ?", userIDs).Find(&users).Error; err != nil {
+	if err := r.db.Where("id IN ?", userIDs).Order("email").Find(&users).Error; err != nil {
 		return nil, err
 	}
 

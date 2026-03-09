@@ -70,7 +70,7 @@ func (r *QuotaRepository) GetNamespaceQuotaTemplateByID(templateID uuid.UUID) (*
 
 func (r *QuotaRepository) GetNamespaceQuotaTemplatesByProjectID(projectID uuid.UUID) ([]models.NamespaceQuotaTemplate, error) {
 	var templates []models.NamespaceQuotaTemplate
-	if err := r.db.Preload("Quotas.Resources.ResourceProp.Resource.ResourceType").Where("project_id = ?", projectID).Find(&templates).Error; err != nil {
+	if err := r.db.Preload("Quotas.Resources.ResourceProp.Resource.ResourceType").Where("project_id = ?", projectID).Order("name").Find(&templates).Error; err != nil {
 		return nil, err
 	}
 
@@ -134,6 +134,7 @@ func (r *QuotaRepository) GetNamespaceQuotasByProjectID(projectID uuid.UUID) ([]
 		Preload("Resources.ResourceProp.Resource.ResourceType").
 		Preload("Node.ResourcePool.Organization").
 		Where("project_id = ?", projectID).
+		Order("name").
 		Find(&namespaceQuotas).Error
 
 	if err != nil {
@@ -173,6 +174,7 @@ func (r *QuotaRepository) GetNamespaceQuotaByNamespaceID(namespaceID uuid.UUID) 
 		Preload("Resources.ResourceProp.Resource.ResourceType").
 		Preload("Node.ResourcePool.Organization").
 		Where("nqt.namespace_quota_template_id = ?", *namespace.QuotaTemplateID).
+		Order("namespace_quota.name").
 		Find(&namespaceQuotas).Error
 
 	if err != nil {
@@ -212,7 +214,7 @@ func (r *QuotaRepository) DeleteResourceQuantitiesByNamespaceQuotaID(namespaceQu
 
 func (r *QuotaRepository) GetResourceQuantitiesByNamespaceQuotaID(namespaceQuotaID uuid.UUID) ([]models.ResourceQuantity, error) {
 	var quantities []models.ResourceQuantity
-	err := r.db.Preload("ResourceProp").Where("namespace_quota_id = ?", namespaceQuotaID).Find(&quantities).Error
+	err := r.db.Preload("ResourceProp").Where("namespace_quota_id = ?", namespaceQuotaID).Order("created_at").Find(&quantities).Error
 	if err != nil {
 		return nil, err
 	}

@@ -12,6 +12,7 @@ func (r *QuotaRepository) CreateProjectQuota(projectQuota *models.ProjectQuota) 
 func (r *QuotaRepository) GetProjectQuotaByProjectID(projectID uuid.UUID) ([]models.ProjectQuota, error) {
 	var projectQuotas []models.ProjectQuota
 	err := r.db.Debug().Preload("Resources.ResourceProp.Resource").Preload("Resources.ResourceProp.Resource.ResourceType").Where("project_id = ?", projectID).
+		Order("name").
 		Find(&projectQuotas).Error
 	if err != nil {
 		return nil, err

@@ -13,8 +13,15 @@ type ResourcePoolRepository struct {
 func (r *ResourcePoolRepository) GetResourcePoolByOrgID(orgID uuid.UUID) ([]models.ResourcePool, error) {
 	var resourcePools []models.ResourcePool
 	err := r.db.
+		Preload("Nodes", func(db *gorm.DB) *gorm.DB {
+			return db.Order("name")
+		}).
+		Preload("Nodes.Resources", func(db *gorm.DB) *gorm.DB {
+			return db.Order("name")
+		}).
 		Preload("Nodes.Resources.ResourceType").
 		Where("organization_id = ?", orgID).
+		Order("name").
 		Find(&resourcePools).Error
 
 	if err != nil {
@@ -32,7 +39,15 @@ func (r *ResourcePoolRepository) CreateResourcePool(resourcePool *models.Resourc
 
 func (r *ResourcePoolRepository) GetResourcePoolByID(id uuid.UUID) (*models.ResourcePool, error) {
 	var resourcePool models.ResourcePool
-	err := r.db.Preload("Nodes.Resources.ResourceType").First(&resourcePool, "id = ?", id).Error
+	err := r.db.
+		Preload("Nodes", func(db *gorm.DB) *gorm.DB {
+			return db.Order("name")
+		}).
+		Preload("Nodes.Resources", func(db *gorm.DB) *gorm.DB {
+			return db.Order("name")
+		}).
+		Preload("Nodes.Resources.ResourceType").
+		First(&resourcePool, "id = ?", id).Error
 
 	if err != nil {
 		return nil, err

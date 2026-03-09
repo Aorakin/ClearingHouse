@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/ClearingHouse/internal/models"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func (r *ResourceRepository) CreateResourceNode(resourceNode *models.ResourceNode) (*models.ResourceNode, error) {
@@ -14,7 +15,13 @@ func (r *ResourceRepository) CreateResourceNode(resourceNode *models.ResourceNod
 
 func (r *ResourceRepository) GetResourceNodeByID(nodeID uuid.UUID) (*models.ResourceNode, error) {
 	var resourceNode models.ResourceNode
-	if err := r.db.Preload("Resources.ResourceType").Preload("Resources").Preload("ResourcePool").First(&resourceNode, "id = ?", nodeID).Error; err != nil {
+	if err := r.db.
+		Preload("Resources", func(db *gorm.DB) *gorm.DB {
+			return db.Order("name")
+		}).
+		Preload("Resources.ResourceType").
+		Preload("ResourcePool").
+		First(&resourceNode, "id = ?", nodeID).Error; err != nil {
 		return nil, err
 	}
 	return &resourceNode, nil

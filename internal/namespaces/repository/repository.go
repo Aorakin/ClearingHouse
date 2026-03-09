@@ -28,7 +28,7 @@ func (r *NamespaceRepository) Create(namespace *models.Namespace) error {
 
 func (r *NamespaceRepository) GetAll() ([]models.Namespace, error) {
 	var namespaces []models.Namespace
-	err := r.db.Find(&namespaces).Error
+	err := r.db.Order("name").Find(&namespaces).Error
 	return namespaces, err
 }
 
@@ -79,7 +79,7 @@ func (r *NamespaceRepository) HasActiveTicketsByNamespaceID(namespaceID uuid.UUI
 
 func (r *NamespaceRepository) GetAllNamespacesByUserID(userID uuid.UUID) ([]models.Namespace, error) {
 	var user models.User
-	if err := r.db.Debug().Preload("MemberNamespaces").First(&user, "id = ?", userID).Error; err != nil {
+	if err := r.db.Debug().Preload("MemberNamespaces", func(db *gorm.DB) *gorm.DB { return db.Order("name") }).First(&user, "id = ?", userID).Error; err != nil {
 		return nil, err
 	}
 	return user.MemberNamespaces, nil
@@ -87,7 +87,7 @@ func (r *NamespaceRepository) GetAllNamespacesByUserID(userID uuid.UUID) ([]mode
 
 func (r *NamespaceRepository) GetNamespaceQuotas(namespaceID uuid.UUID) ([]models.NamespaceQuota, error) {
 	var quotas []models.NamespaceQuota
-	err := r.db.Preload("Resources.ResourceProperties").Joins("JOIN namespace_quotas nq ON nq.namespace_id = ?", namespaceID).Find(&quotas).Error
+	err := r.db.Preload("Resources.ResourceProperties").Joins("JOIN namespace_quotas nq ON nq.namespace_id = ?", namespaceID).Order("namespace_quota.created_at").Find(&quotas).Error
 	if err != nil {
 		return nil, err
 	}
@@ -100,6 +100,7 @@ func (r *NamespaceRepository) GetNamespaceTickets(namespaceID, resourcePoolID, q
 	err := r.db.Debug().
 		Preload("Resources").
 		Where("namespace_id = ? AND resource_pool_id = ? AND quota_id = ?", namespaceID, resourcePoolID, quotaID).
+		Order("created_at DESC").
 		Find(&tickets).Error
 
 	if err != nil {
@@ -114,6 +115,7 @@ func (r *NamespaceRepository) GetAllNamespacesByProjectAndUserID(projectID uuid.
 	var namespaces []models.Namespace
 	err := r.db.Joins("JOIN namespace_members nm ON nm.namespace_id = namespaces.id").
 		Where("namespaces.project_id = ? AND nm.user_id = ?", projectID, userID).
+		Order("namespaces.name").
 		Find(&namespaces).Error
 	return namespaces, err
 }
@@ -204,12 +206,16 @@ func (r *NamespaceRepository) GetNamespaceUsageByType(namespaceID uuid.UUID) (*d
 		result = append(result, v)
 	}
 
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Type < result[j].Type
+	})
+
 	return &dtos.ResourceUsageResponse{ResourceUsages: result}, nil
 }
 
 func (r *NamespaceRepository) GetPrivateNamespaceByUserID(userID uuid.UUID) ([]models.Namespace, error) {
 	var namespaces []models.Namespace
-	err := r.db.Where("owner_id = ?", userID).Find(&namespaces).Error
+	err := r.db.Where("owner_id = ?", userID).Order("name").Find(&namespaces).Error
 	if err != nil {
 		return nil, err
 	}

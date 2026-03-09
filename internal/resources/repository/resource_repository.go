@@ -46,6 +46,7 @@ func (r *ResourceRepository) GetResourcesByOrganizationID(orgID uuid.UUID) ([]mo
 	var resources []models.Resource
 	err := r.db.Joins("JOIN resource_pools ON resource_pools.id = resources.resource_pool_id").
 		Where("resource_pools.organization_id = ?", orgID).
+		Order("resources.name").
 		Find(&resources).Error
 	if err != nil {
 		return nil, err
@@ -55,7 +56,7 @@ func (r *ResourceRepository) GetResourcesByOrganizationID(orgID uuid.UUID) ([]mo
 
 func (r *ResourceRepository) GetResourcesByNodeID(nodeID uuid.UUID) ([]models.Resource, error) {
 	var resources []models.Resource
-	err := r.db.Where("node_id = ?", nodeID).Find(&resources).Error
+	err := r.db.Where("node_id = ?", nodeID).Order("name").Find(&resources).Error
 	if err != nil {
 		return nil, err
 	}

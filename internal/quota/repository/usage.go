@@ -45,6 +45,10 @@ func (r *QuotaRepository) GetNamespaceUsageByType(namespaceID uuid.UUID, quotaID
 		result = append(result, v)
 	}
 
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Type < result[j].Type
+	})
+
 	return &dtos.ResourceUsageResponse{ResourceUsages: result}, nil
 }
 

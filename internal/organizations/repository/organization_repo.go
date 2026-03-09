@@ -23,7 +23,14 @@ func (r *OrganizationRepository) CreateOrganization(org *models.Organization) (*
 }
 func (r *OrganizationRepository) GetOrganizationByID(id uuid.UUID) (*models.Organization, error) {
 	var org models.Organization
-	if err := r.db.Preload("Members").Preload("Admins").Preload("Projects").Preload("ResourcePools").Preload("Quotas").Preload("GivenQuotas").First(&org, "id = ?", id).Error; err != nil {
+	if err := r.db.
+		Preload("Members", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Preload("Admins", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Preload("Projects", func(db *gorm.DB) *gorm.DB { return db.Order("name") }).
+		Preload("ResourcePools", func(db *gorm.DB) *gorm.DB { return db.Order("name") }).
+		Preload("Quotas", func(db *gorm.DB) *gorm.DB { return db.Order("name") }).
+		Preload("GivenQuotas", func(db *gorm.DB) *gorm.DB { return db.Order("name") }).
+		First(&org, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &org, nil
@@ -31,7 +38,10 @@ func (r *OrganizationRepository) GetOrganizationByID(id uuid.UUID) (*models.Orga
 
 func (r *OrganizationRepository) GetOrganizationByDomain(domain string) (*models.Organization, error) {
 	var org models.Organization
-	if err := r.db.Preload("Members").Preload("Admins").Where("domain = ? AND domain != ''", domain).First(&org).Error; err != nil {
+	if err := r.db.
+		Preload("Members", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Preload("Admins", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Where("domain = ? AND domain != ''", domain).First(&org).Error; err != nil {
 		return nil, err
 	}
 	return &org, nil
@@ -51,7 +61,15 @@ func (r *OrganizationRepository) DeleteOrganization(id uuid.UUID) error {
 
 func (r *OrganizationRepository) GetOrganizations() ([]models.Organization, error) {
 	var organizations []models.Organization
-	if err := r.db.Preload("Members").Preload("Admins").Preload("Projects").Preload("ResourcePools").Preload("Quotas").Preload("GivenQuotas").Find(&organizations).Error; err != nil {
+	if err := r.db.
+		Preload("Members", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Preload("Admins", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Preload("Projects", func(db *gorm.DB) *gorm.DB { return db.Order("name") }).
+		Preload("ResourcePools", func(db *gorm.DB) *gorm.DB { return db.Order("name") }).
+		Preload("Quotas", func(db *gorm.DB) *gorm.DB { return db.Order("name") }).
+		Preload("GivenQuotas", func(db *gorm.DB) *gorm.DB { return db.Order("name") }).
+		Order("name").
+		Find(&organizations).Error; err != nil {
 		return nil, err
 	}
 	return organizations, nil
@@ -67,14 +85,14 @@ func (r *OrganizationRepository) UpdateAdmins(org *models.Organization) error {
 
 func (r *OrganizationRepository) GetMembers() ([]models.User, error) {
 	var users []models.User
-	if err := r.db.Find(&users).Error; err != nil {
+	if err := r.db.Order("email").Find(&users).Error; err != nil {
 		return nil, err
 	}
 	return users, nil
 }
 func (r *OrganizationRepository) GetOrganizationMembers(orgID uuid.UUID) ([]models.User, error) {
 	var org models.Organization
-	if err := r.db.Preload("Members").First(&org, "id = ?", orgID).Error; err != nil {
+	if err := r.db.Preload("Members", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).First(&org, "id = ?", orgID).Error; err != nil {
 		return nil, err
 	}
 	return org.Members, nil
