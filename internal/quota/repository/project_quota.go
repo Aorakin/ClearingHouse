@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"github.com/ClearingHouse/internal/models"
+	"github.com/ClearingHouse/pkg/enum"
 	"github.com/google/uuid"
 )
 
@@ -21,8 +22,8 @@ func (r *QuotaRepository) GetProjectQuotaByProjectID(projectID uuid.UUID) ([]mod
 	}
 	for i := range projectQuotas {
 		sort.Slice(projectQuotas[i].Resources, func(a, b int) bool {
-			return projectQuotas[i].Resources[a].ResourceProp.Resource.ResourceType.Name <
-				projectQuotas[i].Resources[b].ResourceProp.Resource.ResourceType.Name
+			return enum.ResourceTypeOrder(projectQuotas[i].Resources[a].ResourceProp.Resource.ResourceType.Name) <
+				enum.ResourceTypeOrder(projectQuotas[i].Resources[b].ResourceProp.Resource.ResourceType.Name)
 		})
 	}
 	return projectQuotas, nil

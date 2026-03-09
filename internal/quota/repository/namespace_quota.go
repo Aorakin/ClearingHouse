@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/ClearingHouse/internal/models"
+	"github.com/ClearingHouse/pkg/enum"
 	"github.com/google/uuid"
 )
 
@@ -67,8 +68,8 @@ func (r *QuotaRepository) GetNamespaceQuotaTemplateByID(templateID uuid.UUID) (*
 	}
 	for i := range template.Quotas {
 		sort.Slice(template.Quotas[i].Resources, func(a, b int) bool {
-			return template.Quotas[i].Resources[a].ResourceProp.Resource.ResourceType.Name <
-				template.Quotas[i].Resources[b].ResourceProp.Resource.ResourceType.Name
+			return enum.ResourceTypeOrder(template.Quotas[i].Resources[a].ResourceProp.Resource.ResourceType.Name) <
+				enum.ResourceTypeOrder(template.Quotas[i].Resources[b].ResourceProp.Resource.ResourceType.Name)
 		})
 	}
 	return &template, nil
@@ -82,8 +83,8 @@ func (r *QuotaRepository) GetNamespaceQuotaTemplatesByProjectID(projectID uuid.U
 	for i := range templates {
 		for j := range templates[i].Quotas {
 			sort.Slice(templates[i].Quotas[j].Resources, func(a, b int) bool {
-				return templates[i].Quotas[j].Resources[a].ResourceProp.Resource.ResourceType.Name <
-					templates[i].Quotas[j].Resources[b].ResourceProp.Resource.ResourceType.Name
+				return enum.ResourceTypeOrder(templates[i].Quotas[j].Resources[a].ResourceProp.Resource.ResourceType.Name) <
+					enum.ResourceTypeOrder(templates[i].Quotas[j].Resources[b].ResourceProp.Resource.ResourceType.Name)
 			})
 		}
 	}
@@ -155,8 +156,8 @@ func (r *QuotaRepository) GetNamespaceQuotasByProjectID(projectID uuid.UUID) ([]
 	}
 	for i := range namespaceQuotas {
 		sort.Slice(namespaceQuotas[i].Resources, func(a, b int) bool {
-			return namespaceQuotas[i].Resources[a].ResourceProp.Resource.ResourceType.Name <
-				namespaceQuotas[i].Resources[b].ResourceProp.Resource.ResourceType.Name
+			return enum.ResourceTypeOrder(namespaceQuotas[i].Resources[a].ResourceProp.Resource.ResourceType.Name) <
+				enum.ResourceTypeOrder(namespaceQuotas[i].Resources[b].ResourceProp.Resource.ResourceType.Name)
 		})
 	}
 	return namespaceQuotas, nil
@@ -200,8 +201,8 @@ func (r *QuotaRepository) GetNamespaceQuotaByNamespaceID(namespaceID uuid.UUID) 
 	}
 	for i := range namespaceQuotas {
 		sort.Slice(namespaceQuotas[i].Resources, func(a, b int) bool {
-			return namespaceQuotas[i].Resources[a].ResourceProp.Resource.ResourceType.Name <
-				namespaceQuotas[i].Resources[b].ResourceProp.Resource.ResourceType.Name
+			return enum.ResourceTypeOrder(namespaceQuotas[i].Resources[a].ResourceProp.Resource.ResourceType.Name) <
+				enum.ResourceTypeOrder(namespaceQuotas[i].Resources[b].ResourceProp.Resource.ResourceType.Name)
 		})
 	}
 	return namespaceQuotas, nil

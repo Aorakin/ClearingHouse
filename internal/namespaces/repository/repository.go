@@ -166,7 +166,7 @@ func (r *NamespaceRepository) GetNamespaceQuotaByType(namespaceID uuid.UUID) (*d
 	}
 
 	sort.Slice(result, func(i, j int) bool {
-		return result[i].Type < result[j].Type
+		return enum.ResourceTypeOrder(result[i].Type) < enum.ResourceTypeOrder(result[j].Type)
 	})
 
 	return &dtos.ResourceQuotaResponse{ResourceQuotas: result}, nil
@@ -207,7 +207,7 @@ func (r *NamespaceRepository) GetNamespaceUsageByType(namespaceID uuid.UUID) (*d
 	}
 
 	sort.Slice(result, func(i, j int) bool {
-		return result[i].Type < result[j].Type
+		return enum.ResourceTypeOrder(result[i].Type) < enum.ResourceTypeOrder(result[j].Type)
 	})
 
 	return &dtos.ResourceUsageResponse{ResourceUsages: result}, nil

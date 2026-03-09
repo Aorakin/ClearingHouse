@@ -150,7 +150,7 @@ func (r *ProjectRepository) GetProjectQuotaByType(projectID uuid.UUID, userID uu
 	}
 
 	sort.Slice(result, func(i, j int) bool {
-		return result[i].Type < result[j].Type
+		return enum.ResourceTypeOrder(result[i].Type) < enum.ResourceTypeOrder(result[j].Type)
 	})
 
 	return &dtos.ResourceQuotaResponse{ResourceQuotas: result}, nil
@@ -193,7 +193,7 @@ func (r *ProjectRepository) GetProjectUsageByType(projectID uuid.UUID, userID uu
 	}
 
 	sort.Slice(result, func(i, j int) bool {
-		return result[i].Type < result[j].Type
+		return enum.ResourceTypeOrder(result[i].Type) < enum.ResourceTypeOrder(result[j].Type)
 	})
 
 	return &dtos.ResourceUsageResponse{ResourceUsages: result}, nil
