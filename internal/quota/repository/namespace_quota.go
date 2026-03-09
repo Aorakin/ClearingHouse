@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/ClearingHouse/internal/models"
 	"github.com/google/uuid"
@@ -64,7 +65,12 @@ func (r *QuotaRepository) GetNamespaceQuotaTemplateByID(templateID uuid.UUID) (*
 	if err := r.db.Preload("Quotas.Resources.ResourceProp.Resource.ResourceType").Where("id = ?", templateID).First(&template).Error; err != nil {
 		return nil, err
 	}
-
+	for i := range template.Quotas {
+		sort.Slice(template.Quotas[i].Resources, func(a, b int) bool {
+			return template.Quotas[i].Resources[a].ResourceProp.Resource.ResourceType.Name <
+				template.Quotas[i].Resources[b].ResourceProp.Resource.ResourceType.Name
+		})
+	}
 	return &template, nil
 }
 
@@ -73,7 +79,14 @@ func (r *QuotaRepository) GetNamespaceQuotaTemplatesByProjectID(projectID uuid.U
 	if err := r.db.Preload("Quotas.Resources.ResourceProp.Resource.ResourceType").Where("project_id = ?", projectID).Order("name").Find(&templates).Error; err != nil {
 		return nil, err
 	}
-
+	for i := range templates {
+		for j := range templates[i].Quotas {
+			sort.Slice(templates[i].Quotas[j].Resources, func(a, b int) bool {
+				return templates[i].Quotas[j].Resources[a].ResourceProp.Resource.ResourceType.Name <
+					templates[i].Quotas[j].Resources[b].ResourceProp.Resource.ResourceType.Name
+			})
+		}
+	}
 	return templates, nil
 }
 
@@ -140,7 +153,12 @@ func (r *QuotaRepository) GetNamespaceQuotasByProjectID(projectID uuid.UUID) ([]
 	if err != nil {
 		return nil, err
 	}
-
+	for i := range namespaceQuotas {
+		sort.Slice(namespaceQuotas[i].Resources, func(a, b int) bool {
+			return namespaceQuotas[i].Resources[a].ResourceProp.Resource.ResourceType.Name <
+				namespaceQuotas[i].Resources[b].ResourceProp.Resource.ResourceType.Name
+		})
+	}
 	return namespaceQuotas, nil
 }
 
@@ -180,7 +198,12 @@ func (r *QuotaRepository) GetNamespaceQuotaByNamespaceID(namespaceID uuid.UUID) 
 	if err != nil {
 		return nil, err
 	}
-
+	for i := range namespaceQuotas {
+		sort.Slice(namespaceQuotas[i].Resources, func(a, b int) bool {
+			return namespaceQuotas[i].Resources[a].ResourceProp.Resource.ResourceType.Name <
+				namespaceQuotas[i].Resources[b].ResourceProp.Resource.ResourceType.Name
+		})
+	}
 	return namespaceQuotas, nil
 }
 

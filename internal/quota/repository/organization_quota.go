@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"sort"
+
 	"github.com/ClearingHouse/internal/models"
 	"github.com/google/uuid"
 )
@@ -31,6 +33,12 @@ func (r *QuotaRepository) GetOrganizationQuotasByOrgID(orgID uuid.UUID) ([]model
 		Find(&organizations).Error
 	if err != nil {
 		return nil, err
+	}
+	for i := range organizations {
+		sort.Slice(organizations[i].Resources, func(a, b int) bool {
+			return organizations[i].Resources[a].ResourceProp.Resource.ResourceType.Name <
+				organizations[i].Resources[b].ResourceProp.Resource.ResourceType.Name
+		})
 	}
 	return organizations, nil
 }
