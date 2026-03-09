@@ -21,6 +21,7 @@ type GliderTicket struct {
 	ProjectName       string     `json:"project_name"`
 	NodeID            uuid.UUID  `json:"node_id"`
 	NodeName          string     `json:"node_name"`
+	NodeDisplayName   string     `json:"node_display_name"`
 	GlideletURN       string     `json:"glidelet_urn"` // resource_pool.URN (where to send request)
 	GlideletName      string     `json:"glidelet_name"`
 	OrganizationName  string     `json:"organization_name"`

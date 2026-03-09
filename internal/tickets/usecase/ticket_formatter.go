@@ -16,6 +16,7 @@ func (u *TicketUsecase) formatTicketResponse(ticket *models.Ticket) *dtos.Glider
 		ProjectName:       ticket.Namespace.Project.Name,
 		NodeID:            ticket.NodeID,
 		NodeName:          ticket.Node.Name,
+		NodeDisplayName:   ticket.Node.DisplayName,
 		ResourcePoolID:    ticket.ResourcePoolID,
 		ResourcePoolName:  ticket.ResourcePool.Name,
 		GlideletURN:       ticket.GlideletURN,
