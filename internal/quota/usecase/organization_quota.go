@@ -133,38 +133,31 @@ func (u *QuotaUsecase) createOrganizationQuota(request *dtos.CreateOrganizationQ
 }
 
 func (u *QuotaUsecase) DeleteOrganizationQuota(quotaID uuid.UUID, userID uuid.UUID) error {
-	// Get organization quota to check if it exists
 	orgQuota, err := u.quotaRepo.GetOrgQuotaByID(quotaID)
 	if err != nil {
 		return apiError.NewNotFoundError(fmt.Errorf("organization quota not found: %w", err))
 	}
 
-	// Check if user is admin of the FROM organization (the one giving the quota)
 	if err := u.isOrgAdmin(orgQuota.FromOrgID, userID); err != nil {
 		return err
 	}
 
-	// Check if there are any project quotas using this organization quota
-	hasProjectQuotas, err := u.quotaRepo.HasProjectQuotasByOrgQuotaID(quotaID)
+	// Cascade: delete every ProjectQuota (and its children) that references this org quota.
+	projQuotas, err := u.quotaRepo.GetProjectQuotasByOrgQuotaID(quotaID)
 	if err != nil {
-		return apiError.NewInternalServerError(fmt.Errorf("failed to check project quotas: %w", err))
+		return apiError.NewInternalServerError(fmt.Errorf("failed to list project quotas: %w", err))
 	}
 
-	if hasProjectQuotas {
-		return apiError.NewBadRequestError(errors.New("cannot delete organization quota with existing project quotas. Please delete all project quotas first"))
+	for _, pq := range projQuotas {
+		if err := u.deleteProjectQuotaCascade(pq.ID); err != nil {
+			return err
+		}
 	}
 
-	// Check if there is any active usage (resource quantities > 0)
-	hasActiveUsage, err := u.quotaRepo.HasActiveUsageByOrgQuotaID(quotaID)
-	if err != nil {
-		return apiError.NewInternalServerError(fmt.Errorf("failed to check active usage: %w", err))
+	if err := u.quotaRepo.DeleteResourceQuantitiesByOrgQuotaID(quotaID); err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to delete resource quantities for org quota: %w", err))
 	}
 
-	if hasActiveUsage {
-		return apiError.NewBadRequestError(errors.New("cannot delete organization quota with active usage. Please release all resources first"))
-	}
-
-	// Soft delete the organization quota (and cascade to resource properties/quantities via soft delete)
 	if err := u.quotaRepo.DeleteOrganizationQuota(quotaID); err != nil {
 		return apiError.NewInternalServerError(fmt.Errorf("failed to delete organization quota: %w", err))
 	}

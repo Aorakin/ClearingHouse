@@ -186,6 +186,32 @@ func (r *QuotaRepository) DeleteNamespaceQuota(quotaID uuid.UUID) error {
 	return r.db.Delete(&models.NamespaceQuota{}, "id = ?", quotaID).Error
 }
 
+func (r *QuotaRepository) GetNamespaceQuotasByProjectQuotaID(projectQuotaID uuid.UUID) ([]models.NamespaceQuota, error) {
+	var namespaceQuotas []models.NamespaceQuota
+	err := r.db.Where("project_quota_id = ?", projectQuotaID).Find(&namespaceQuotas).Error
+	if err != nil {
+		return nil, err
+	}
+	return namespaceQuotas, nil
+}
+
+// RemoveNamespaceQuotaFromAllTemplates removes the quota from all templates via the junction table.
+// This does NOT delete the templates themselves since it is a many2many relationship.
+func (r *QuotaRepository) RemoveNamespaceQuotaFromAllTemplates(quotaID uuid.UUID) error {
+	return r.db.Exec("DELETE FROM namespace_quota_template_relations WHERE namespace_quota_id = ?", quotaID).Error
+}
+
+// UnassignAllNamespacesFromTemplate sets quota_template_id = NULL for every namespace using the given template.
+func (r *QuotaRepository) UnassignAllNamespacesFromTemplate(templateID uuid.UUID) error {
+	return r.db.Model(&models.Namespace{}).Where("quota_template_id = ?", templateID).Update("quota_template_id", nil).Error
+}
+
+// DeleteTemplateQuotaRelations removes all quota associations from a template via the junction table.
+// This does NOT delete the NamespaceQuotas themselves.
+func (r *QuotaRepository) DeleteTemplateQuotaRelations(templateID uuid.UUID) error {
+	return r.db.Exec("DELETE FROM namespace_quota_template_relations WHERE namespace_quota_template_id = ?", templateID).Error
+}
+
 func (r *QuotaRepository) UpdateNamespaceQuota(quotaID uuid.UUID, name, description string) error {
 	updates := make(map[string]interface{})
 	if name != "" {

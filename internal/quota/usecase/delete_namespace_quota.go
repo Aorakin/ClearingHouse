@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"errors"
 	"fmt"
 
 	apiError "github.com/ClearingHouse/pkg/api_error"
@@ -15,19 +14,27 @@ func (u *QuotaUsecase) DeleteNamespaceQuota(quotaID uuid.UUID, userID uuid.UUID)
 	}
 
 	if quota.ProjectID == nil {
-		return apiError.NewInternalServerError(errors.New("namespace quota has no associated project"))
+		return apiError.NewInternalServerError(fmt.Errorf("namespace quota has no associated project"))
 	}
 
 	if err := u.isProjAdmin(*quota.ProjectID, userID); err != nil {
 		return err
 	}
 
-	hasQuotaTemplates, err := u.quotaRepo.HasQuotaTemplatesByNamespaceQuotaID(quotaID)
-	if err != nil {
-		return apiError.NewInternalServerError(fmt.Errorf("failed to check quota templates: %w", err))
+	return u.deleteNamespaceQuotaCascade(quotaID)
+}
+
+// deleteNamespaceQuotaCascade removes all junction-table references from templates,
+// deletes resource quantities, then soft-deletes the namespace quota itself.
+// It does NOT delete templates — the many2many relationship means templates may
+// reference other quotas that should be preserved.
+func (u *QuotaUsecase) deleteNamespaceQuotaCascade(quotaID uuid.UUID) error {
+	if err := u.quotaRepo.RemoveNamespaceQuotaFromAllTemplates(quotaID); err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to remove namespace quota from templates: %w", err))
 	}
-	if hasQuotaTemplates {
-		return apiError.NewBadRequestError(errors.New("cannot delete namespace quota: this quota is being used in quota templates"))
+
+	if err := u.quotaRepo.DeleteResourceQuantitiesByNamespaceQuotaID(quotaID); err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to delete resource quantities: %w", err))
 	}
 
 	if err := u.quotaRepo.DeleteNamespaceQuota(quotaID); err != nil {

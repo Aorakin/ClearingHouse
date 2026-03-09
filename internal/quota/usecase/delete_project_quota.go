@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"errors"
 	"fmt"
 
 	apiError "github.com/ClearingHouse/pkg/api_error"
@@ -18,12 +17,25 @@ func (u *QuotaUsecase) DeleteProjectQuota(quotaID uuid.UUID, userID uuid.UUID) e
 		return err
 	}
 
-	hasNamespaceQuotas, err := u.quotaRepo.HasNamespaceQuotasByProjectQuotaID(quotaID)
+	return u.deleteProjectQuotaCascade(quotaID)
+}
+
+// deleteProjectQuotaCascade cascades deletion down through every NamespaceQuota
+// that belongs to this ProjectQuota, then deletes the project quota itself.
+func (u *QuotaUsecase) deleteProjectQuotaCascade(quotaID uuid.UUID) error {
+	nsQuotas, err := u.quotaRepo.GetNamespaceQuotasByProjectQuotaID(quotaID)
 	if err != nil {
-		return apiError.NewInternalServerError(fmt.Errorf("failed to check namespace quotas: %w", err))
+		return apiError.NewInternalServerError(fmt.Errorf("failed to list namespace quotas: %w", err))
 	}
-	if hasNamespaceQuotas {
-		return apiError.NewBadRequestError(errors.New("cannot delete project quota: namespace quotas are still using this project quota"))
+
+	for _, nsq := range nsQuotas {
+		if err := u.deleteNamespaceQuotaCascade(nsq.ID); err != nil {
+			return err
+		}
+	}
+
+	if err := u.quotaRepo.DeleteResourceQuantitiesByProjectQuotaID(quotaID); err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to delete resource quantities for project quota: %w", err))
 	}
 
 	if err := u.quotaRepo.DeleteProjectQuota(quotaID); err != nil {

@@ -16,6 +16,7 @@ type QuotaRepository interface {
 	GetOrgQuotaQuantity(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)
 	DeleteOrganizationQuotasByOrgID(orgID uuid.UUID) error
 	DeleteOrganizationQuota(quotaID uuid.UUID) error
+	DeleteResourceQuantitiesByOrgQuotaID(orgQuotaID uuid.UUID) error
 	HasActiveQuotaUsage(orgID uuid.UUID) (bool, error)
 	HasProjectQuotasByOrgQuotaID(orgQuotaID uuid.UUID) (bool, error)
 	HasActiveUsageByOrgQuotaID(orgQuotaID uuid.UUID) (bool, error)
@@ -24,7 +25,9 @@ type QuotaRepository interface {
 	CreateProjectQuota(quota *models.ProjectQuota) error
 	GetProjectQuotaByProjectID(projectID uuid.UUID) ([]models.ProjectQuota, error)
 	GetProjectQuotaByID(id uuid.UUID) (*models.ProjectQuota, error)
+	GetProjectQuotasByOrgQuotaID(orgQuotaID uuid.UUID) ([]models.ProjectQuota, error)
 	DeleteProjectQuota(quotaID uuid.UUID) error
+	DeleteResourceQuantitiesByProjectQuotaID(projectQuotaID uuid.UUID) error
 	HasNamespaceQuotasByProjectQuotaID(projectQuotaID uuid.UUID) (bool, error)
 
 	IsNamespaceQuotaExists(namespaceID uuid.UUID, nodeID uuid.UUID) (bool, error)
@@ -47,6 +50,7 @@ type QuotaRepository interface {
 	GetQuotaByType(quotaID uuid.UUID) (*dtos.ResourceQuotaResponse, error)
 
 	GetNamespaceQuotasByProjectID(projectID uuid.UUID) ([]models.NamespaceQuota, error)
+	GetNamespaceQuotasByProjectQuotaID(projectQuotaID uuid.UUID) ([]models.NamespaceQuota, error)
 	GetNamespaceQuotasByIDs(quotaIDs []uuid.UUID, projectID uuid.UUID) ([]models.NamespaceQuota, error)
 	CreateNamespaceQuotaTemplate(template *models.NamespaceQuotaTemplate) error
 	UpdateNamespaceQuotaTemplate(templateID uuid.UUID, name, description string) error
@@ -56,7 +60,10 @@ type QuotaRepository interface {
 	GetNamespaceQuotaTemplatesByProjectID(projectID uuid.UUID) ([]models.NamespaceQuotaTemplate, error)
 	AssignQuotaToNamespace(namespaceID uuid.UUID, quotaTemplateID uuid.UUID) error
 	UnassignQuotaTemplateFromNamespace(namespaceID uuid.UUID) error
+	UnassignAllNamespacesFromTemplate(templateID uuid.UUID) error
 	IsAssigned(namespaceID uuid.UUID, quotaID uuid.UUID) (bool, error)
 	DeleteNamespaceQuotaTemplate(templateID uuid.UUID) error
+	DeleteTemplateQuotaRelations(templateID uuid.UUID) error
 	HasNamespacesUsingTemplate(templateID uuid.UUID) (bool, error)
+	RemoveNamespaceQuotaFromAllTemplates(quotaID uuid.UUID) error
 }

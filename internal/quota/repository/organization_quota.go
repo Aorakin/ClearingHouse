@@ -99,6 +99,10 @@ func (r *QuotaRepository) DeleteOrganizationQuota(quotaID uuid.UUID) error {
 	return r.db.Delete(&models.OrganizationQuota{}, "id = ?", quotaID).Error
 }
 
+func (r *QuotaRepository) DeleteResourceQuantitiesByOrgQuotaID(orgQuotaID uuid.UUID) error {
+	return r.db.Where("organization_quota_id = ?", orgQuotaID).Delete(&models.ResourceQuantity{}).Error
+}
+
 func (r *QuotaRepository) HasProjectQuotasByOrgQuotaID(orgQuotaID uuid.UUID) (bool, error) {
 	var count int64
 
