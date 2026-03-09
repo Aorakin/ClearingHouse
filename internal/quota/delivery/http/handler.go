@@ -457,6 +457,36 @@ func (h *QuotaHandler) GetUsage() gin.HandlerFunc {
 	}
 }
 
+func (h *QuotaHandler) GetProjectQuotaTotal() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
+		projectID := c.Param("project_id")
+		if projectID == "" {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Project ID is required")))
+			return
+		}
+
+		projectUUID, err := uuid.Parse(projectID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
+			return
+		}
+
+		total, err := h.quotaUsecase.GetProjectQuotaTotal(projectUUID, userID)
+		if err != nil {
+			c.JSON(response.ErrorResponseBuilder(err))
+			return
+		}
+
+		c.JSON(http.StatusOK, total)
+	}
+}
+
 func (h *QuotaHandler) GetNamespaceQuotaInProject() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)

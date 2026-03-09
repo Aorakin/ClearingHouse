@@ -172,3 +172,18 @@ func (u *QuotaUsecase) GetUsage(quotaID uuid.UUID, namespaceID uuid.UUID, userID
 
 	return response, nil
 }
+
+func (u *QuotaUsecase) GetProjectQuotaTotal(projectID uuid.UUID, userID uuid.UUID) (interface{}, error) {
+	if err := u.isProjMember(projectID, userID); err != nil {
+		if err := u.isProjAdmin(projectID, userID); err != nil {
+			return nil, apiError.NewForbiddenError(fmt.Errorf("user is not a member or admin of the project"))
+		}
+	}
+
+	total, err := u.quotaRepo.GetProjectQuotaTotalByType(projectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to fetch project quota: %w", err))
+	}
+
+	return total, nil
+}

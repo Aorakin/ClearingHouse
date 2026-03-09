@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"github.com/ClearingHouse/internal/models"
+	namespaceDtos "github.com/ClearingHouse/internal/namespaces/dtos"
 	"github.com/ClearingHouse/pkg/enum"
 	"github.com/google/uuid"
 )
@@ -40,6 +41,47 @@ func (r *QuotaRepository) GetProjectQuotaByID(id uuid.UUID) (*models.ProjectQuot
 
 func (r *QuotaRepository) DeleteProjectQuota(quotaID uuid.UUID) error {
 	return r.db.Delete(&models.ProjectQuota{}, "id = ?", quotaID).Error
+}
+
+func (r *QuotaRepository) GetProjectQuotaTotalByType(projectID uuid.UUID) (*namespaceDtos.ResourceQuotaResponse, error) {
+	var projectQuotas []models.ProjectQuota
+	err := r.db.
+		Preload("Resources.ResourceProp.Resource").
+		Preload("Resources.ResourceProp.Resource.ResourceType").
+		Where("project_id = ?", projectID).
+		Find(&projectQuotas).Error
+	if err != nil {
+		return nil, err
+	}
+
+	typeAgg := make(map[uuid.UUID]namespaceDtos.ResourceQuota)
+	for _, pq := range projectQuotas {
+		for _, res := range pq.Resources {
+			rt := res.ResourceProp.Resource.ResourceType
+			rtID := rt.ID
+			if _, ok := typeAgg[rtID]; !ok {
+				typeAgg[rtID] = namespaceDtos.ResourceQuota{
+					TypeID: rtID,
+					Type:   rt.Name,
+					Quota:  0,
+				}
+			}
+			tmp := typeAgg[rtID]
+			tmp.Quota += float64(res.Quantity)
+			typeAgg[rtID] = tmp
+		}
+	}
+
+	var result []namespaceDtos.ResourceQuota
+	for _, v := range typeAgg {
+		result = append(result, v)
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return enum.ResourceTypeOrder(result[i].Type) < enum.ResourceTypeOrder(result[j].Type)
+	})
+
+	return &namespaceDtos.ResourceQuotaResponse{ResourceQuotas: result}, nil
 }
 
 func (r *QuotaRepository) HasNamespaceQuotasByProjectQuotaID(projectQuotaID uuid.UUID) (bool, error) {
