@@ -15,6 +15,7 @@ type NamespaceQuotaResponse struct {
 	Name             string                    `json:"name"`
 	NodeID           uuid.UUID                 `json:"node_id"`
 	NodeName         string                    `json:"node_name"`
+	NodeDisplayName  string                    `json:"node_display_name"`
 	OrganizationName string                    `json:"organization_name"`
 	ProjectID        uuid.UUID                 `json:"project_id"`
 	Resources        []models.ResourceQuantity `json:"resources"`

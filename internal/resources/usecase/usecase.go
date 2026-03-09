@@ -40,6 +40,7 @@ func (u *ResourceUsecase) CreateResourceNode(request *dtos.CreateResourceNodeReq
 	resourceNode := &models.ResourceNode{
 		ResourcePoolID: request.ResourcePoolID,
 		Name:           request.Name,
+		DisplayName:    request.DisplayName,
 	}
 	createdNode, err := u.resourceRepo.CreateResourceNode(resourceNode)
 	if err != nil {
@@ -125,6 +126,7 @@ func (u *ResourceUsecase) UpdateResourceNode(nodeID uuid.UUID, request *dtos.Upd
 
 	// Update fields
 	resourceNode.Name = request.Name
+	resourceNode.DisplayName = request.DisplayName
 
 	// Save changes
 	updatedNode, err := u.resourceRepo.UpdateResourceNode(resourceNode)

@@ -15,7 +15,8 @@ type UpdateResourcePoolRequest struct {
 }
 
 type UpdateResourceNodeRequest struct {
-	Name string `json:"name" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	DisplayName string `json:"display_name"`
 }
 
 type CreateResourcePoolRequest struct {
@@ -27,6 +28,7 @@ type CreateResourcePoolRequest struct {
 type CreateResourceNodeRequest struct {
 	ResourcePoolID uuid.UUID `json:"resource_pool_id" binding:"required,uuid"`
 	Name           string    `json:"name" binding:"required"`
+	DisplayName    string    `json:"display_name"`
 }
 
 type CreateResourceTypeRequest struct {
