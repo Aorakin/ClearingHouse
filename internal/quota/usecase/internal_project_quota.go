@@ -37,6 +37,13 @@ func (u *QuotaUsecase) CreateInternalProjectQuota(request *dtos.CreateInternalPr
 }
 
 func (u *QuotaUsecase) validateInternalProjectQuotaRequest(request *dtos.CreateInternalProjectQuotaRequest, node *models.ResourceNode) ([]dtos.ResourceWithProperty, error) {
+	quotaExists, err := u.quotaRepo.IsProjectQuotaExist(request.ProjectID, request.NodeID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to check existing project quota: %w", err))
+	}
+	if quotaExists {
+		return nil, apiError.NewConflictError(errors.New("project quota already exists for this project and node"))
+	}
 	resourcesMap := make(map[uuid.UUID]models.Resource)
 	for _, resource := range node.Resources {
 		resourcesMap[resource.ID] = resource
