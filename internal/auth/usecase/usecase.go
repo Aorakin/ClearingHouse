@@ -55,9 +55,9 @@ func (u *AuthUsecase) HandleGoogleCallback(code string, c *gin.Context) (*models
 
 	email, emailOk := googleUser["email"].(string)
 	firstName, firstNameOk := googleUser["given_name"].(string)
-	lastName, lastNameOk := googleUser["family_name"].(string)
+	lastName, _ := googleUser["family_name"].(string)
 	log.Println(email, firstName, lastName)
-	if !emailOk || !firstNameOk || !lastNameOk {
+	if !emailOk || !firstNameOk {
 		return nil, errors.New("invalid user data from Google")
 	}
 
@@ -83,9 +83,9 @@ func (u *AuthUsecase) HandleGoogleRegisterCallback(code string, c *gin.Context) 
 
 	email, emailOk := googleUser["email"].(string)
 	firstName, firstNameOk := googleUser["given_name"].(string)
-	lastName, lastNameOk := googleUser["family_name"].(string)
+	lastName, _ := googleUser["family_name"].(string)
 	log.Println(email, firstName, lastName)
-	if !emailOk || !firstNameOk || !lastNameOk {
+	if !emailOk || !firstNameOk {
 		return nil, errors.New("invalid user data from Google")
 	}
 
