@@ -173,6 +173,14 @@ func (u *QuotaUsecase) CreateNamespaceQuotaTemplate(request *dtos.CreateNamespac
 		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get namespace quotas: %w", err))
 	}
 
+	seenNodes := make(map[uuid.UUID]struct{})
+	for _, q := range namespaceQuotas {
+		if _, exists := seenNodes[q.NodeID]; exists {
+			return nil, apiError.NewBadRequestError(fmt.Errorf("duplicate node ID %s: each quota in a template must have a unique node", q.NodeID))
+		}
+		seenNodes[q.NodeID] = struct{}{}
+	}
+
 	template := &models.NamespaceQuotaTemplate{
 		Name:        request.Name,
 		Description: request.Description,
@@ -219,6 +227,14 @@ func (u *QuotaUsecase) UpdateNamespaceQuotaTemplate(quotaTemplateID uuid.UUID, r
 		namespaceQuotas, err := u.quotaRepo.GetNamespaceQuotasByIDs(request.QuotaIDs, existingTemplate.ProjectID)
 		if err != nil {
 			return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get namespace quotas: %w", err))
+		}
+
+		seenNodes := make(map[uuid.UUID]struct{})
+		for _, q := range namespaceQuotas {
+			if _, exists := seenNodes[q.NodeID]; exists {
+				return nil, apiError.NewBadRequestError(fmt.Errorf("duplicate node ID %s: each quota in a template must have a unique node", q.NodeID))
+			}
+			seenNodes[q.NodeID] = struct{}{}
 		}
 
 		// Remove old quota associations
