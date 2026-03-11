@@ -24,14 +24,18 @@ func NewAuthHandler(authUsecase interfaces.AuthUsecase) interfaces.AuthHandler {
 
 func (h *AuthHandler) GoogleLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		url := h.authUsecase.GenerateGoogleLoginURL("login")
+		portal := c.DefaultQuery("portal", "portal")
+		state := "login:" + portal
+		url := h.authUsecase.GenerateGoogleLoginURL(state, portal)
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
 
 func (h *AuthHandler) GoogleRegister() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		url := h.authUsecase.GenerateGoogleRegisterURL("register")
+		portal := c.DefaultQuery("portal", "portal")
+		state := "register:" + portal
+		url := h.authUsecase.GenerateGoogleRegisterURL(state, portal)
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
@@ -46,9 +50,12 @@ func (h *AuthHandler) GoogleCallback() gin.HandlerFunc {
 			return
 		}
 
+		// state format: "{type}:{portal}" e.g. "login:admin", "register:portal"
+		stateType, portal := parseState(state)
+
 		// Handle registration flow
-		if state == "register" {
-			user, err := h.authUsecase.HandleGoogleRegisterCallback(code, c)
+		if stateType == "register" {
+			user, err := h.authUsecase.HandleGoogleRegisterCallback(code, portal, c)
 			if err != nil {
 				c.JSON(response.ErrorResponseBuilder(apiError.NewInternalServerError(err)))
 				return
@@ -67,7 +74,7 @@ func (h *AuthHandler) GoogleCallback() gin.HandlerFunc {
 		}
 
 		// Handle login flow
-		user, err := h.authUsecase.HandleGoogleCallback(code, c)
+		user, err := h.authUsecase.HandleGoogleCallback(code, portal, c)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewInternalServerError(err)))
 			return
@@ -85,6 +92,16 @@ func (h *AuthHandler) GoogleCallback() gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
 	}
+}
+
+// parseState splits a state string in "type:portal" format.
+// Returns (stateType, portal), defaulting to ("login", "portal") on malformed input.
+func parseState(state string) (stateType, portal string) {
+	parts := strings.SplitN(state, ":", 2)
+	if len(parts) == 2 {
+		return parts[0], parts[1]
+	}
+	return state, "portal"
 }
 
 // ManualRegister handles manual user registration for testing without OAuth

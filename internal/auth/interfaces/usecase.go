@@ -7,10 +7,10 @@ import (
 )
 
 type AuthUsecase interface {
-	GenerateGoogleLoginURL(state string) string
-	GenerateGoogleRegisterURL(state string) string
-	HandleGoogleCallback(string, *gin.Context) (*models.User, error)
-	HandleGoogleRegisterCallback(string, *gin.Context) (*models.User, error)
+	GenerateGoogleLoginURL(state, portal string) string
+	GenerateGoogleRegisterURL(state, portal string) string
+	HandleGoogleCallback(code, portal string, c *gin.Context) (*models.User, error)
+	HandleGoogleRegisterCallback(code, portal string, c *gin.Context) (*models.User, error)
 	ManualRegister(email, firstName, lastName string) (*models.User, error)
 	GetUserByID(userID uuid.UUID) (*models.User, error)
 	GenerateTokens(user *models.User) (accessToken string, refreshToken string, err error)

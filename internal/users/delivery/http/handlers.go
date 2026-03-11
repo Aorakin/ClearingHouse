@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/ClearingHouse/internal/users/interfaces"
 	"github.com/gin-contrib/sessions"
@@ -20,7 +21,9 @@ func NewUsersHandler(usersUsecase interfaces.UsersUsecase) interfaces.UsersHandl
 
 func (h *UsersHandlers) LoginWithGoogle() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		url := h.usersUsecase.GenerateLoginURL("state-token")
+		portal := c.DefaultQuery("portal", "portal")
+		state := "login:" + portal
+		url := h.usersUsecase.GenerateLoginURL(state, portal)
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
@@ -28,12 +31,20 @@ func (h *UsersHandlers) LoginWithGoogle() gin.HandlerFunc {
 func (h *UsersHandlers) Callback() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		code := c.Query("code")
+		state := c.Query("state")
 		if code == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "No code provided"})
 			return
 		}
 
-		userInfo, err := h.usersUsecase.HandleGoogleCallback(code, c)
+		// state format: "{type}:{portal}" e.g. "login:admin"
+		parts := strings.SplitN(state, ":", 2)
+		portal := "portal"
+		if len(parts) == 2 {
+			portal = parts[1]
+		}
+
+		userInfo, err := h.usersUsecase.HandleGoogleCallback(code, portal, c)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to handle callback"})
 			return

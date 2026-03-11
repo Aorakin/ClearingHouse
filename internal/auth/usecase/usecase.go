@@ -34,16 +34,16 @@ func NewAuthUsecase(userRepo userInterfaces.UsersRepository, blacklistRepo *auth
 	}
 }
 
-func (u *AuthUsecase) GenerateGoogleLoginURL(state string) string {
-	return config.GoogleOauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
+func (u *AuthUsecase) GenerateGoogleLoginURL(state, portal string) string {
+	return config.GetOauthConfig(portal).AuthCodeURL(state, oauth2.AccessTypeOffline)
 }
 
-func (u *AuthUsecase) GenerateGoogleRegisterURL(state string) string {
-	return config.GoogleOauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
+func (u *AuthUsecase) GenerateGoogleRegisterURL(state, portal string) string {
+	return config.GetOauthConfig(portal).AuthCodeURL(state, oauth2.AccessTypeOffline)
 }
 
-func (u *AuthUsecase) HandleGoogleCallback(code string, c *gin.Context) (*models.User, error) {
-	token, err := config.GoogleOauthConfig.Exchange(context.TODO(), code)
+func (u *AuthUsecase) HandleGoogleCallback(code, portal string, c *gin.Context) (*models.User, error) {
+	token, err := config.GetOauthConfig(portal).Exchange(context.TODO(), code)
 	if err != nil {
 		return nil, err
 	}
@@ -70,8 +70,8 @@ func (u *AuthUsecase) HandleGoogleCallback(code string, c *gin.Context) (*models
 	return user, nil
 }
 
-func (u *AuthUsecase) HandleGoogleRegisterCallback(code string, c *gin.Context) (*models.User, error) {
-	token, err := config.GoogleOauthConfig.Exchange(context.TODO(), code)
+func (u *AuthUsecase) HandleGoogleRegisterCallback(code, portal string, c *gin.Context) (*models.User, error) {
+	token, err := config.GetOauthConfig(portal).Exchange(context.TODO(), code)
 	if err != nil {
 		return nil, err
 	}

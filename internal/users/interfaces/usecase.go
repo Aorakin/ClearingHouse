@@ -5,6 +5,6 @@ import (
 )
 
 type UsersUsecase interface {
-	GenerateLoginURL(string) string
-	HandleGoogleCallback(string, *gin.Context) (map[string]interface{}, error)
+	GenerateLoginURL(state, portal string) string
+	HandleGoogleCallback(code, portal string, c *gin.Context) (map[string]interface{}, error)
 }

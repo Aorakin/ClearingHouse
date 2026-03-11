@@ -19,12 +19,12 @@ func NewUsersUsecase(userRepository interfaces.UsersRepository) interfaces.Users
 	}
 }
 
-func (u *UsersUsecase) GenerateLoginURL(state string) string {
-	return config.GoogleOauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
+func (u *UsersUsecase) GenerateLoginURL(state, portal string) string {
+	return config.GetOauthConfig(portal).AuthCodeURL(state, oauth2.AccessTypeOffline)
 }
 
-func (u *UsersUsecase) HandleGoogleCallback(code string, c *gin.Context) (map[string]interface{}, error) {
-	token, err := config.GoogleOauthConfig.Exchange(context.TODO(), code)
+func (u *UsersUsecase) HandleGoogleCallback(code, portal string, c *gin.Context) (map[string]interface{}, error) {
+	token, err := config.GetOauthConfig(portal).Exchange(context.TODO(), code)
 	if err != nil {
 		return nil, err
 	}

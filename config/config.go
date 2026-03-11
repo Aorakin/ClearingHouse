@@ -11,7 +11,19 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-var GoogleOauthConfig *oauth2.Config
+var (
+	PortalOauthConfig *oauth2.Config
+	AdminOauthConfig  *oauth2.Config
+)
+
+// GetOauthConfig returns the OAuth config matching the given portal identifier.
+// Use "admin" for the admin portal, anything else returns the user portal config.
+func GetOauthConfig(portal string) *oauth2.Config {
+	if portal == "admin" {
+		return AdminOauthConfig
+	}
+	return PortalOauthConfig
+}
 
 func InitConfig() {
 	err := godotenv.Load()
@@ -19,10 +31,18 @@ func InitConfig() {
 		log.Printf("Error loading .env file: %v", err)
 	}
 
-	GoogleOauthConfig = &oauth2.Config{
+	PortalOauthConfig = &oauth2.Config{
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-		RedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
+		RedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL_PORTAL"),
+		Scopes:       []string{"email", "profile", "openid"},
+		Endpoint:     google.Endpoint,
+	}
+
+	AdminOauthConfig = &oauth2.Config{
+		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+		RedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL_ADMIN"),
 		Scopes:       []string{"email", "profile", "openid"},
 		Endpoint:     google.Endpoint,
 	}
