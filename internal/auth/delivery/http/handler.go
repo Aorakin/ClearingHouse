@@ -1,6 +1,7 @@
 package http
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -27,6 +28,7 @@ func (h *AuthHandler) GoogleLogin() gin.HandlerFunc {
 		portal := c.DefaultQuery("portal", "portal")
 		state := "login:" + portal
 		url := h.authUsecase.GenerateGoogleLoginURL(state, portal)
+		log.Printf("State: %s and URL: %s", state, url)
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
