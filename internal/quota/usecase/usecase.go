@@ -65,11 +65,21 @@ func (u *QuotaUsecase) isProjAdmin(projID uuid.UUID, userID uuid.UUID) error {
 		return apiError.NewNotFoundError(fmt.Errorf("failed to get user: %w", err))
 	}
 
-	if !helper.ContainsUserID(proj.Admins, user.ID) {
-		return apiError.NewForbiddenError(fmt.Errorf("user is not an admin of the project"))
+	if helper.ContainsUserID(proj.Admins, user.ID) {
+		return nil
 	}
 
-	return nil
+	// Also allow org admin of the project's organization
+	org, err := u.orgRepo.GetOrganizationByID(proj.OrganizationID)
+	if err != nil {
+		return apiError.NewNotFoundError(fmt.Errorf("failed to get organization: %w", err))
+	}
+
+	if helper.ContainsUserID(org.Admins, user.ID) {
+		return nil
+	}
+
+	return apiError.NewForbiddenError(fmt.Errorf("user is not an admin of the project or its organization"))
 }
 
 func (u *QuotaUsecase) isProjMember(projID uuid.UUID, userID uuid.UUID) error {

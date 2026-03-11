@@ -32,6 +32,18 @@ func NewProjectUsecase(projRepo interfaces.ProjectRepository, orgRepo orgInterfa
 	}
 }
 
+// isProjAdminOrOrgAdmin checks if user is a project admin or an org admin of the project's organization.
+func (u *ProjectUsecase) isProjAdminOrOrgAdmin(project *models.Project, userID uuid.UUID) bool {
+	if helper.ContainsUserID(project.Admins, userID) {
+		return true
+	}
+	org, err := u.orgRepo.GetOrganizationByID(project.OrganizationID)
+	if err != nil {
+		return false
+	}
+	return helper.ContainsUserID(org.Admins, userID)
+}
+
 func (u *ProjectUsecase) CreateProject(request *dtos.CreateProjectRequest, userID uuid.UUID) error {
 	org, err := u.orgRepo.GetOrganizationByID(request.OrganizationID)
 	if err != nil {
@@ -155,8 +167,8 @@ func (u *ProjectUsecase) AddMembers(request *dtos.AddMembersRequest, userID uuid
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	if !helper.ContainsUserID(project.Admins, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not project admin")
+	if !u.isProjAdminOrOrgAdmin(project, userID) {
+		return nil, apiError.NewForbiddenError("user is not a project admin or organization admin")
 	}
 
 	existing := make(map[uuid.UUID]struct{})
@@ -202,8 +214,8 @@ func (u *ProjectUsecase) RemoveMembers(request *dtos.RemoveMembersRequest, userI
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	if !helper.ContainsUserID(project.Admins, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not project admin")
+	if !u.isProjAdminOrOrgAdmin(project, userID) {
+		return nil, apiError.NewForbiddenError("user is not a project admin or organization admin")
 	}
 
 	// Create a map of members to remove for quick lookup
@@ -318,14 +330,17 @@ func (u *ProjectUsecase) GetAllUserProjects(userID uuid.UUID) ([]dtos.ProjectRes
 }
 
 func (u *ProjectUsecase) GetProjectsByOrganizationID(orgID uuid.UUID, userID uuid.UUID, isSuperAdmin bool) ([]dtos.ProjectResponse, error) {
+	var isOrgAdmin bool
 	if !isSuperAdmin {
 		org, err := u.orgRepo.GetOrganizationByID(orgID)
 		if err != nil {
 			return nil, apiError.NewInternalServerError(err.Error())
 		}
 
-		if !helper.ContainsUserID(org.Admins, userID) && !helper.ContainsUserID(org.Members, userID) {
-			// Allow project admins in this org to view
+		isOrgAdmin = helper.ContainsUserID(org.Admins, userID)
+
+		if !isOrgAdmin && !helper.ContainsUserID(org.Members, userID) {
+			// Allow project admins in this org to view their own projects
 			isProjectAdmin, pErr := u.orgRepo.IsProjectAdminInOrg(orgID, userID)
 			if pErr != nil || !isProjectAdmin {
 				return nil, apiError.NewForbiddenError("access denied")
@@ -340,6 +355,13 @@ func (u *ProjectUsecase) GetProjectsByOrganizationID(orgID uuid.UUID, userID uui
 
 	var projectResponses []dtos.ProjectResponse
 	for _, project := range projects {
+		// If not super admin and not org admin, only show projects where user is admin or member
+		if !isSuperAdmin && !isOrgAdmin {
+			if !helper.ContainsUserID(project.Admins, userID) && !helper.ContainsUserID(project.Members, userID) {
+				continue
+			}
+		}
+
 		// Get all namespaces for this project
 		namespaces, err := u.namespaceRepo.GetAllNamespacesByProjectID(project.ID)
 		if err != nil {
@@ -410,7 +432,11 @@ func (u *ProjectUsecase) GetProjectMembers(projectID uuid.UUID, userID uuid.UUID
 	}
 
 	if !isSuperAdmin && !helper.ContainsUserID(project.Admins, userID) && !helper.ContainsUserID(project.Members, userID) {
-		return nil, apiError.NewForbiddenError("access denied")
+		// Also allow org admin
+		org, orgErr := u.orgRepo.GetOrganizationByID(project.OrganizationID)
+		if orgErr != nil || !helper.ContainsUserID(org.Admins, userID) {
+			return nil, apiError.NewForbiddenError("access denied")
+		}
 	}
 
 	members, err := u.projRepo.GetProjectMembers(projectID)
@@ -428,16 +454,13 @@ func (u *ProjectUsecase) GetProjectByID(projectID uuid.UUID, userID uuid.UUID, i
 	}
 
 	if !isSuperAdmin && !helper.ContainsUserID(project.Admins, userID) && !helper.ContainsUserID(project.Members, userID) {
-		// Allow org admins and project admins from the same org to view
+		// Allow org admins to view
 		org, err := u.orgRepo.GetOrganizationByID(project.OrganizationID)
 		if err != nil {
 			return nil, apiError.NewInternalServerError(err.Error())
 		}
 		if !helper.ContainsUserID(org.Admins, userID) {
-			isProjectAdmin, pErr := u.orgRepo.IsProjectAdminInOrg(project.OrganizationID, userID)
-			if pErr != nil || !isProjectAdmin {
-				return nil, apiError.NewForbiddenError("access denied")
-			}
+			return nil, apiError.NewForbiddenError("access denied")
 		}
 	}
 
@@ -509,8 +532,12 @@ func (u *ProjectUsecase) GetProjectUsage(projectID uuid.UUID, userID uuid.UUID) 
 	}
 
 	if !helper.ContainsUserID(project.Admins, userID) && !helper.ContainsUserID(project.Members, userID) {
-		log.Println("Unauthorized access attempt by user:", userID)
-		return nil, apiError.NewUnauthorizedError("user is not project admin or member")
+		// Also allow org admin
+		org, orgErr := u.orgRepo.GetOrganizationByID(project.OrganizationID)
+		if orgErr != nil || !helper.ContainsUserID(org.Admins, userID) {
+			log.Println("Unauthorized access attempt by user:", userID)
+			return nil, apiError.NewForbiddenError("user is not a project admin, member, or organization admin")
+		}
 	}
 
 	quotas, err := u.projRepo.GetProjectQuotaByType(projectID, userID)
@@ -549,9 +576,8 @@ func (u *ProjectUsecase) UpdateProject(request *dtos.UpdateProjectRequest, userI
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	// Only admins can update project
-	if !helper.ContainsUserID(project.Admins, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not project admin")
+	if !u.isProjAdminOrOrgAdmin(project, userID) {
+		return nil, apiError.NewForbiddenError("user is not a project admin or organization admin")
 	}
 
 	// Update only provided fields
@@ -581,9 +607,8 @@ func (u *ProjectUsecase) DeleteProject(projectID uuid.UUID, userID uuid.UUID) er
 		return apiError.NewInternalServerError(err.Error())
 	}
 
-	// Only admins can delete project
-	if !helper.ContainsUserID(project.Admins, userID) {
-		return apiError.NewUnauthorizedError("user is not project admin")
+	if !u.isProjAdminOrOrgAdmin(project, userID) {
+		return apiError.NewForbiddenError("user is not a project admin or organization admin")
 	}
 
 	// Check if project has any active namespaces
@@ -624,9 +649,8 @@ func (u *ProjectUsecase) AddAdmins(request *dtos.AddAdminsRequest, userID uuid.U
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	// Only project admins can add admins
-	if !helper.ContainsUserID(project.Admins, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not project admin")
+	if !u.isProjAdminOrOrgAdmin(project, userID) {
+		return nil, apiError.NewForbiddenError("user is not a project admin or organization admin")
 	}
 
 	existing := make(map[uuid.UUID]struct{})
@@ -636,9 +660,9 @@ func (u *ProjectUsecase) AddAdmins(request *dtos.AddAdminsRequest, userID uuid.U
 
 	seenReq := make(map[uuid.UUID]struct{})
 	for _, adminID := range request.Admins {
-		// Must be organization admin to become project admin
-		if !helper.ContainsUserID(org.Admins, adminID) {
-			return nil, apiError.NewBadRequestError(fmt.Sprintf("user %s is not an admin of the organization", adminID))
+		// Must be organization member to become project admin
+		if !helper.ContainsUserID(org.Members, adminID) && !helper.ContainsUserID(org.Admins, adminID) {
+			return nil, apiError.NewBadRequestError(fmt.Sprintf("user %s is not a member of the organization", adminID))
 		}
 		if _, found := existing[adminID]; found {
 			return nil, apiError.NewConflictError(fmt.Sprintf("user %s is already a project admin", adminID))
@@ -672,9 +696,8 @@ func (u *ProjectUsecase) RemoveAdmins(request *dtos.RemoveAdminsRequest, userID 
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	// Only project admins can remove admins
-	if !helper.ContainsUserID(project.Admins, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not project admin")
+	if !u.isProjAdminOrOrgAdmin(project, userID) {
+		return nil, apiError.NewForbiddenError("user is not a project admin or organization admin")
 	}
 
 	// Create a map of admins to remove for quick lookup
