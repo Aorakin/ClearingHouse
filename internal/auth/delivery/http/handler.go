@@ -135,9 +135,9 @@ func (h *AuthHandler) Logout() gin.HandlerFunc {
 		}
 
 		// Clear the access token cookie
-		c.SetCookie("access_token", "", -1, "/", ".localhost", true, true)
+		c.SetCookie("access_token", "", -1, "/", ".onepointfive.life", true, true)
 		// Clear the refresh token cookie
-		c.SetCookie("refresh_token", "", -1, "/", ".localhost", true, true)
+		c.SetCookie("refresh_token", "", -1, "/", ".onepointfive.life", true, true)
 		c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
 	}
 }
