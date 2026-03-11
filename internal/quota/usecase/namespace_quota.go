@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/ClearingHouse/helper"
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/quota/dtos"
 	apiError "github.com/ClearingHouse/pkg/api_error"
@@ -41,27 +42,30 @@ func (u *QuotaUsecase) CreateNamespaceQuota(request *dtos.CreateNamespaceQuotaRe
 }
 
 func (u *QuotaUsecase) GetNamespaceQuota(namespaceID uuid.UUID, userID uuid.UUID) ([]dtos.NamespaceQuotaResponse, error) {
-	// Check access: user must be project admin or org admin
+	// Check access: user must be project admin, org admin, or namespace member
 	namespace, err := u.namespaceRepo.GetNamespaceByID(namespaceID)
 	if err != nil {
 		return nil, apiError.NewNotFoundError(fmt.Errorf("failed to get namespace: %w", err))
 	}
 
-	if namespace.ProjectID != nil {
-		projErr := u.isProjAdmin(*namespace.ProjectID, userID)
-		if projErr != nil {
-			proj, err := u.projRepo.GetProjectByID(*namespace.ProjectID)
-			if err != nil {
-				return nil, apiError.NewNotFoundError(fmt.Errorf("failed to get project: %w", err))
+	// Check namespace membership first (fastest path)
+	isMember := (namespace.OwnerID != nil && *namespace.OwnerID == userID) || helper.ContainsUserID(namespace.Members, userID)
+	if !isMember {
+		// If not a namespace member, check admin access
+		if namespace.ProjectID != nil {
+			projErr := u.isProjAdmin(*namespace.ProjectID, userID)
+			if projErr != nil {
+				proj, err := u.projRepo.GetProjectByID(*namespace.ProjectID)
+				if err != nil {
+					return nil, apiError.NewNotFoundError(fmt.Errorf("failed to get project: %w", err))
+				}
+				if err := u.isOrgAdmin(proj.OrganizationID, userID); err != nil {
+					return nil, apiError.NewForbiddenError(fmt.Errorf("user is not an admin of the project or its organization, nor a member of the namespace"))
+				}
 			}
-			if err := u.isOrgAdmin(proj.OrganizationID, userID); err != nil {
-				return nil, apiError.NewForbiddenError(fmt.Errorf("user is not an admin of the project or its organization"))
-			}
-		}
-	} else {
-		// Private namespace: only owner can view
-		if namespace.OwnerID == nil || *namespace.OwnerID != userID {
-			return nil, apiError.NewForbiddenError(fmt.Errorf("user is not the owner of this private namespace"))
+		} else {
+			// Private namespace: only owner or member can view
+			return nil, apiError.NewForbiddenError(fmt.Errorf("user is not the owner or member of this private namespace"))
 		}
 	}
 
