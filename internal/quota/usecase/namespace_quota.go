@@ -102,7 +102,7 @@ func (u *QuotaUsecase) UpdateNamespaceQuota(quotaID uuid.UUID, request *dtos.Upd
 	}
 
 	// Update resources if provided
-	if request.Resources != nil && len(request.Resources) > 0 {
+	if len(request.Resources) > 0 {
 		// Validate the requested resources
 		if err := u.validateUpdateNamespaceQuotaResources(request.Resources, quotaResourcesMap); err != nil {
 			return nil, err
