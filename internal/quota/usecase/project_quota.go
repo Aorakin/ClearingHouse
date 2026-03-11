@@ -40,7 +40,20 @@ func (u *QuotaUsecase) CreateProjectQuota(request *dtos.CreateProjectQuotaReques
 	return u.createProjectQuota(request, quotaResourcesMap)
 }
 
-func (u *QuotaUsecase) GetProjectQuotas(projectID uuid.UUID) ([]models.ProjectQuota, error) {
+func (u *QuotaUsecase) GetProjectQuotas(projectID uuid.UUID, userID uuid.UUID) ([]models.ProjectQuota, error) {
+	// Check if user is project admin
+	projErr := u.isProjAdmin(projectID, userID)
+	if projErr != nil {
+		// Fall back to org admin check via project's organization
+		proj, err := u.projRepo.GetProjectByID(projectID)
+		if err != nil {
+			return nil, apiError.NewNotFoundError(fmt.Errorf("failed to get project: %w", err))
+		}
+		if err := u.isOrgAdmin(proj.OrganizationID, userID); err != nil {
+			return nil, apiError.NewForbiddenError(fmt.Errorf("user is not an admin of the project or its organization"))
+		}
+	}
+
 	quotas, err := u.quotaRepo.GetProjectQuotaByProjectID(projectID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get project quotas: %w", err))

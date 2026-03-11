@@ -34,7 +34,14 @@ func (u *QuotaUsecase) CreateOrganizationQuota(request *dtos.CreateOrganizationQ
 	return u.createOrganizationQuota(request)
 }
 
-func (u *QuotaUsecase) GetOrganizationQuota(fromOrgID uuid.UUID, toOrgID uuid.UUID) ([]models.OrganizationQuota, error) {
+func (u *QuotaUsecase) GetOrganizationQuota(fromOrgID uuid.UUID, toOrgID uuid.UUID, userID uuid.UUID) ([]models.OrganizationQuota, error) {
+	// User must be org admin of either the giving or receiving organization
+	fromErr := u.isOrgAdmin(fromOrgID, userID)
+	toErr := u.isOrgAdmin(toOrgID, userID)
+	if fromErr != nil && toErr != nil {
+		return nil, apiError.NewForbiddenError(fmt.Errorf("user is not an admin of either organization"))
+	}
+
 	quotas, err := u.quotaRepo.GetOrganizationByRelationship(fromOrgID, toOrgID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get organization quotas: %w", err))
@@ -42,7 +49,11 @@ func (u *QuotaUsecase) GetOrganizationQuota(fromOrgID uuid.UUID, toOrgID uuid.UU
 	return quotas, nil
 }
 
-func (u *QuotaUsecase) GetOrganizationQuotasByOrgID(orgID uuid.UUID) ([]models.OrganizationQuota, error) {
+func (u *QuotaUsecase) GetOrganizationQuotasByOrgID(orgID uuid.UUID, userID uuid.UUID) ([]models.OrganizationQuota, error) {
+	if err := u.isOrgAdmin(orgID, userID); err != nil {
+		return nil, err
+	}
+
 	quotas, err := u.quotaRepo.GetOrganizationQuotasByOrgID(orgID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get organization quotas: %w", err))

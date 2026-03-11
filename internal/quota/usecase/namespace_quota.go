@@ -40,7 +40,31 @@ func (u *QuotaUsecase) CreateNamespaceQuota(request *dtos.CreateNamespaceQuotaRe
 	return u.createNamespaceQuota(request, quotaResourcesMap)
 }
 
-func (u *QuotaUsecase) GetNamespaceQuota(namespaceID uuid.UUID) ([]dtos.NamespaceQuotaResponse, error) {
+func (u *QuotaUsecase) GetNamespaceQuota(namespaceID uuid.UUID, userID uuid.UUID) ([]dtos.NamespaceQuotaResponse, error) {
+	// Check access: user must be project admin or org admin
+	namespace, err := u.namespaceRepo.GetNamespaceByID(namespaceID)
+	if err != nil {
+		return nil, apiError.NewNotFoundError(fmt.Errorf("failed to get namespace: %w", err))
+	}
+
+	if namespace.ProjectID != nil {
+		projErr := u.isProjAdmin(*namespace.ProjectID, userID)
+		if projErr != nil {
+			proj, err := u.projRepo.GetProjectByID(*namespace.ProjectID)
+			if err != nil {
+				return nil, apiError.NewNotFoundError(fmt.Errorf("failed to get project: %w", err))
+			}
+			if err := u.isOrgAdmin(proj.OrganizationID, userID); err != nil {
+				return nil, apiError.NewForbiddenError(fmt.Errorf("user is not an admin of the project or its organization"))
+			}
+		}
+	} else {
+		// Private namespace: only owner can view
+		if namespace.OwnerID == nil || *namespace.OwnerID != userID {
+			return nil, apiError.NewForbiddenError(fmt.Errorf("user is not the owner of this private namespace"))
+		}
+	}
+
 	quotas, err := u.quotaRepo.GetNamespaceQuotaByNamespaceID(namespaceID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(fmt.Errorf("failed to get namespace quota: %w", err))
@@ -195,10 +219,15 @@ func (u *QuotaUsecase) CreateNamespaceQuotaTemplate(request *dtos.CreateNamespac
 	return template, nil
 }
 
-func (u *QuotaUsecase) GetNamespaceQuotaTemplate(quotaTemplateID uuid.UUID) (*models.NamespaceQuotaTemplate, error) {
+func (u *QuotaUsecase) GetNamespaceQuotaTemplate(quotaTemplateID uuid.UUID, userID uuid.UUID) (*models.NamespaceQuotaTemplate, error) {
 	quotaTemplate, err := u.quotaRepo.GetNamespaceQuotaTemplateByID(quotaTemplateID)
 	if err != nil {
 		return nil, apiError.NewNotFoundError(fmt.Errorf("failed to find quota template: %w", err))
+	}
+
+	// Verify user is project admin of the template's project
+	if err := u.isProjAdmin(quotaTemplate.ProjectID, userID); err != nil {
+		return nil, err
 	}
 
 	return quotaTemplate, nil
@@ -222,7 +251,7 @@ func (u *QuotaUsecase) UpdateNamespaceQuotaTemplate(quotaTemplateID uuid.UUID, r
 	}
 
 	// Update quota associations if provided
-	if request.QuotaIDs != nil && len(request.QuotaIDs) > 0 {
+	if len(request.QuotaIDs) > 0 {
 		// Validate that all quotas belong to the same project
 		namespaceQuotas, err := u.quotaRepo.GetNamespaceQuotasByIDs(request.QuotaIDs, existingTemplate.ProjectID)
 		if err != nil {

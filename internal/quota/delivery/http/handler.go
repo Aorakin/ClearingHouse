@@ -47,6 +47,12 @@ func (h *QuotaHandler) CreateOrganizationQuota() gin.HandlerFunc {
 
 func (h *QuotaHandler) GetOrganizationQuota() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
 		var request dtos.FindOrganizationQuotaGroupRequest
 		if err := c.ShouldBindQuery(&request); err != nil {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError(err)))
@@ -64,7 +70,7 @@ func (h *QuotaHandler) GetOrganizationQuota() gin.HandlerFunc {
 			return
 		}
 
-		quotas, err := h.quotaUsecase.GetOrganizationQuota(fromUUID, toUUID)
+		quotas, err := h.quotaUsecase.GetOrganizationQuota(fromUUID, toUUID, userID)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
@@ -76,6 +82,12 @@ func (h *QuotaHandler) GetOrganizationQuota() gin.HandlerFunc {
 
 func (h *QuotaHandler) GetOrganizationQuotasByOrgID() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
 		orgID := c.Param("org_id")
 		orgUUID, err := uuid.Parse(orgID)
 		if err != nil {
@@ -83,7 +95,7 @@ func (h *QuotaHandler) GetOrganizationQuotasByOrgID() gin.HandlerFunc {
 			return
 		}
 
-		quotas, err := h.quotaUsecase.GetOrganizationQuotasByOrgID(orgUUID)
+		quotas, err := h.quotaUsecase.GetOrganizationQuotasByOrgID(orgUUID, userID)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
@@ -148,6 +160,12 @@ func (h *QuotaHandler) CreateProjectQuota() gin.HandlerFunc {
 
 func (h *QuotaHandler) GetProjectQuotas() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
 		projectID := c.Param("project_id")
 		if projectID == "" {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Project ID is required")))
@@ -160,7 +178,7 @@ func (h *QuotaHandler) GetProjectQuotas() gin.HandlerFunc {
 			return
 		}
 
-		quotas, err := h.quotaUsecase.GetProjectQuotas(projectUUID)
+		quotas, err := h.quotaUsecase.GetProjectQuotas(projectUUID, userID)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
@@ -197,6 +215,12 @@ func (h *QuotaHandler) CreateNamespaceQuota() gin.HandlerFunc {
 
 func (h *QuotaHandler) GetNamespaceQuota() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
 		namespaceID := c.Param("namespace_id")
 		if namespaceID == "" {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Namespace ID is required")))
@@ -209,7 +233,7 @@ func (h *QuotaHandler) GetNamespaceQuota() gin.HandlerFunc {
 			return
 		}
 
-		quota, err := h.quotaUsecase.GetNamespaceQuota(namespaceUUID)
+		quota, err := h.quotaUsecase.GetNamespaceQuota(namespaceUUID, userID)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
@@ -281,6 +305,12 @@ func (h *QuotaHandler) CreateNamespaceQuotaTemplate() gin.HandlerFunc {
 
 func (h *QuotaHandler) GetNamespaceQuotaTemplate() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userID := c.MustGet("userID").(uuid.UUID)
+		if userID == uuid.Nil {
+			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
+			return
+		}
+
 		quotaTemplateID := c.Param("quota_template_id")
 		if quotaTemplateID == "" {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewBadRequestError("Quota Template ID is required")))
@@ -293,7 +323,7 @@ func (h *QuotaHandler) GetNamespaceQuotaTemplate() gin.HandlerFunc {
 			return
 		}
 
-		template, err := h.quotaUsecase.GetNamespaceQuotaTemplate(quotaTemplateUUID)
+		template, err := h.quotaUsecase.GetNamespaceQuotaTemplate(quotaTemplateUUID, userID)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
