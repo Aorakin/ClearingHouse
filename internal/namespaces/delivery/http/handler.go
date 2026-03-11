@@ -46,7 +46,10 @@ func (h *NamespaceHandler) CreateNamespace() gin.HandlerFunc {
 
 func (h *NamespaceHandler) GetAllNamespaces() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		namespaces, err := h.namespaceUsecase.GetAllNamespaces()
+		userID := c.MustGet("userID").(uuid.UUID)
+		isSuperAdmin := c.MustGet("isSuperAdmin").(bool)
+
+		namespaces, err := h.namespaceUsecase.GetAllNamespaces(userID, isSuperAdmin)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return

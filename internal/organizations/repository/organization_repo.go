@@ -75,6 +75,45 @@ func (r *OrganizationRepository) GetOrganizations() ([]models.Organization, erro
 	return organizations, nil
 }
 
+func (r *OrganizationRepository) GetOrganizationsByAdminOrProjectAdmin(userID uuid.UUID) ([]models.Organization, error) {
+	var organizations []models.Organization
+
+	subqueryOrgAdmin := r.db.Table("organization_admins").
+		Select("organization_id").
+		Where("user_id = ?", userID)
+
+	subqueryProjAdmin := r.db.Table("project_admins").
+		Joins("JOIN projects ON projects.id = project_admins.project_id").
+		Select("DISTINCT projects.organization_id").
+		Where("project_admins.user_id = ? AND projects.deleted_at IS NULL", userID)
+
+	if err := r.db.
+		Preload("Members", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Preload("Admins", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Preload("Projects", func(db *gorm.DB) *gorm.DB { return db.Order("name") }).
+		Preload("ResourcePools", func(db *gorm.DB) *gorm.DB { return db.Order("name") }).
+		Preload("Quotas", func(db *gorm.DB) *gorm.DB { return db.Order("name") }).
+		Preload("GivenQuotas", func(db *gorm.DB) *gorm.DB { return db.Order("name") }).
+		Where("id IN (?) OR id IN (?)", subqueryOrgAdmin, subqueryProjAdmin).
+		Order("name").
+		Find(&organizations).Error; err != nil {
+		return nil, err
+	}
+	return organizations, nil
+}
+
+func (r *OrganizationRepository) IsProjectAdminInOrg(orgID uuid.UUID, userID uuid.UUID) (bool, error) {
+	var count int64
+	err := r.db.Table("project_admins").
+		Joins("JOIN projects ON projects.id = project_admins.project_id").
+		Where("projects.organization_id = ? AND project_admins.user_id = ? AND projects.deleted_at IS NULL", orgID, userID).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 func (r *OrganizationRepository) UpdateMembers(org *models.Organization) error {
 	return r.db.Model(org).Association("Members").Replace(org.Members)
 }

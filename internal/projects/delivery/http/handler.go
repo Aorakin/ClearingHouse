@@ -47,7 +47,10 @@ func (h *ProjectHandler) CreateProject() gin.HandlerFunc {
 
 func (h *ProjectHandler) GetAllProjects() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		projects, err := h.projUsecase.GetAllProjects()
+		userID := c.MustGet("userID").(uuid.UUID)
+		isSuperAdmin := c.MustGet("isSuperAdmin").(bool)
+
+		projects, err := h.projUsecase.GetAllProjects(userID, isSuperAdmin)
 
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
@@ -175,6 +178,7 @@ func (h *ProjectHandler) GetAllUserProjects() gin.HandlerFunc {
 func (h *ProjectHandler) GetProject() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
+		isSuperAdmin := c.MustGet("isSuperAdmin").(bool)
 		if userID == uuid.Nil {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
@@ -192,7 +196,7 @@ func (h *ProjectHandler) GetProject() gin.HandlerFunc {
 			return
 		}
 
-		project, err := h.projUsecase.GetProjectByID(projectUUID, userID)
+		project, err := h.projUsecase.GetProjectByID(projectUUID, userID, isSuperAdmin)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
@@ -205,6 +209,7 @@ func (h *ProjectHandler) GetProject() gin.HandlerFunc {
 func (h *ProjectHandler) GetProjectsByOrganizationID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
+		isSuperAdmin := c.MustGet("isSuperAdmin").(bool)
 		if userID == uuid.Nil {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
@@ -222,7 +227,7 @@ func (h *ProjectHandler) GetProjectsByOrganizationID() gin.HandlerFunc {
 			return
 		}
 
-		projects, err := h.projUsecase.GetProjectsByOrganizationID(orgUUID, userID)
+		projects, err := h.projUsecase.GetProjectsByOrganizationID(orgUUID, userID, isSuperAdmin)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
@@ -235,6 +240,7 @@ func (h *ProjectHandler) GetProjectsByOrganizationID() gin.HandlerFunc {
 func (h *ProjectHandler) GetProjectMembers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
+		isSuperAdmin := c.MustGet("isSuperAdmin").(bool)
 		if userID == uuid.Nil {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
@@ -252,7 +258,7 @@ func (h *ProjectHandler) GetProjectMembers() gin.HandlerFunc {
 			return
 		}
 
-		members, err := h.projUsecase.GetProjectMembers(projectUUID, userID)
+		members, err := h.projUsecase.GetProjectMembers(projectUUID, userID, isSuperAdmin)
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return

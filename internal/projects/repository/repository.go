@@ -26,8 +26,34 @@ func (r *ProjectRepository) CreateProject(project *models.Project) error {
 
 func (r *ProjectRepository) GetAllProjects() ([]models.Project, error) {
 	var projects []models.Project
-	err := r.db.Order("name").Find(&projects).Error
+	err := r.db.
+		Preload("Admins", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Preload("Members", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Order("name").Find(&projects).Error
 	if err != nil {
+		return nil, err
+	}
+	return projects, nil
+}
+
+func (r *ProjectRepository) GetProjectsByUserAdminScope(userID uuid.UUID) ([]models.Project, error) {
+	var projects []models.Project
+
+	subqueryOrgAdmin := r.db.Table("organization_admins").
+		Select("organization_id").
+		Where("user_id = ?", userID)
+
+	subqueryProjAdmin := r.db.Table("project_admins").
+		Joins("JOIN projects p ON p.id = project_admins.project_id").
+		Select("DISTINCT p.organization_id").
+		Where("project_admins.user_id = ? AND p.deleted_at IS NULL", userID)
+
+	if err := r.db.
+		Preload("Admins", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Preload("Members", func(db *gorm.DB) *gorm.DB { return db.Order("email") }).
+		Where("organization_id IN (?) OR organization_id IN (?)", subqueryOrgAdmin, subqueryProjAdmin).
+		Order("name").
+		Find(&projects).Error; err != nil {
 		return nil, err
 	}
 	return projects, nil

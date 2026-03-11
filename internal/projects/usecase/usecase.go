@@ -62,10 +62,21 @@ func (u *ProjectUsecase) CreateProject(request *dtos.CreateProjectRequest, userI
 	return nil
 }
 
-func (u *ProjectUsecase) GetAllProjects() ([]dtos.ProjectResponse, error) {
-	projects, err := u.projRepo.GetAllProjects()
+func (u *ProjectUsecase) GetAllProjects(userID uuid.UUID, isSuperAdmin bool) ([]dtos.ProjectResponse, error) {
+	var projects []models.Project
+	var err error
+
+	if isSuperAdmin {
+		projects, err = u.projRepo.GetAllProjects()
+	} else {
+		projects, err = u.projRepo.GetProjectsByUserAdminScope(userID)
+	}
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	if !isSuperAdmin && len(projects) == 0 {
+		return nil, apiError.NewForbiddenError("admin access required")
 	}
 
 	var projectResponses []dtos.ProjectResponse
@@ -306,14 +317,20 @@ func (u *ProjectUsecase) GetAllUserProjects(userID uuid.UUID) ([]dtos.ProjectRes
 	return projectResponses, nil
 }
 
-func (u *ProjectUsecase) GetProjectsByOrganizationID(orgID uuid.UUID, userID uuid.UUID) ([]dtos.ProjectResponse, error) {
-	org, err := u.orgRepo.GetOrganizationByID(orgID)
-	if err != nil {
-		return nil, apiError.NewInternalServerError(err.Error())
-	}
+func (u *ProjectUsecase) GetProjectsByOrganizationID(orgID uuid.UUID, userID uuid.UUID, isSuperAdmin bool) ([]dtos.ProjectResponse, error) {
+	if !isSuperAdmin {
+		org, err := u.orgRepo.GetOrganizationByID(orgID)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(err.Error())
+		}
 
-	if !helper.ContainsUserID(org.Admins, userID) && !helper.ContainsUserID(org.Members, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not organization admin or member")
+		if !helper.ContainsUserID(org.Admins, userID) && !helper.ContainsUserID(org.Members, userID) {
+			// Allow project admins in this org to view
+			isProjectAdmin, pErr := u.orgRepo.IsProjectAdminInOrg(orgID, userID)
+			if pErr != nil || !isProjectAdmin {
+				return nil, apiError.NewForbiddenError("access denied")
+			}
+		}
 	}
 
 	projects, err := u.projRepo.GetProjectsByOrganizationID(orgID)
@@ -386,14 +403,14 @@ func (u *ProjectUsecase) GetProjectsByOrganizationID(orgID uuid.UUID, userID uui
 	return projectResponses, nil
 }
 
-func (u *ProjectUsecase) GetProjectMembers(projectID uuid.UUID, userID uuid.UUID) ([]models.User, error) {
+func (u *ProjectUsecase) GetProjectMembers(projectID uuid.UUID, userID uuid.UUID, isSuperAdmin bool) ([]models.User, error) {
 	project, err := u.projRepo.GetProjectByID(projectID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	if !helper.ContainsUserID(project.Admins, userID) && !helper.ContainsUserID(project.Members, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not project admin or member")
+	if !isSuperAdmin && !helper.ContainsUserID(project.Admins, userID) && !helper.ContainsUserID(project.Members, userID) {
+		return nil, apiError.NewForbiddenError("access denied")
 	}
 
 	members, err := u.projRepo.GetProjectMembers(projectID)
@@ -404,14 +421,24 @@ func (u *ProjectUsecase) GetProjectMembers(projectID uuid.UUID, userID uuid.UUID
 	return members, nil
 }
 
-func (u *ProjectUsecase) GetProjectByID(projectID uuid.UUID, userID uuid.UUID) (*dtos.ProjectResponse, error) {
+func (u *ProjectUsecase) GetProjectByID(projectID uuid.UUID, userID uuid.UUID, isSuperAdmin bool) (*dtos.ProjectResponse, error) {
 	project, err := u.projRepo.GetProjectByID(projectID)
 	if err != nil {
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
-	if !helper.ContainsUserID(project.Admins, userID) && !helper.ContainsUserID(project.Members, userID) {
-		return nil, apiError.NewUnauthorizedError("user is not project admin or member")
+	if !isSuperAdmin && !helper.ContainsUserID(project.Admins, userID) && !helper.ContainsUserID(project.Members, userID) {
+		// Allow org admins and project admins from the same org to view
+		org, err := u.orgRepo.GetOrganizationByID(project.OrganizationID)
+		if err != nil {
+			return nil, apiError.NewInternalServerError(err.Error())
+		}
+		if !helper.ContainsUserID(org.Admins, userID) {
+			isProjectAdmin, pErr := u.orgRepo.IsProjectAdminInOrg(project.OrganizationID, userID)
+			if pErr != nil || !isProjectAdmin {
+				return nil, apiError.NewForbiddenError("access denied")
+			}
+		}
 	}
 
 	// Get all namespaces for this project with preloaded quota templates

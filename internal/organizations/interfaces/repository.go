@@ -12,6 +12,8 @@ type OrganizationRepository interface {
 	UpdateOrganization(org *models.Organization) (*models.Organization, error)
 	DeleteOrganization(id uuid.UUID) error
 	GetOrganizations() ([]models.Organization, error)
+	GetOrganizationsByAdminOrProjectAdmin(userID uuid.UUID) ([]models.Organization, error)
+	IsProjectAdminInOrg(orgID uuid.UUID, userID uuid.UUID) (bool, error)
 	UpdateMembers(org *models.Organization) error
 	UpdateAdmins(org *models.Organization) error
 	GetMembers() ([]models.User, error)

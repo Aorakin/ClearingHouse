@@ -7,8 +7,8 @@ import (
 )
 
 func MapOrganizationRoutes(orgGroup *gin.RouterGroup, orgHandler interfaces.OrganizationHandler) {
-	orgGroup.GET("/", orgHandler.GetAllOrganizations())
 	orgGroup.Use(middleware.AuthMiddleware())
+	orgGroup.GET("/", orgHandler.GetAllOrganizations())
 	orgGroup.GET("/:org-id", orgHandler.GetOrganizationByID())
 	orgGroup.POST("/", middleware.SuperAdminMiddleware(), orgHandler.CreateOrganization())
 	orgGroup.PUT("/:org-id", middleware.SuperAdminMiddleware(), orgHandler.UpdateOrganization())

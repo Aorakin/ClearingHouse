@@ -7,8 +7,8 @@ import (
 )
 
 func MapProjectRoutes(projectGroup *gin.RouterGroup, projectHandler interfaces.ProjectHandler) {
-	projectGroup.GET("/", projectHandler.GetAllProjects())
 	projectGroup.Use(middleware.AuthMiddleware())
+	projectGroup.GET("/", projectHandler.GetAllProjects())
 	projectGroup.GET("/all", projectHandler.GetAllUserProjects())
 	projectGroup.GET("/organization/:orgId", projectHandler.GetProjectsByOrganizationID())
 	projectGroup.GET("/:id", projectHandler.GetProject())

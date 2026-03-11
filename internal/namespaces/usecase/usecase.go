@@ -58,7 +58,10 @@ func (u *NamespaceUsecase) CreateNamespace(request *dtos.CreateNamespaceRequest,
 	return &namespace, nil
 }
 
-func (u *NamespaceUsecase) GetAllNamespaces() ([]models.Namespace, error) {
+func (u *NamespaceUsecase) GetAllNamespaces(userID uuid.UUID, isSuperAdmin bool) ([]models.Namespace, error) {
+	if !isSuperAdmin {
+		return nil, apiError.NewForbiddenError("super admin access required")
+	}
 	return u.namespaceRepo.GetAll()
 }
 

@@ -7,7 +7,7 @@ import (
 )
 
 type OrganizationUsecase interface {
-	GetAllOrganizations() ([]orgDtos.OrganizationResponse, error)
+	GetAllOrganizations(userID uuid.UUID, isSuperAdmin bool) ([]orgDtos.OrganizationResponse, error)
 	GetOrganizationByID(orgID uuid.UUID, userID uuid.UUID, isSuperAdmin bool) (*orgDtos.OrganizationResponse, error)
 	CreateOrganization(request *orgDtos.CreateOrganization, userID uuid.UUID) (*models.Organization, error)
 	UpdateOrganization(orgID uuid.UUID, request *orgDtos.UpdateOrganization, userID uuid.UUID) (*models.Organization, error)
@@ -16,6 +16,6 @@ type OrganizationUsecase interface {
 	RemoveMembers(request *orgDtos.RemoveMembersRequest, userID uuid.UUID) (*models.Organization, error)
 	AddAdmins(request *orgDtos.AddAdminsRequest, userID uuid.UUID, isSuperAdmin bool) (*models.Organization, error)
 	RemoveAdmins(request *orgDtos.RemoveAdminsRequest, userID uuid.UUID, isSuperAdmin bool) (*models.Organization, error)
-	GetMembers() ([]models.User, error)
-	GetOrganizationMembers(orgID uuid.UUID) ([]models.User, error)
+	GetMembers(isSuperAdmin bool) ([]models.User, error)
+	GetOrganizationMembers(orgID uuid.UUID, userID uuid.UUID, isSuperAdmin bool) ([]models.User, error)
 }

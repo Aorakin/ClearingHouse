@@ -8,7 +8,7 @@ import (
 
 type NamespaceUsecase interface {
 	CreateNamespace(request *dtos.CreateNamespaceRequest, userID uuid.UUID) (*models.Namespace, error)
-	GetAllNamespaces() ([]models.Namespace, error)
+	GetAllNamespaces(userID uuid.UUID, isSuperAdmin bool) ([]models.Namespace, error)
 	AddMembers(request *dtos.AddMembersRequest, userID uuid.UUID) (*models.Namespace, error)
 	RemoveMembers(request *dtos.RemoveMembersRequest, userID uuid.UUID) (*models.Namespace, error)
 	UpdateNamespace(request *dtos.UpdateNamespaceRequest, userID uuid.UUID) (*models.Namespace, error)

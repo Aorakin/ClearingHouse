@@ -9,6 +9,7 @@ import (
 type ProjectRepository interface {
 	CreateProject(project *models.Project) error
 	GetAllProjects() ([]models.Project, error)
+	GetProjectsByUserAdminScope(userID uuid.UUID) ([]models.Project, error)
 
 	GetProjectByID(id uuid.UUID) (*models.Project, error)
 	UpdateProject(project *models.Project) error

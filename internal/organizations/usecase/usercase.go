@@ -34,10 +34,21 @@ func NewOrganizationUsecase(orgRepo interfaces.OrganizationRepository, userRepo 
 	}
 }
 
-func (u *OrganizationUsecase) GetAllOrganizations() ([]dtos.OrganizationResponse, error) {
-	orgs, err := u.orgRepo.GetOrganizations()
+func (u *OrganizationUsecase) GetAllOrganizations(userID uuid.UUID, isSuperAdmin bool) ([]dtos.OrganizationResponse, error) {
+	var orgs []models.Organization
+	var err error
+
+	if isSuperAdmin {
+		orgs, err = u.orgRepo.GetOrganizations()
+	} else {
+		orgs, err = u.orgRepo.GetOrganizationsByAdminOrProjectAdmin(userID)
+	}
 	if err != nil {
 		return nil, apierror.NewInternalServerError(err)
+	}
+
+	if !isSuperAdmin && len(orgs) == 0 {
+		return nil, apierror.NewForbiddenError("admin access required")
 	}
 
 	var orgResponses []dtos.OrganizationResponse
@@ -122,7 +133,11 @@ func (u *OrganizationUsecase) GetOrganizationByID(id uuid.UUID, userID uuid.UUID
 	}
 
 	if !isSuperAdmin && !helper.ContainsUserID(organization.Admins, userID) && !helper.ContainsUserID(organization.Members, userID) {
-		return nil, apierror.NewUnauthorizedError("user is not organization admin or member")
+		// Allow project admins in this org to view it
+		isProjectAdmin, pErr := u.orgRepo.IsProjectAdminInOrg(id, userID)
+		if pErr != nil || !isProjectAdmin {
+			return nil, apierror.NewForbiddenError("access denied")
+		}
 	}
 
 	// Get all projects for this organization
@@ -367,14 +382,29 @@ func (u *OrganizationUsecase) RemoveMembers(request *dtos.RemoveMembersRequest, 
 	return org, nil
 }
 
-func (u *OrganizationUsecase) GetMembers() ([]models.User, error) {
+func (u *OrganizationUsecase) GetMembers(isSuperAdmin bool) ([]models.User, error) {
+	if !isSuperAdmin {
+		return nil, apierror.NewForbiddenError("super admin access required")
+	}
 	users, err := u.orgRepo.GetMembers()
 	if err != nil {
 		return nil, apierror.NewInternalServerError(err)
 	}
 	return users, nil
 }
-func (u *OrganizationUsecase) GetOrganizationMembers(orgID uuid.UUID) ([]models.User, error) {
+func (u *OrganizationUsecase) GetOrganizationMembers(orgID uuid.UUID, userID uuid.UUID, isSuperAdmin bool) ([]models.User, error) {
+	if !isSuperAdmin {
+		org, err := u.orgRepo.GetOrganizationByID(orgID)
+		if err != nil {
+			return nil, apierror.NewInternalServerError(err)
+		}
+		if !helper.ContainsUserID(org.Admins, userID) {
+			isProjectAdmin, pErr := u.orgRepo.IsProjectAdminInOrg(orgID, userID)
+			if pErr != nil || !isProjectAdmin {
+				return nil, apierror.NewForbiddenError("access denied")
+			}
+		}
+	}
 	users, err := u.orgRepo.GetOrganizationMembers(orgID)
 	if err != nil {
 		return nil, apierror.NewInternalServerError(err)
