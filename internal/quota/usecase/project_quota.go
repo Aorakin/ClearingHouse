@@ -90,18 +90,13 @@ func (u *QuotaUsecase) validateProjectQuotaRequest(request *dtos.CreateProjectQu
 		}
 		seenResources[r.ResourceID] = struct{}{}
 
-		currentUsage, err := u.quotaRepo.GetOrgUsage(quota.ID, r.ResourceID)
-		if err != nil {
-			return apiError.NewInternalServerError(fmt.Errorf("failed to get current usage for resource %s: %w", r.ResourceID, err))
-		}
-
 		maxQuota, err := u.quotaRepo.GetOrgQuotaQuantity(quota.ID, r.ResourceID)
 		if err != nil {
 			return apiError.NewInternalServerError(fmt.Errorf("failed to get maximum quota for resource %s: %w", r.ResourceID, err))
 		}
 
-		if r.Quantity+currentUsage > maxQuota {
-			return apiError.NewBadRequestError(fmt.Errorf("requested quantity %d exceeds available quota %d for resource %s", r.Quantity, maxQuota-currentUsage, r.ResourceID))
+		if r.Quantity > maxQuota {
+			return apiError.NewBadRequestError(fmt.Errorf("requested quantity %d exceeds org quota %d for resource %s", r.Quantity, maxQuota, r.ResourceID))
 		}
 	}
 
