@@ -95,7 +95,7 @@ func (r *QuotaRepository) HasActiveQuotaUsage(orgID uuid.UUID) (bool, error) {
 	err := r.db.Table("resource_quantities rq").
 		Joins("JOIN project_quota pq ON pq.id = rq.project_quota_id").
 		Joins("JOIN organization_quota oq ON oq.id = pq.organization_quota_id").
-		Where("oq.to_org_id = ? AND rq.quantity > 0", orgID).
+		Where("oq.to_org_id = ? AND rq.quantity > 0 AND rq.deleted_at IS NULL AND pq.deleted_at IS NULL AND oq.deleted_at IS NULL", orgID).
 		Count(&count).Error
 
 	if err != nil {
