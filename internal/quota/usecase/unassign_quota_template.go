@@ -25,6 +25,16 @@ func (u *QuotaUsecase) UnassignQuotaTemplateFromNamespace(namespaceID uuid.UUID,
 		return apiError.NewBadRequestError("namespace does not have a quota template assigned")
 	}
 
+	// Check for active tickets/resource usage in the namespace
+	hasActiveTickets, err := u.namespaceRepo.HasActiveTicketsByNamespaceID(namespaceID)
+	if err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to check active tickets: %w", err))
+	}
+
+	if hasActiveTickets {
+		return apiError.NewBadRequestError("cannot unassign quota template while there are active tickets or resource usage in this namespace")
+	}
+
 	if err := u.quotaRepo.UnassignQuotaTemplateFromNamespace(namespaceID); err != nil {
 		return apiError.NewInternalServerError(fmt.Errorf("failed to unassign quota template: %w", err))
 	}
