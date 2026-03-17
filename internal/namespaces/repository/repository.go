@@ -69,7 +69,7 @@ func (r *NamespaceRepository) DeleteNamespace(namespaceID uuid.UUID) error {
 func (r *NamespaceRepository) HasActiveTicketsByNamespaceID(namespaceID uuid.UUID) (bool, error) {
 	var count int64
 	err := r.db.Model(&models.Ticket{}).
-		Where("namespace_id = ? AND deleted_at IS NULL AND status NOT IN ?", namespaceID, []string{"failed", "cancelled", "expired", "stopped"}).
+		Where("namespace_id = ? AND deleted_at IS NULL AND status NOT IN ?", namespaceID, []string{"completed", "cancelled", "rejected"}).
 		Count(&count).Error
 	if err != nil {
 		return false, err
