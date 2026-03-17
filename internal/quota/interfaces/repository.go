@@ -14,19 +14,29 @@ type QuotaRepository interface {
 	GetOrgQuotaByID(id uuid.UUID) (*models.OrganizationQuota, error)
 	GetOrgUsage(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)
 	GetOrgQuotaQuantity(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)
+	UpdateOrganizationQuota(quotaID uuid.UUID, name, description string) error
 	DeleteOrganizationQuotasByOrgID(orgID uuid.UUID) error
 	DeleteOrganizationQuota(quotaID uuid.UUID) error
 	HasActiveQuotaUsage(orgID uuid.UUID) (bool, error)
 	HasProjectQuotasByOrgQuotaID(orgQuotaID uuid.UUID) (bool, error)
 	HasActiveUsageByOrgQuotaID(orgQuotaID uuid.UUID) (bool, error)
+	GetResourceQuantitiesByOrgQuotaID(orgQuotaID uuid.UUID) ([]models.ResourceQuantity, error)
+	GetProjectQuotasByOrgQuotaID(orgQuotaID uuid.UUID) ([]models.ProjectQuota, error)
+	SoftDeleteResourceQuantitiesByOrgQuotaID(orgQuotaID uuid.UUID) error
+	SoftDeleteProjectQuotasByOrgQuotaID(orgQuotaID uuid.UUID) ([]uuid.UUID, error)
 
 	IsProjectQuotaExist(projectID uuid.UUID, nodeID uuid.UUID) (bool, error)
 	CreateProjectQuota(quota *models.ProjectQuota) error
 	GetProjectQuotaByProjectID(projectID uuid.UUID) ([]models.ProjectQuota, error)
 	GetProjectQuotaByID(id uuid.UUID) (*models.ProjectQuota, error)
 	GetProjectQuotaTotalByType(projectID uuid.UUID) (*dtos.ResourceQuotaResponse, error)
+	UpdateProjectQuota(quotaID uuid.UUID, name, description string) error
 	DeleteProjectQuota(quotaID uuid.UUID) error
 	HasNamespaceQuotasByProjectQuotaID(projectQuotaID uuid.UUID) (bool, error)
+	GetResourceQuantitiesByProjectQuotaID(projectQuotaID uuid.UUID) ([]models.ResourceQuantity, error)
+	GetNamespaceQuotasByProjectQuotaID(projectQuotaID uuid.UUID) ([]models.NamespaceQuota, error)
+	SoftDeleteResourceQuantitiesByProjectQuotaID(projectQuotaID uuid.UUID) error
+	SoftDeleteNamespaceQuotasByProjectQuotaID(projectQuotaID uuid.UUID) ([]uuid.UUID, error)
 
 	IsNamespaceQuotaExists(namespaceID uuid.UUID, nodeID uuid.UUID) (bool, error)
 	CreateNamespaceQuota(quota *models.NamespaceQuota) error
@@ -37,6 +47,7 @@ type QuotaRepository interface {
 	HasQuotaTemplatesByNamespaceQuotaID(namespaceQuotaID uuid.UUID) (bool, error)
 
 	CreateResourceProperty(resourceProperty *models.ResourceProperty) error
+	UpdateResourceProperty(propID uuid.UUID, price float32, maxDuration uint) error
 
 	CreateResourceQuantity(resourceQuantity *models.ResourceQuantity) error
 	UpdateResourceQuantity(quantityID uuid.UUID, quantity uint) error
@@ -57,6 +68,7 @@ type QuotaRepository interface {
 	GetNamespaceQuotaTemplatesByProjectID(projectID uuid.UUID) ([]models.NamespaceQuotaTemplate, error)
 	AssignQuotaToNamespace(namespaceID uuid.UUID, quotaTemplateID uuid.UUID) error
 	UnassignQuotaTemplateFromNamespace(namespaceID uuid.UUID) error
+	UnassignQuotaTemplatesByNamespaceQuotaIDs(namespaceQuotaIDs []uuid.UUID) error
 	IsAssigned(namespaceID uuid.UUID, quotaID uuid.UUID) (bool, error)
 	DeleteNamespaceQuotaTemplate(templateID uuid.UUID) error
 	HasNamespacesUsingTemplate(templateID uuid.UUID) (bool, error)

@@ -144,38 +144,53 @@ func (u *QuotaUsecase) createOrganizationQuota(request *dtos.CreateOrganizationQ
 }
 
 func (u *QuotaUsecase) DeleteOrganizationQuota(quotaID uuid.UUID, userID uuid.UUID) error {
-	// Get organization quota to check if it exists
 	orgQuota, err := u.quotaRepo.GetOrgQuotaByID(quotaID)
 	if err != nil {
 		return apiError.NewNotFoundError(fmt.Errorf("organization quota not found: %w", err))
 	}
 
-	// Check if user is admin of the FROM organization (the one giving the quota)
 	if err := u.isOrgAdmin(orgQuota.FromOrgID, userID); err != nil {
 		return err
 	}
 
-	// Check if there are any project quotas using this organization quota
-	hasProjectQuotas, err := u.quotaRepo.HasProjectQuotasByOrgQuotaID(quotaID)
+	// Cascading soft-delete: org quota -> project quotas -> namespace quotas -> resource quantities
+	// 1. Get all child project quotas and cascade delete each
+	projectQuotaIDs, err := u.quotaRepo.SoftDeleteProjectQuotasByOrgQuotaID(quotaID)
 	if err != nil {
-		return apiError.NewInternalServerError(fmt.Errorf("failed to check project quotas: %w", err))
+		return apiError.NewInternalServerError(fmt.Errorf("failed to cascade delete project quotas: %w", err))
 	}
 
-	if hasProjectQuotas {
-		return apiError.NewBadRequestError(errors.New("cannot delete organization quota with existing project quotas. Please delete all project quotas first"))
+	for _, pqID := range projectQuotaIDs {
+		// Cascade delete namespace quotas under each project quota
+		nsQuotaIDs, err := u.quotaRepo.SoftDeleteNamespaceQuotasByProjectQuotaID(pqID)
+		if err != nil {
+			return apiError.NewInternalServerError(fmt.Errorf("failed to cascade delete namespace quotas: %w", err))
+		}
+
+		// Clean up template associations for deleted namespace quotas
+		if err := u.quotaRepo.UnassignQuotaTemplatesByNamespaceQuotaIDs(nsQuotaIDs); err != nil {
+			return apiError.NewInternalServerError(fmt.Errorf("failed to clean up quota template associations: %w", err))
+		}
+
+		// Soft-delete resource quantities for each namespace quota
+		for _, nsID := range nsQuotaIDs {
+			if err := u.quotaRepo.DeleteResourceQuantitiesByNamespaceQuotaID(nsID); err != nil {
+				return apiError.NewInternalServerError(fmt.Errorf("failed to delete namespace quota resource quantities: %w", err))
+			}
+		}
+
+		// Soft-delete resource quantities for the project quota
+		if err := u.quotaRepo.SoftDeleteResourceQuantitiesByProjectQuotaID(pqID); err != nil {
+			return apiError.NewInternalServerError(fmt.Errorf("failed to delete project quota resource quantities: %w", err))
+		}
 	}
 
-	// Check if there is any active usage (resource quantities > 0)
-	hasActiveUsage, err := u.quotaRepo.HasActiveUsageByOrgQuotaID(quotaID)
-	if err != nil {
-		return apiError.NewInternalServerError(fmt.Errorf("failed to check active usage: %w", err))
+	// Soft-delete resource quantities for the org quota itself
+	if err := u.quotaRepo.SoftDeleteResourceQuantitiesByOrgQuotaID(quotaID); err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to delete org quota resource quantities: %w", err))
 	}
 
-	if hasActiveUsage {
-		return apiError.NewBadRequestError(errors.New("cannot delete organization quota with active usage. Please release all resources first"))
-	}
-
-	// Soft delete the organization quota (and cascade to resource properties/quantities via soft delete)
+	// Finally, soft-delete the organization quota
 	if err := u.quotaRepo.DeleteOrganizationQuota(quotaID); err != nil {
 		return apiError.NewInternalServerError(fmt.Errorf("failed to delete organization quota: %w", err))
 	}

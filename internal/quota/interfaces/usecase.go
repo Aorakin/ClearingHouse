@@ -10,13 +10,16 @@ type QuotaUsecase interface {
 	CreateOrganizationQuota(request *dtos.CreateOrganizationQuotaRequest, userID uuid.UUID) (*models.OrganizationQuota, error)
 	GetOrganizationQuota(fromOrgID uuid.UUID, toOrgID uuid.UUID, userID uuid.UUID) ([]models.OrganizationQuota, error)
 	GetOrganizationQuotasByOrgID(orgID uuid.UUID, userID uuid.UUID) ([]models.OrganizationQuota, error)
+	UpdateOrganizationQuota(quotaID uuid.UUID, request *dtos.UpdateOrganizationQuotaRequest, userID uuid.UUID) (*models.OrganizationQuota, error)
 	DeleteOrganizationQuota(quotaID uuid.UUID, userID uuid.UUID) error
 
 	GetNamespaceQuotaInProject(userID uuid.UUID, projectID uuid.UUID) ([]dtos.NamespaceQuotaResponse, error)
 	CreateProjectQuota(request *dtos.CreateProjectQuotaRequest, userID uuid.UUID) (*models.ProjectQuota, error)
 	GetProjectQuotas(projectID uuid.UUID, userID uuid.UUID) ([]models.ProjectQuota, error)
 	GetProjectQuotaTotal(projectID uuid.UUID, userID uuid.UUID) (interface{}, error)
+	UpdateProjectQuota(quotaID uuid.UUID, request *dtos.UpdateProjectQuotaRequest, userID uuid.UUID) (*models.ProjectQuota, error)
 	CreateInternalProjectQuota(request *dtos.CreateInternalProjectQuotaRequest, userID uuid.UUID) (*models.ProjectQuota, error)
+	UpdateInternalProjectQuota(quotaID uuid.UUID, request *dtos.UpdateInternalProjectQuotaRequest, userID uuid.UUID) (*models.ProjectQuota, error)
 	DeleteProjectQuota(quotaID uuid.UUID, userID uuid.UUID) error
 
 	CreateNamespaceQuota(request *dtos.CreateNamespaceQuotaRequest, userID uuid.UUID) (*models.NamespaceQuota, error)

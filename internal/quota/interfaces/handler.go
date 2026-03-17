@@ -6,6 +6,7 @@ type QuotaHandler interface {
 	CreateOrganizationQuota() gin.HandlerFunc
 	GetOrganizationQuota() gin.HandlerFunc
 	GetOrganizationQuotasByOrgID() gin.HandlerFunc
+	UpdateOrganizationQuota() gin.HandlerFunc
 	DeleteOrganizationQuota() gin.HandlerFunc
 
 	CreateProjectQuota() gin.HandlerFunc
@@ -13,6 +14,8 @@ type QuotaHandler interface {
 	GetProjectQuotas() gin.HandlerFunc
 	GetProjectQuotaTotal() gin.HandlerFunc
 	GetNamespaceQuotaInProject() gin.HandlerFunc
+	UpdateProjectQuota() gin.HandlerFunc
+	UpdateInternalProjectQuota() gin.HandlerFunc
 	DeleteProjectQuota() gin.HandlerFunc
 
 	CreateNamespaceQuota() gin.HandlerFunc
