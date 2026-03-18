@@ -252,11 +252,9 @@ func (u *OrganizationUsecase) DeleteOrganization(orgID uuid.UUID, userID uuid.UU
 		return apierror.NewInternalServerError(err)
 	}
 
-	// Delete all child projects first so organization deletion cascades from top to lower levels.
-	for _, project := range org.Projects {
-		if err := u.projectRepo.DeleteProject(project.ID); err != nil {
-			return apierror.NewInternalServerError(err)
-		}
+	// Prevent deletion if organization has projects
+	if len(org.Projects) > 0 {
+		return apierror.NewBadRequestError(fmt.Errorf("cannot delete organization with existing projects. Please delete all projects first"))
 	}
 
 	// Prevent deletion if organization has resource pools
