@@ -1,0 +1,3 @@
+คีย์,ชื่อแอททริบิวต์,ชนิดตัวแปร,รายละเอียด
+FK,namespace_quota_id,uuid,FK -> namespace_quotas.id
+FK,namespace_quota_template_id,uuid,FK -> namespace_quota_templates.id

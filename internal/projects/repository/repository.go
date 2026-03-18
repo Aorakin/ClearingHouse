@@ -88,7 +88,19 @@ func (r *ProjectRepository) UpdateAdmins(project *models.Project) error {
 }
 
 func (r *ProjectRepository) DeleteProject(id uuid.UUID) error {
-	return r.db.Delete(&models.Project{}, "id = ?", id).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		project := models.Project{BaseModel: models.BaseModel{ID: id}}
+
+		if err := tx.Model(&project).Association("Members").Clear(); err != nil {
+			return err
+		}
+
+		if err := tx.Model(&project).Association("Admins").Clear(); err != nil {
+			return err
+		}
+
+		return tx.Delete(&project).Error
+	})
 }
 
 func (r *ProjectRepository) HasProjectQuotas(projectID uuid.UUID) (bool, error) {

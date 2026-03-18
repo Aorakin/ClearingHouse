@@ -1,0 +1,8 @@
+คีย์,ชื่อแอททริบิวต์,ชนิดตัวแปร,รายละเอียด
+PK,id,uuid,id ของ resource_property
+,created_at,timestamptz,วันที่สร้างข้อมูล
+,updated_at,timestamptz,วันที่อัปเดตข้อมูลล่าสุด
+,deleted_at,timestamptz,วันที่ลบข้อมูล (soft delete)
+FK,resource_id,uuid,FK -> resources.id
+,price,real,ราคาต่อหน่วยทรัพยากร
+,max_duration,integer,ระยะเวลาใช้งานสูงสุด

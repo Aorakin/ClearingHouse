@@ -53,10 +53,19 @@ func (r *OrganizationRepository) UpdateOrganization(org *models.Organization) (*
 	return org, nil
 }
 func (r *OrganizationRepository) DeleteOrganization(id uuid.UUID) error {
-	if err := r.db.Delete(&models.Organization{}, "id = ?", id).Error; err != nil {
-		return err
-	}
-	return nil
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		org := models.Organization{BaseModel: models.BaseModel{ID: id}}
+
+		if err := tx.Model(&org).Association("Members").Clear(); err != nil {
+			return err
+		}
+
+		if err := tx.Model(&org).Association("Admins").Clear(); err != nil {
+			return err
+		}
+
+		return tx.Delete(&org).Error
+	})
 }
 
 func (r *OrganizationRepository) GetOrganizations() ([]models.Organization, error) {

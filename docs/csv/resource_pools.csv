@@ -1,0 +1,8 @@
+คีย์,ชื่อแอททริบิวต์,ชนิดตัวแปร,รายละเอียด
+PK,id,uuid,id ของ resource_pool
+,created_at,timestamptz,วันที่สร้างข้อมูล
+,updated_at,timestamptz,วันที่อัปเดตข้อมูลล่าสุด
+,deleted_at,timestamptz,วันที่ลบข้อมูล (soft delete)
+,name,varchar,ชื่อกลุ่มทรัพยากร
+FK,organization_id,uuid,FK -> organizations.id
+,glidelet_urn,varchar,รหัสอ้างอิงจากระบบภายนอก

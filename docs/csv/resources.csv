@@ -1,0 +1,9 @@
+คีย์,ชื่อแอททริบิวต์,ชนิดตัวแปร,รายละเอียด
+PK,id,uuid,id ของ resource
+,created_at,timestamptz,วันที่สร้างข้อมูล
+,updated_at,timestamptz,วันที่อัปเดตข้อมูลล่าสุด
+,deleted_at,timestamptz,วันที่ลบข้อมูล (soft delete)
+,name,varchar,ชื่อทรัพยากร
+,quantity,integer,จำนวนทรัพยากร
+FK,resource_type_id,uuid,FK -> resource_types.id
+FK,node_id,uuid,FK -> resource_nodes.id

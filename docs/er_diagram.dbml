@@ -1,0 +1,187 @@
+// DBML for dbdiagram.io
+// Source of truth: internal/models structs and gorm tags.
+
+Table users {
+  id uuid [pk]
+  email varchar
+  first_name varchar
+  last_name varchar
+  is_super_admin boolean [default: false]
+  namespace_id uuid
+}
+
+Table organizations {
+  id uuid [pk]
+  name varchar
+  description varchar
+  domain varchar
+}
+
+Table projects {
+  id uuid [pk]
+  name varchar
+  description varchar
+  organization_id uuid [not null]
+}
+
+Table namespaces {
+  id uuid [pk]
+  name varchar
+  description varchar
+  credit real
+  project_id uuid
+  organization_id uuid [not null]
+  quota_template_id uuid
+  owner_id uuid
+}
+
+Table resource_types {
+  id uuid [pk]
+  name varchar
+  unit varchar
+}
+
+Table resource_pools {
+  id uuid [pk]
+  name varchar [not null]
+  organization_id uuid [not null]
+  glidelet_urn varchar
+}
+
+Table resource_nodes {
+  id uuid [pk]
+  name varchar [not null]
+  display_name varchar
+  resource_pool_id uuid [not null]
+}
+
+Table resources {
+  id uuid [pk]
+  name varchar
+  quantity int
+  resource_type_id uuid [not null]
+  node_id uuid
+}
+
+Table resource_properties {
+  id uuid [pk]
+  resource_id uuid [not null]
+  price real [not null]
+  max_duration int
+}
+
+Table organization_quotas {
+  id uuid [pk]
+  name varchar
+  description varchar
+  node_id uuid [not null]
+  from_organization_id uuid [not null]
+  to_organization_id uuid [not null]
+}
+
+Table project_quotas {
+  id uuid [pk]
+  name varchar
+  description varchar
+  organization_id uuid
+  organization_quota_id uuid
+  project_id uuid [not null]
+  node_id uuid [not null]
+}
+
+Table namespace_quotas {
+  id uuid [pk]
+  name varchar
+  description varchar
+  project_id uuid
+  project_quota_id uuid
+  node_id uuid [not null]
+}
+
+Table namespace_quota_templates {
+  id uuid [pk]
+  name varchar
+  description varchar
+  project_id uuid [not null]
+}
+
+Table resource_quantities {
+  id uuid [pk]
+  organization_quota_id uuid
+  project_quota_id uuid
+  namespace_quota_id uuid
+  quantity int
+  resource_property_id uuid [not null]
+}
+
+Table tickets {
+  id uuid [pk]
+  name varchar
+  status varchar
+  start_time timestamptz
+  end_time timestamptz
+  cancel_time timestamptz
+  duration int
+  price real
+  glidelet_urn varchar
+  owner_id uuid [not null]
+  namespace_id uuid [not null]
+  node_id uuid [not null]
+  resource_pool_id uuid [not null]
+  quota_id uuid [not null]
+  redeem_timeout int
+}
+
+Table token_blacklist {
+  id bigint [pk, increment]
+  token text [not null, unique]
+  expires_at timestamptz [not null]
+  created_at timestamptz
+}
+
+Ref: users.namespace_id > namespaces.id
+
+Ref: projects.organization_id > organizations.id
+
+Ref: namespaces.project_id > projects.id
+Ref: namespaces.organization_id > organizations.id
+Ref: namespaces.quota_template_id > namespace_quota_templates.id
+Ref: namespaces.owner_id > users.id
+
+Ref: resource_pools.organization_id > organizations.id
+Ref: resource_nodes.resource_pool_id > resource_pools.id
+Ref: resources.resource_type_id > resource_types.id
+Ref: resources.node_id > resource_nodes.id
+Ref: resource_properties.resource_id > resources.id
+
+Ref: organization_quotas.node_id > resource_nodes.id
+Ref: organization_quotas.from_organization_id > organizations.id
+Ref: organization_quotas.to_organization_id > organizations.id
+
+Ref: project_quotas.organization_id > organizations.id
+Ref: project_quotas.organization_quota_id > organization_quotas.id
+Ref: project_quotas.project_id > projects.id
+Ref: project_quotas.node_id > resource_nodes.id
+
+Ref: namespace_quotas.project_id > projects.id
+Ref: namespace_quotas.project_quota_id > project_quotas.id
+Ref: namespace_quotas.node_id > resource_nodes.id
+
+Ref: namespace_quota_templates.project_id > projects.id
+
+Ref: resource_quantities.organization_quota_id > organization_quotas.id
+Ref: resource_quantities.project_quota_id > project_quotas.id
+Ref: resource_quantities.namespace_quota_id > namespace_quotas.id
+Ref: resource_quantities.resource_property_id > resource_properties.id
+
+Ref: tickets.owner_id > users.id
+Ref: tickets.namespace_id > namespaces.id
+Ref: tickets.node_id > resource_nodes.id
+Ref: tickets.resource_pool_id > resource_pools.id
+Ref: tickets.quota_id > namespace_quotas.id
+
+Ref: tickets.id <> resources.id
+Ref: users.id <> organizations.id
+Ref: users.id <> projects.id
+Ref: users.id <> namespaces.id
+Ref: namespace_quota_templates.id <> namespace_quotas.id
