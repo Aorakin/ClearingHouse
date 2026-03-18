@@ -379,6 +379,57 @@ func (u *OrganizationUsecase) RemoveMembers(request *dtos.RemoveMembersRequest, 
 		return nil, apierror.NewInternalServerError(err)
 	}
 
+	// Keep hierarchy consistent: removing an org member also removes them
+	// from all project memberships/admins and namespace memberships in the org.
+	projects, err := u.projectRepo.GetProjectsByOrganizationID(request.OrganizationID)
+	if err != nil {
+		return nil, apierror.NewInternalServerError(err)
+	}
+
+	for _, project := range projects {
+		updatedProjectMembers := make([]models.User, 0, len(project.Members))
+		for _, member := range project.Members {
+			if _, shouldRemove := removeMap[member.ID]; !shouldRemove {
+				updatedProjectMembers = append(updatedProjectMembers, member)
+			}
+		}
+		project.Members = updatedProjectMembers
+
+		updatedProjectAdmins := make([]models.User, 0, len(project.Admins))
+		for _, admin := range project.Admins {
+			if _, shouldRemove := removeMap[admin.ID]; !shouldRemove {
+				updatedProjectAdmins = append(updatedProjectAdmins, admin)
+			}
+		}
+		project.Admins = updatedProjectAdmins
+
+		if err := u.projectRepo.UpdateMembers(&project); err != nil {
+			return nil, apierror.NewInternalServerError(err)
+		}
+		if err := u.projectRepo.UpdateAdmins(&project); err != nil {
+			return nil, apierror.NewInternalServerError(err)
+		}
+
+		namespaces, err := u.namespaceRepo.GetAllNamespacesByProjectID(project.ID)
+		if err != nil {
+			return nil, apierror.NewInternalServerError(err)
+		}
+
+		for _, namespace := range namespaces {
+			updatedNamespaceMembers := make([]models.User, 0, len(namespace.Members))
+			for _, member := range namespace.Members {
+				if _, shouldRemove := removeMap[member.ID]; !shouldRemove {
+					updatedNamespaceMembers = append(updatedNamespaceMembers, member)
+				}
+			}
+
+			namespace.Members = updatedNamespaceMembers
+			if err := u.namespaceRepo.UpdateMembers(&namespace); err != nil {
+				return nil, apierror.NewInternalServerError(err)
+			}
+		}
+	}
+
 	return org, nil
 }
 
