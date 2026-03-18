@@ -1,3 +1,0 @@
-คีย์,ชื่อแอททริบิวต์,ชนิดตัวแปร,รายละเอียด
-FK,namespace_id,uuid,FK -> namespaces.id
-FK,user_id,uuid,FK -> users.id

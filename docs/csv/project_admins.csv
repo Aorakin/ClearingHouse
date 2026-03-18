@@ -1,3 +1,0 @@
-คีย์,ชื่อแอททริบิวต์,ชนิดตัวแปร,รายละเอียด
-FK,project_id,uuid,FK -> projects.id
-FK,user_id,uuid,FK -> users.id

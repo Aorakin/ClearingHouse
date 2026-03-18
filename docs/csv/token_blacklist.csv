@@ -1,5 +1,0 @@
-คีย์,ชื่อแอททริบิวต์,ชนิดตัวแปร,รายละเอียด
-PK,id,bigserial,id ของ token blacklist
-,token,text,ค่า token ที่ถูก blacklist
-,expires_at,timestamptz,เวลาหมดอายุของ token
-,created_at,timestamptz,วันที่สร้างข้อมูล
