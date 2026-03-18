@@ -255,6 +255,27 @@ func (u *ProjectUsecase) RemoveMembers(request *dtos.RemoveMembersRequest, userI
 		return nil, apiError.NewInternalServerError(err.Error())
 	}
 
+	// Keep hierarchy consistent: removing a project member also removes
+	// the same user from all namespace memberships in that project.
+	namespaces, err := u.namespaceRepo.GetAllNamespacesByProjectID(request.ProjectID)
+	if err != nil {
+		return nil, apiError.NewInternalServerError(err.Error())
+	}
+
+	for _, namespace := range namespaces {
+		updatedNamespaceMembers := make([]models.User, 0, len(namespace.Members))
+		for _, member := range namespace.Members {
+			if _, shouldRemove := removeMap[member.ID]; !shouldRemove {
+				updatedNamespaceMembers = append(updatedNamespaceMembers, member)
+			}
+		}
+
+		namespace.Members = updatedNamespaceMembers
+		if err := u.namespaceRepo.UpdateMembers(&namespace); err != nil {
+			return nil, apiError.NewInternalServerError(err.Error())
+		}
+	}
+
 	return project, nil
 }
 
