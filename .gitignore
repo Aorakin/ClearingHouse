@@ -40,5 +40,9 @@ docker-compose.override.yml
 
 /tmp/*
 
+# Generated/exported documentation assets
+/docs/csv/
+/docs/sequence_diagram/
+
 *.pem
 secret.json
