@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ClearingHouse/helper"
 	namespaceInterfaces "github.com/ClearingHouse/internal/namespaces/interfaces"
 	orgInterfaces "github.com/ClearingHouse/internal/organizations/interfaces"
 	projInterfaces "github.com/ClearingHouse/internal/projects/interfaces"
@@ -13,6 +12,7 @@ import (
 	resourcesInterfaces "github.com/ClearingHouse/internal/resources/interfaces"
 	userInterfaces "github.com/ClearingHouse/internal/users/interfaces"
 	apiError "github.com/ClearingHouse/pkg/api_error"
+	helper "github.com/ClearingHouse/pkg/membership"
 	"github.com/google/uuid"
 )
 

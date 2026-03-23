@@ -3,13 +3,13 @@ package usecase
 import (
 	"fmt"
 
-	"github.com/ClearingHouse/helper"
 	namespaceInterfaces "github.com/ClearingHouse/internal/namespaces/interfaces"
 	quotaInterfaces "github.com/ClearingHouse/internal/quota/interfaces"
 	resourceInterfaces "github.com/ClearingHouse/internal/resources/interfaces"
 	"github.com/ClearingHouse/internal/tickets/interfaces"
 	userInterfaces "github.com/ClearingHouse/internal/users/interfaces"
 	apiError "github.com/ClearingHouse/pkg/api_error"
+	helper "github.com/ClearingHouse/pkg/membership"
 	"github.com/google/uuid"
 )
 

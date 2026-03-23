@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ClearingHouse/helper"
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/quota/dtos"
 	apiError "github.com/ClearingHouse/pkg/api_error"
+	helper "github.com/ClearingHouse/pkg/membership"
 	"github.com/google/uuid"
 )
 

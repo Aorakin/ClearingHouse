@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ClearingHouse/helper"
 	"github.com/ClearingHouse/internal/models"
 	"github.com/ClearingHouse/internal/namespaces/dtos"
 	"github.com/ClearingHouse/internal/namespaces/interfaces"
@@ -12,6 +11,7 @@ import (
 	quotaInterfaces "github.com/ClearingHouse/internal/quota/interfaces"
 	userInterfaces "github.com/ClearingHouse/internal/users/interfaces"
 	apiError "github.com/ClearingHouse/pkg/api_error"
+	helper "github.com/ClearingHouse/pkg/membership"
 	"github.com/google/uuid"
 )
 

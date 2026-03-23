@@ -36,10 +36,6 @@ import (
 	TicketRepository "github.com/ClearingHouse/internal/tickets/repository"
 	TicketUsecase "github.com/ClearingHouse/internal/tickets/usecase"
 
-	PrivateNamespaceHttp "github.com/ClearingHouse/internal/private_namespaces/delivery/http"
-	PrivateNamespaceRepository "github.com/ClearingHouse/internal/private_namespaces/repository"
-	PrivateNamespaceUsecase "github.com/ClearingHouse/internal/private_namespaces/usecase"
-
 	AdminHttp "github.com/ClearingHouse/internal/admin/delivery/http"
 	AdminUsecase "github.com/ClearingHouse/internal/admin/usecase"
 )
@@ -62,7 +58,6 @@ func (a *App) MapHandlers() error {
 	authGroup := a.gin.Group("/auth")
 	userGroup := a.gin.Group("/users")
 	ticketGroup := a.gin.Group("/tickets")
-	privNamespaceGroup := namespacesGroup.Group("/private")
 	adminGroup := a.gin.Group("/admin")
 
 	orgRepo := OrganizationRepository.NewOrganizationRepository(a.postgresDB)
@@ -73,7 +68,6 @@ func (a *App) MapHandlers() error {
 	userRepo := UserRepository.NewUsersRepository(a.postgresDB)
 	tokenBlacklistRepo := AuthRepository.NewTokenBlacklistRepository(a.postgresDB)
 	ticketRepo := TicketRepository.NewTicketRepository(a.postgresDB)
-	privNamespaceRepo := PrivateNamespaceRepository.NewPrivateNamespaceRepository(a.postgresDB)
 
 	orgUsecase := OrganizationUsecase.NewOrganizationUsecase(orgRepo, userRepo, quotaRepo, projRepo, namespaceRepo)
 	resourceUsecase := ResourceUsecase.NewResourceUsecase(resourcePoolRepo, resourceRepo, resourceTypeRepo)
@@ -83,7 +77,6 @@ func (a *App) MapHandlers() error {
 	userUsecase := UserUsecase.NewUsersUsecase(userRepo)
 	authUsecase := AuthUsecase.NewAuthUsecase(userRepo, tokenBlacklistRepo, orgRepo)
 	ticketUsecase := TicketUsecase.NewTicketUsecase(namespaceRepo, ticketRepo, quotaRepo, userRepo, resourceRepo)
-	privNamespaceUsecase := PrivateNamespaceUsecase.NewPrivateNamespaceUsecase(privNamespaceRepo, namespaceRepo, orgRepo, userRepo, quotaRepo, resourceRepo)
 	adminUsecase := AdminUsecase.NewAdminUsecase(userRepo)
 
 	orgHandler := OrganizationHttp.NewOrganizationHandler(orgUsecase)
@@ -94,7 +87,6 @@ func (a *App) MapHandlers() error {
 	userHandler := UserHttp.NewUsersHandler(userUsecase)
 	authHandler := AuthHttp.NewAuthHandler(authUsecase)
 	ticketHandler := TicketHttp.NewTicketHandler(ticketUsecase)
-	privNamespaceHandler := PrivateNamespaceHttp.NewPrivateNamespaceHandler(privNamespaceUsecase, namespaceUsecase)
 	adminHandler := AdminHttp.NewAdminHandler(adminUsecase)
 
 	OrganizationHttp.MapOrganizationRoutes(organizationsGroup, orgHandler)
@@ -105,7 +97,6 @@ func (a *App) MapHandlers() error {
 	UserHttp.MapUsersRoutes(userGroup, userHandler)
 	AuthHttp.MapAuthRoutes(authGroup, authHandler)
 	TicketHttp.MapTicketRoutes(ticketGroup, ticketHandler)
-	PrivateNamespaceHttp.MapPrivateNamespaceRoutes(privNamespaceGroup, privNamespaceHandler)
 	AdminHttp.MapAdminRoutes(adminGroup, adminHandler)
 
 	return nil
