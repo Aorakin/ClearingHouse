@@ -207,12 +207,11 @@ func (h *OrganizationHandler) UpdateOrganization() gin.HandlerFunc {
 func (h *OrganizationHandler) GetMembers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("userID").(uuid.UUID)
-		isSuperAdmin := c.MustGet("isSuperAdmin").(bool)
 		if userID == uuid.Nil {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewUnauthorizedError("unauthorized")))
 			return
 		}
-		members, err := h.organizationUsecase.GetMembers(isSuperAdmin)
+		members, err := h.organizationUsecase.GetMembers()
 		if err != nil {
 			c.JSON(response.ErrorResponseBuilder(err))
 			return
