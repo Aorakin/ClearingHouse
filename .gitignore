@@ -46,3 +46,4 @@ docker-compose.override.yml
 
 *.pem
 secret.json
+docs/sequence_diagram_crucial.csv

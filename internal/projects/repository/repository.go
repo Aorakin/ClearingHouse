@@ -156,7 +156,7 @@ func (r *ProjectRepository) GetProjectQuotaByType(projectID uuid.UUID, userID uu
 		Joins("JOIN namespace_quota_templates nqt ON nqt.id = nqtr.namespace_quota_template_id").
 		Joins("JOIN namespaces ns ON ns.quota_template_id = nqt.id").
 		Joins("JOIN namespace_members nm ON nm.namespace_id = ns.id").
-		Where("ns.project_id = ? AND nm.user_id = ?", projectID, userID).
+		Where("ns.project_id = ? AND nm.user_id = ? AND ns.deleted_at IS NULL", projectID, userID).
 		Preload("Resources.ResourceProp.Resource.ResourceType").
 		Find(&quotas).Error; err != nil {
 		return nil, err
@@ -201,7 +201,7 @@ func (r *ProjectRepository) GetProjectUsageByType(projectID uuid.UUID, userID uu
 	if err := r.db.
 		Joins("JOIN namespaces ns ON ns.id = tickets.namespace_id").
 		Joins("JOIN namespace_members nm ON nm.namespace_id = ns.id").
-		Where("ns.project_id = ? AND nm.user_id = ? AND status IN ?", projectID, userID, enum.UsingStatuses).
+		Where("ns.project_id = ? AND nm.user_id = ? AND ns.deleted_at IS NULL AND tickets.deleted_at IS NULL AND status IN ?", projectID, userID, enum.UsingStatuses).
 		Preload("Resources.Resource.ResourceType").
 		Find(&tickets).Error; err != nil {
 		return nil, err
