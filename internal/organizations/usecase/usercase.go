@@ -433,10 +433,7 @@ func (u *OrganizationUsecase) RemoveMembers(request *dtos.RemoveMembersRequest, 
 	return org, nil
 }
 
-func (u *OrganizationUsecase) GetMembers(isSuperAdmin bool) ([]models.User, error) {
-	if !isSuperAdmin {
-		return nil, apierror.NewForbiddenError("super admin access required")
-	}
+func (u *OrganizationUsecase) GetMembers() ([]models.User, error) {
 	users, err := u.orgRepo.GetMembers()
 	if err != nil {
 		return nil, apierror.NewInternalServerError(err)
