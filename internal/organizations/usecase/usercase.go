@@ -268,15 +268,15 @@ func (u *OrganizationUsecase) DeleteOrganization(orgID uuid.UUID, userID uuid.UU
 		return apierror.NewBadRequestError(fmt.Errorf("cannot delete organization with given quotas to other organizations. Please revoke all given quotas first"))
 	}
 
-	// // Check if organization has any active quota usage
-	// hasUsage, err := u.quotaRepo.HasActiveQuotaUsage(orgID)
-	// if err != nil {
-	// 	return apierror.NewInternalServerError(err)
-	// }
+	// Check if organization has any active quota usage
+	hasUsage, err := u.quotaRepo.HasActiveQuotaUsage(orgID)
+	if err != nil {
+		return apierror.NewInternalServerError(err)
+	}
 
-	// if hasUsage {
-	// 	return apierror.NewBadRequestError(fmt.Errorf("cannot delete organization with active quota usage. Please release all resources first"))
-	// }
+	if hasUsage {
+		return apierror.NewBadRequestError(fmt.Errorf("cannot delete organization with active quota usage. Please release all resources first"))
+	}
 
 	// Delete all quotas received by this organization (ToOrgID = orgID)
 	if err := u.quotaRepo.DeleteOrganizationQuotasByOrgID(orgID); err != nil {
