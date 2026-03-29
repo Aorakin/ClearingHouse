@@ -365,14 +365,14 @@ func (u *NamespaceUsecase) DeleteNamespace(namespaceID uuid.UUID, userID uuid.UU
 		}
 	}
 
-	// Check if namespace has active tickets
-	hasActiveTickets, err := u.namespaceRepo.HasActiveTicketsByNamespaceID(namespaceID)
-	if err != nil {
-		return apiError.NewInternalServerError(err)
-	}
-	if hasActiveTickets {
-		return apiError.NewBadRequestError("cannot delete namespace: active tickets are still using this namespace")
-	}
+	// // Check if namespace has active tickets
+	// hasActiveTickets, err := u.namespaceRepo.HasActiveTicketsByNamespaceID(namespaceID)
+	// if err != nil {
+	// 	return apiError.NewInternalServerError(err)
+	// }
+	// if hasActiveTickets {
+	// 	return apiError.NewBadRequestError("cannot delete namespace: active tickets are still using this namespace")
+	// }
 
 	if err := u.namespaceRepo.DeleteNamespace(namespaceID); err != nil {
 		return apiError.NewInternalServerError(err)
