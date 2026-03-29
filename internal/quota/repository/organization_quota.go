@@ -92,7 +92,7 @@ func (r *QuotaRepository) DeleteOrganizationQuotasByOrgID(orgID uuid.UUID) error
 func (r *QuotaRepository) HasActiveQuotaUsage(orgID uuid.UUID) (bool, error) {
 	var count int64
 
-	err := r.db.Table("resource_quantities rq").
+	err := r.db.Debug().Table("resource_quantities rq").
 		Joins("JOIN project_quota pq ON pq.id = rq.project_quota_id").
 		Joins("JOIN organization_quota oq ON oq.id = pq.organization_quota_id").
 		Where("oq.to_org_id = ? AND rq.quantity > 0", orgID).
