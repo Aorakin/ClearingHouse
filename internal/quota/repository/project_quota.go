@@ -39,6 +39,18 @@ func (r *QuotaRepository) GetProjectQuotaByID(id uuid.UUID) (*models.ProjectQuot
 	return &projectQuota, nil
 }
 
+func (r *QuotaRepository) GetInternalProjectQuotasByOrgAndNode(orgID uuid.UUID, nodeID uuid.UUID) ([]models.ProjectQuota, error) {
+	var projectQuotas []models.ProjectQuota
+	err := r.db.
+		Preload("Resources.ResourceProp").
+		Where("organization_id = ? AND node_id = ? AND organization_quota_id IS NULL", orgID, nodeID).
+		Find(&projectQuotas).Error
+	if err != nil {
+		return nil, err
+	}
+	return projectQuotas, nil
+}
+
 func (r *QuotaRepository) DeleteProjectQuota(quotaID uuid.UUID) error {
 	return r.db.Delete(&models.ProjectQuota{}, "id = ?", quotaID).Error
 }

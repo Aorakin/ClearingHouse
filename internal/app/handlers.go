@@ -70,7 +70,7 @@ func (a *App) MapHandlers() error {
 	ticketRepo := TicketRepository.NewTicketRepository(a.postgresDB)
 
 	orgUsecase := OrganizationUsecase.NewOrganizationUsecase(orgRepo, userRepo, quotaRepo, projRepo, namespaceRepo)
-	resourceUsecase := ResourceUsecase.NewResourceUsecase(resourcePoolRepo, resourceRepo, resourceTypeRepo)
+	resourceUsecase := ResourceUsecase.NewResourceUsecase(resourcePoolRepo, resourceRepo, resourceTypeRepo, quotaRepo)
 	quotaUsecase := QuotaUsecase.NewQuotaUsecase(quotaRepo, resourceRepo, namespaceRepo, orgRepo, projRepo, userRepo)
 	projUsecase := ProjectUsecase.NewProjectUsecase(projRepo, orgRepo, userRepo, namespaceRepo)
 	namespaceUsecase := NamespaceUsecase.NewNamespaceUsecase(namespaceRepo, userRepo, projRepo, quotaRepo)

@@ -1,7 +1,10 @@
 package usecase
 
 import (
+	"fmt"
+
 	"github.com/ClearingHouse/internal/models"
+	quotaInterfaces "github.com/ClearingHouse/internal/quota/interfaces"
 	"github.com/ClearingHouse/internal/resources/dtos"
 	"github.com/ClearingHouse/internal/resources/interfaces"
 	apiError "github.com/ClearingHouse/pkg/api_error"
@@ -13,13 +16,15 @@ type ResourceUsecase struct {
 	poolRepo         interfaces.ResourcePoolRepository
 	resourceRepo     interfaces.ResourceRepository
 	resourceTypeRepo interfaces.ResourceTypeRepository
+	quotaRepo        quotaInterfaces.QuotaRepository
 }
 
-func NewResourceUsecase(poolRepo interfaces.ResourcePoolRepository, resourceRepo interfaces.ResourceRepository, resourceTypeRepo interfaces.ResourceTypeRepository) interfaces.ResourceUsecase {
+func NewResourceUsecase(poolRepo interfaces.ResourcePoolRepository, resourceRepo interfaces.ResourceRepository, resourceTypeRepo interfaces.ResourceTypeRepository, quotaRepo quotaInterfaces.QuotaRepository) interfaces.ResourceUsecase {
 	return &ResourceUsecase{
 		poolRepo:         poolRepo,
 		resourceRepo:     resourceRepo,
 		resourceTypeRepo: resourceTypeRepo,
+		quotaRepo:        quotaRepo,
 	}
 }
 
@@ -162,6 +167,7 @@ func (u *ResourceUsecase) UpdateResource(resourceID uuid.UUID, request *dtos.Upd
 	if err != nil {
 		return nil, err
 	}
+	oldQuantity := resource.Quantity
 
 	resource.Quantity = request.Quantity
 	resource.Name = request.Name
@@ -170,6 +176,14 @@ func (u *ResourceUsecase) UpdateResource(resourceID uuid.UUID, request *dtos.Upd
 	if err != nil {
 		return nil, err
 	}
+
+	// Clamp downstream quotas when a resource capacity is reduced.
+	if request.Quantity < oldQuantity {
+		if err := u.cascadeResourceCapacityUpdate(resource.ID, resource.NodeID, request.Quantity); err != nil {
+			return nil, err
+		}
+	}
+
 	return updatedResource, nil
 }
 
@@ -239,6 +253,10 @@ func (u *ResourceUsecase) DeleteResourceNode(nodeID uuid.UUID) error {
 		return apiError.NewBadRequestError("cannot delete resource node with active tickets. Please wait for all tickets to complete")
 	}
 
+	if err := u.cascadeDeleteNodeQuotas(nodeID); err != nil {
+		return err
+	}
+
 	// Soft delete the resource node
 	if err := u.resourceRepo.DeleteResourceNode(nodeID); err != nil {
 		return apiError.NewInternalServerError(err)
@@ -280,6 +298,224 @@ func (u *ResourceUsecase) DeleteResource(resourceID uuid.UUID) error {
 	// Soft delete the resource
 	if err := u.resourceRepo.DeleteResource(resource.ID); err != nil {
 		return apiError.NewInternalServerError(err)
+	}
+
+	return nil
+}
+
+func (u *ResourceUsecase) cascadeResourceCapacityUpdate(resourceID uuid.UUID, nodeID uuid.UUID, newLimit uint) error {
+	node, err := u.resourceRepo.GetResourceNodeByID(nodeID)
+	if err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to get resource node for quota cascade: %w", err))
+	}
+
+	orgQuotas, err := u.quotaRepo.GetOrganizationQuotasByFromOrgAndNode(node.ResourcePool.OrganizationID, nodeID)
+	if err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to get organization quotas for cascade: %w", err))
+	}
+
+	for _, orgQuota := range orgQuotas {
+		if err := u.clampOrgQuotaAndChildren(orgQuota.ID, resourceID, newLimit); err != nil {
+			return err
+		}
+	}
+
+	internalProjectQuotas, err := u.quotaRepo.GetInternalProjectQuotasByOrgAndNode(node.ResourcePool.OrganizationID, nodeID)
+	if err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to get internal project quotas for cascade: %w", err))
+	}
+
+	for _, projectQuota := range internalProjectQuotas {
+		if err := u.clampProjectQuotaAndNamespaces(projectQuota.ID, resourceID, newLimit); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (u *ResourceUsecase) clampOrgQuotaAndChildren(orgQuotaID uuid.UUID, resourceID uuid.UUID, newLimit uint) error {
+	orgResources, err := u.quotaRepo.GetResourceQuantitiesByOrgQuotaID(orgQuotaID)
+	if err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to get organization quota resources: %w", err))
+	}
+
+	for _, rq := range orgResources {
+		if rq.ResourceProp.ResourceID != resourceID {
+			continue
+		}
+
+		if rq.Quantity > newLimit {
+			if err := u.quotaRepo.UpdateResourceQuantity(rq.ID, newLimit); err != nil {
+				return apiError.NewInternalServerError(fmt.Errorf("failed to clamp organization quota resource: %w", err))
+			}
+		}
+
+		if err := u.cascadeOrgQuotaToProjects(orgQuotaID, resourceID, newLimit); err != nil {
+			return err
+		}
+
+		break
+	}
+
+	return nil
+}
+
+func (u *ResourceUsecase) cascadeOrgQuotaToProjects(orgQuotaID uuid.UUID, resourceID uuid.UUID, newLimit uint) error {
+	projectQuotas, err := u.quotaRepo.GetProjectQuotasByOrgQuotaID(orgQuotaID)
+	if err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to get project quotas from organization quota: %w", err))
+	}
+
+	for _, projectQuota := range projectQuotas {
+		if err := u.clampProjectQuotaAndNamespaces(projectQuota.ID, resourceID, newLimit); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (u *ResourceUsecase) clampProjectQuotaAndNamespaces(projectQuotaID uuid.UUID, resourceID uuid.UUID, newLimit uint) error {
+	projectResources, err := u.quotaRepo.GetResourceQuantitiesByProjectQuotaID(projectQuotaID)
+	if err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to get project quota resources: %w", err))
+	}
+
+	for _, rq := range projectResources {
+		if rq.ResourceProp.ResourceID != resourceID {
+			continue
+		}
+
+		if rq.Quantity > newLimit {
+			if err := u.quotaRepo.UpdateResourceQuantity(rq.ID, newLimit); err != nil {
+				return apiError.NewInternalServerError(fmt.Errorf("failed to clamp project quota resource: %w", err))
+			}
+		}
+
+		if err := u.cascadeProjectQuotaToNamespaces(projectQuotaID, resourceID, newLimit); err != nil {
+			return err
+		}
+
+		break
+	}
+
+	return nil
+}
+
+func (u *ResourceUsecase) cascadeProjectQuotaToNamespaces(projectQuotaID uuid.UUID, resourceID uuid.UUID, newLimit uint) error {
+	namespaceQuotas, err := u.quotaRepo.GetNamespaceQuotasByProjectQuotaID(projectQuotaID)
+	if err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to get namespace quotas from project quota: %w", err))
+	}
+
+	for _, namespaceQuota := range namespaceQuotas {
+		for _, rq := range namespaceQuota.Resources {
+			if rq.ResourceProp.ResourceID == resourceID && rq.Quantity > newLimit {
+				if err := u.quotaRepo.UpdateResourceQuantity(rq.ID, newLimit); err != nil {
+					return apiError.NewInternalServerError(fmt.Errorf("failed to clamp namespace quota resource: %w", err))
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (u *ResourceUsecase) cascadeDeleteNodeQuotas(nodeID uuid.UUID) error {
+	node, err := u.resourceRepo.GetResourceNodeByID(nodeID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return apiError.NewNotFoundError("resource node not found")
+		}
+		return apiError.NewInternalServerError(fmt.Errorf("failed to get resource node for quota cleanup: %w", err))
+	}
+
+	orgQuotas, err := u.quotaRepo.GetOrganizationQuotasByFromOrgAndNode(node.ResourcePool.OrganizationID, nodeID)
+	if err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to list organization quotas for node cleanup: %w", err))
+	}
+
+	for _, orgQuota := range orgQuotas {
+		if err := u.deleteOrganizationQuotaCascade(orgQuota.ID); err != nil {
+			return err
+		}
+	}
+
+	internalProjectQuotas, err := u.quotaRepo.GetInternalProjectQuotasByOrgAndNode(node.ResourcePool.OrganizationID, nodeID)
+	if err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to list internal project quotas for node cleanup: %w", err))
+	}
+
+	for _, projectQuota := range internalProjectQuotas {
+		if err := u.deleteProjectQuotaCascade(projectQuota.ID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (u *ResourceUsecase) deleteOrganizationQuotaCascade(orgQuotaID uuid.UUID) error {
+	if err := u.quotaRepo.SoftDeleteResourceQuantitiesByOrgQuotaID(orgQuotaID); err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to delete organization quota resources: %w", err))
+	}
+
+	projectQuotaIDs, err := u.quotaRepo.SoftDeleteProjectQuotasByOrgQuotaID(orgQuotaID)
+	if err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to delete project quotas from organization quota: %w", err))
+	}
+
+	for _, projectQuotaID := range projectQuotaIDs {
+		namespaceQuotaIDs, err := u.quotaRepo.SoftDeleteNamespaceQuotasByProjectQuotaID(projectQuotaID)
+		if err != nil {
+			return apiError.NewInternalServerError(fmt.Errorf("failed to delete namespace quotas from project quota: %w", err))
+		}
+
+		for _, namespaceQuotaID := range namespaceQuotaIDs {
+			if err := u.quotaRepo.DeleteResourceQuantitiesByNamespaceQuotaID(namespaceQuotaID); err != nil {
+				return apiError.NewInternalServerError(fmt.Errorf("failed to delete namespace quota resources: %w", err))
+			}
+		}
+
+		if err := u.quotaRepo.UnassignQuotaTemplatesByNamespaceQuotaIDs(namespaceQuotaIDs); err != nil {
+			return apiError.NewInternalServerError(fmt.Errorf("failed to unassign quota templates from deleted namespace quotas: %w", err))
+		}
+
+		if err := u.quotaRepo.SoftDeleteResourceQuantitiesByProjectQuotaID(projectQuotaID); err != nil {
+			return apiError.NewInternalServerError(fmt.Errorf("failed to delete project quota resources: %w", err))
+		}
+	}
+
+	if err := u.quotaRepo.DeleteOrganizationQuota(orgQuotaID); err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to delete organization quota: %w", err))
+	}
+
+	return nil
+}
+
+func (u *ResourceUsecase) deleteProjectQuotaCascade(projectQuotaID uuid.UUID) error {
+	namespaceQuotaIDs, err := u.quotaRepo.SoftDeleteNamespaceQuotasByProjectQuotaID(projectQuotaID)
+	if err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to delete namespace quotas from project quota: %w", err))
+	}
+
+	for _, namespaceQuotaID := range namespaceQuotaIDs {
+		if err := u.quotaRepo.DeleteResourceQuantitiesByNamespaceQuotaID(namespaceQuotaID); err != nil {
+			return apiError.NewInternalServerError(fmt.Errorf("failed to delete namespace quota resources: %w", err))
+		}
+	}
+
+	if err := u.quotaRepo.UnassignQuotaTemplatesByNamespaceQuotaIDs(namespaceQuotaIDs); err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to unassign quota templates from deleted namespace quotas: %w", err))
+	}
+
+	if err := u.quotaRepo.SoftDeleteResourceQuantitiesByProjectQuotaID(projectQuotaID); err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to delete project quota resources: %w", err))
+	}
+
+	if err := u.quotaRepo.DeleteProjectQuota(projectQuotaID); err != nil {
+		return apiError.NewInternalServerError(fmt.Errorf("failed to delete project quota: %w", err))
 	}
 
 	return nil

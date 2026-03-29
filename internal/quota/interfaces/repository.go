@@ -11,6 +11,7 @@ type QuotaRepository interface {
 	CreateOrgQuota(quota *models.OrganizationQuota) error
 	GetOrganizationByRelationship(fromOrgID uuid.UUID, toOrgID uuid.UUID) ([]models.OrganizationQuota, error)
 	GetOrganizationQuotasByOrgID(orgID uuid.UUID) ([]models.OrganizationQuota, error)
+	GetOrganizationQuotasByFromOrgAndNode(fromOrgID uuid.UUID, nodeID uuid.UUID) ([]models.OrganizationQuota, error)
 	GetOrgQuotaByID(id uuid.UUID) (*models.OrganizationQuota, error)
 	GetOrgUsage(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)
 	GetOrgQuotaQuantity(quotaID uuid.UUID, resourceID uuid.UUID) (uint, error)
@@ -29,6 +30,7 @@ type QuotaRepository interface {
 	CreateProjectQuota(quota *models.ProjectQuota) error
 	GetProjectQuotaByProjectID(projectID uuid.UUID) ([]models.ProjectQuota, error)
 	GetProjectQuotaByID(id uuid.UUID) (*models.ProjectQuota, error)
+	GetInternalProjectQuotasByOrgAndNode(orgID uuid.UUID, nodeID uuid.UUID) ([]models.ProjectQuota, error)
 	GetProjectQuotaTotalByType(projectID uuid.UUID) (*dtos.ResourceQuotaResponse, error)
 	UpdateProjectQuota(quotaID uuid.UUID, name, description string) error
 	DeleteProjectQuota(quotaID uuid.UUID) error
