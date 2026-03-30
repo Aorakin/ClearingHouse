@@ -3,6 +3,8 @@ package http
 import (
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/ClearingHouse/internal/auth/dtos"
@@ -15,6 +17,25 @@ import (
 
 type AuthHandler struct {
 	authUsecase interfaces.AuthUsecase
+}
+
+func getEnv(key, fallback string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return fallback
+}
+
+func getEnvBool(key string, fallback bool) bool {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.ParseBool(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
 }
 
 func NewAuthHandler(authUsecase interfaces.AuthUsecase) interfaces.AuthHandler {
@@ -87,10 +108,13 @@ func (h *AuthHandler) GoogleCallback() gin.HandlerFunc {
 			c.JSON(response.ErrorResponseBuilder(apiError.NewInternalServerError(err)))
 			return
 		}
+		prodCookieDomain := getEnv("AUTH_COOKIE_DOMAIN", ".onepointfive.life")
+		refreshCookiePath := getEnv("AUTH_REFRESH_COOKIE_PATH", "/users/auth")
+		cookieSecure := getEnvBool("AUTH_COOKIE_SECURE", true)
 		c.SetCookie("access_token", accessToken, 3600, "/", ".localhost", true, true)
 		c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", ".localhost", true, true)
-		c.SetCookie("access_token", accessToken, 7*24*3600, "/", ".onepointfive.life", true, true)
-		c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/users/auth", ".onepointfive.life", true, true)
+		c.SetCookie("access_token", accessToken, 7*24*3600, "/", prodCookieDomain, cookieSecure, true)
+		c.SetCookie("refresh_token", refreshToken, 7*24*3600, refreshCookiePath, prodCookieDomain, cookieSecure, true)
 
 		c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
 	}
@@ -153,10 +177,13 @@ func (h *AuthHandler) Logout() gin.HandlerFunc {
 			}
 		}
 
+		prodCookieDomain := getEnv("AUTH_COOKIE_DOMAIN", ".onepointfive.life")
+		cookieSecure := getEnvBool("AUTH_COOKIE_SECURE", true)
+
 		// Clear the access token cookie
-		c.SetCookie("access_token", "", -1, "/", ".onepointfive.life", true, true)
+		c.SetCookie("access_token", "", -1, "/", prodCookieDomain, cookieSecure, true)
 		// Clear the refresh token cookie
-		c.SetCookie("refresh_token", "", -1, "/", ".onepointfive.life", true, true)
+		c.SetCookie("refresh_token", "", -1, "/", prodCookieDomain, cookieSecure, true)
 		c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
 	}
 }
