@@ -88,10 +88,13 @@ func (h *AuthHandler) GoogleCallback() gin.HandlerFunc {
 				c.JSON(response.ErrorResponseBuilder(apiError.NewInternalServerError(err)))
 				return
 			}
-			c.SetCookie("access_token", accessToken, 3600, "/", "localhost", false, true)
-			c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", "localhost", false, true)
-			c.SetCookie("access_token", accessToken, 3600, "/", ".ch-admin", false, true)
-			c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", ".ch-admin", false, true)
+			prodCookieDomain := getEnv("AUTH_COOKIE_DOMAIN", ".onepointfive.life")
+			refreshCookiePath := getEnv("AUTH_REFRESH_COOKIE_PATH", "/users/auth")
+			cookieSecure := getEnvBool("AUTH_COOKIE_SECURE", true)
+			c.SetCookie("access_token", accessToken, 3600, "/", ".localhost", true, true)
+			c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", ".localhost", true, true)
+			c.SetCookie("access_token", accessToken, 7*24*3600, "/", prodCookieDomain, cookieSecure, true)
+			c.SetCookie("refresh_token", refreshToken, 7*24*3600, refreshCookiePath, prodCookieDomain, cookieSecure, true)
 			c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "access_token": accessToken, "refresh_token": refreshToken})
 			return
 		}
