@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
   title: "ClearingHouse API"
-  description: "API สำหรับจัดการ Organizations, Projects, Namespaces, Resources และ Quotas"
+  description: "API for managing organizations, projects, namespaces, resources, and quotas"
   version: "1.0"
   contact: {}
 basePath: ""
@@ -13,7 +13,12 @@ securityDefinitions:
     type: apiKey
     name: Authorization
     in: header
-    description: "JWT token (ใส่เป็น 'Bearer {token}')"
+    description: "JWT token (format: 'Bearer {token}')"
+  ApiKeyAuth:
+    type: apiKey
+    name: Authorization
+    in: header
+    description: "JWT token (format: 'Bearer {token}')"
 
 paths:
   # Home
@@ -22,7 +27,7 @@ paths:
       tags:
         - "Home"
       summary: "Welcome endpoint"
-      description: "ตรวจสอบสถานะ API"
+      description: "Check API health status"
       responses:
         200:
           description: "Success"
@@ -1364,63 +1369,159 @@ paths:
         200:
           description: "Success"
 
-  # ========== Users (Legacy) ==========
+  # ========== Users ==========
+  /users/access-token:
+    get:
+      description: "Exchange OAuth code via clearing house and set access/refresh token cookies"
+      produces:
+        - "application/json"
+      tags:
+        - "users"
+      summary: "Exchange Google callback code for tokens"
+      parameters:
+        - type: string
+          description: "Authorization code"
+          name: code
+          in: query
+          required: true
+        - type: string
+          description: "OAuth state"
+          name: state
+          in: query
+      responses:
+        200:
+          description: "Tokens set successfully"
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/response.ErrorResponse"
+
   /users/auth/google:
     get:
+      description: "Redirect user to Google OAuth authorization page"
+      produces:
+        - "application/json"
       tags:
-        - "Users (Legacy)"
-      summary: "[เก่า] Login ด้วย Google"
+        - "users"
+      summary: "Start Google OAuth login"
       responses:
-        302:
-          description: "Redirect"
+        307:
+          description: "Temporary redirect"
+          schema:
+            type: string
 
   /users/auth/callback/google:
     get:
+      description: "Handle Google OAuth callback with authorization code"
+      produces:
+        - "application/json"
       tags:
-        - "Users (Legacy)"
-      summary: "[เก่า] Google OAuth callback"
+        - "users"
+      summary: "Google OAuth callback"
+      parameters:
+        - type: string
+          description: "Authorization code"
+          name: code
+          in: query
+          required: true
       responses:
         200:
-          description: "Success"
+          description: "Authentication response"
+          schema:
+            type: object
+            additionalProperties: true
+        302:
+          description: "Redirect after successful login"
+          schema:
+            type: string
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/response.ErrorResponse"
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/response.ErrorResponse"
 
-  /users/logout:
-    post:
-      tags:
-        - "Users (Legacy)"
-      summary: "[เก่า] Logout"
-      responses:
-        200:
-          description: "Success"
-
-  /users/testsession:
+  /users/auth/logout:
     get:
-      tags:
-        - "Users (Legacy)"
-      summary: "[เก่า] ทดสอบ Session"
       security:
-        - BearerAuth: []
+        - ApiKeyAuth: []
+      description: "Logout user and clear session"
+      produces:
+        - "application/json"
+      tags:
+        - "users"
+      summary: "User logout"
       responses:
         200:
-          description: "Success"
+          description: "Logout successful"
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/response.ErrorResponse"
+
+  /users/auth/refresh-token:
+    get:
+      description: "Refresh access token using refresh token cookie"
+      produces:
+        - "application/json"
+      tags:
+        - "users"
+      summary: "Refresh access token"
+      responses:
+        200:
+          description: "Tokens refreshed successfully"
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/response.ErrorResponse"
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/response.ErrorResponse"
 
 tags:
   - name: "Home"
     description: "Home endpoints"
   - name: "Authentication"
-    description: "การจัดการ Authentication และ Authorization"
+    description: "Authentication and authorization endpoints"
   - name: "Organizations"
-    description: "การจัดการ Organizations และ Members"
+    description: "Organization and membership endpoints"
   - name: "Projects"
-    description: "การจัดการ Projects และ Members"
+    description: "Project and membership endpoints"
   - name: "Namespaces"
-    description: "การจัดการ Namespaces และ Members"
+    description: "Namespace and membership endpoints"
   - name: "Resources"
-    description: "การจัดการ Resources, Resource Types, Pools และ Nodes"
+    description: "Resource, resource type, pool, and node endpoints"
   - name: "Quota"
-    description: "การจัดการ Quotas สำหรับ Organization, Project และ Namespace"
+    description: "Quota endpoints for organizations, projects, and namespaces"
   - name: "Tickets"
-    description: "การจัดการ Tickets และ Lifecycle"
+    description: "Ticket lifecycle endpoints"
   - name: "Admin"
-    description: "การจัดการ Super Admin"
-  - name: "Users (Legacy)"
-    description: "Endpoints เก่าที่อาจจะถูกแทนที่ด้วย /auth"
+    description: "Super admin management endpoints"
+  - name: "users"
+    description: "User authentication endpoints"
+
+definitions:
+  response.ErrorResponse:
+    type: object
+    properties:
+      status:
+        type: integer
+      message:
+        type: string
+      error:
+        type: string
