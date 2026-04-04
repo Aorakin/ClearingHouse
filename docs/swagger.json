@@ -45,7 +45,7 @@
         "tags": [
           "Authentication"
         ],
-        "summary": "เริ่มต้นการ Login ด้วย Google OAuth",
+        "summary": "Start Google OAuth login",
         "responses": {
           "302": {
             "description": "Redirect to Google OAuth"
@@ -58,7 +58,7 @@
         "tags": [
           "Authentication"
         ],
-        "summary": "Google OAuth callback สำหรับ Login",
+        "summary": "Google OAuth callback for login",
         "responses": {
           "200": {
             "description": "Success"
@@ -71,7 +71,7 @@
         "tags": [
           "Authentication"
         ],
-        "summary": "เริ่มต้นการ Register ด้วย Google OAuth",
+        "summary": "Start Google OAuth registration",
         "responses": {
           "302": {
             "description": "Redirect to Google OAuth"
@@ -84,7 +84,7 @@
         "tags": [
           "Authentication"
         ],
-        "summary": "ลงทะเบียนด้วย Email/Password",
+        "summary": "Register with email and password",
         "parameters": [
           {
             "in": "body",
@@ -147,7 +147,7 @@
         "tags": [
           "Authentication"
         ],
-        "summary": "ดึงข้อมูล User ที่ Login อยู่",
+        "summary": "Get authenticated user profile",
         "security": [
           {
             "BearerAuth": []
@@ -165,7 +165,7 @@
         "tags": [
           "Organizations"
         ],
-        "summary": "ดึงรายการ Organization ทั้งหมด",
+        "summary": "Get all organizations",
         "responses": {
           "200": {
             "description": "Success"
@@ -176,7 +176,7 @@
         "tags": [
           "Organizations"
         ],
-        "summary": "สร้าง Organization ใหม่ (Super Admin only)",
+        "summary": "Create organization (super admin only)",
         "security": [
           {
             "BearerAuth": []
@@ -212,7 +212,7 @@
         "tags": [
           "Organizations"
         ],
-        "summary": "ดึงข้อมูล Organization ตาม ID",
+        "summary": "Get organization by ID",
         "security": [
           {
             "BearerAuth": []
@@ -236,7 +236,7 @@
         "tags": [
           "Organizations"
         ],
-        "summary": "แก้ไข Organization (Super Admin only)",
+        "summary": "Update organization (super admin only)",
         "security": [
           {
             "BearerAuth": []
@@ -268,7 +268,7 @@
         "tags": [
           "Organizations"
         ],
-        "summary": "ลบ Organization (Super Admin only)",
+        "summary": "Delete organization (super admin only)",
         "security": [
           {
             "BearerAuth": []
@@ -294,7 +294,7 @@
         "tags": [
           "Organizations"
         ],
-        "summary": "เพิ่ม Members เข้า Organization",
+        "summary": "Add members to organization",
         "security": [
           {
             "BearerAuth": []
@@ -331,7 +331,7 @@
         "tags": [
           "Organizations"
         ],
-        "summary": "ดึงรายการ Members ของ User",
+        "summary": "Get user memberships",
         "security": [
           {
             "BearerAuth": []
@@ -349,7 +349,7 @@
         "tags": [
           "Organizations"
         ],
-        "summary": "ลบ Members ออกจาก Organization",
+        "summary": "Remove members from organization",
         "security": [
           {
             "BearerAuth": []
@@ -377,7 +377,7 @@
         "tags": [
           "Organizations"
         ],
-        "summary": "เพิ่ม Admins เข้า Organization",
+        "summary": "Add admins to organization",
         "security": [
           {
             "BearerAuth": []
@@ -405,7 +405,7 @@
         "tags": [
           "Organizations"
         ],
-        "summary": "ลบ Admins ออกจาก Organization",
+        "summary": "Remove admins from organization",
         "security": [
           {
             "BearerAuth": []
@@ -433,7 +433,7 @@
         "tags": [
           "Organizations"
         ],
-        "summary": "ดึงรายการ Members ของ Organization",
+        "summary": "Get organization members",
         "security": [
           {
             "BearerAuth": []
@@ -459,7 +459,7 @@
         "tags": [
           "Projects"
         ],
-        "summary": "ดึงรายการ Project ทั้งหมด (public)",
+        "summary": "Get all projects (public)",
         "responses": {
           "200": {
             "description": "Success"
@@ -470,7 +470,7 @@
         "tags": [
           "Projects"
         ],
-        "summary": "สร้าง Project ใหม่",
+        "summary": "Create project",
         "security": [
           {
             "BearerAuth": []
@@ -496,7 +496,7 @@
         "tags": [
           "Projects"
         ],
-        "summary": "แก้ไข Project",
+        "summary": "Update project",
         "security": [
           {
             "BearerAuth": []
@@ -524,7 +524,7 @@
         "tags": [
           "Projects"
         ],
-        "summary": "ดึงรายการ Project ทั้งหมดของ User",
+        "summary": "Get user projects",
         "security": [
           {
             "BearerAuth": []
@@ -542,7 +542,7 @@
         "tags": [
           "Projects"
         ],
-        "summary": "ดึงรายการ Project ตาม Organization ID",
+        "summary": "Get projects by organization ID",
         "security": [
           {
             "BearerAuth": []
@@ -568,7 +568,7 @@
         "tags": [
           "Projects"
         ],
-        "summary": "ดึงข้อมูล Project ตาม ID",
+        "summary": "Get project by ID",
         "security": [
           {
             "BearerAuth": []
@@ -592,7 +592,7 @@
         "tags": [
           "Projects"
         ],
-        "summary": "ลบ Project",
+        "summary": "Delete project",
         "security": [
           {
             "BearerAuth": []
@@ -618,7 +618,7 @@
         "tags": [
           "Projects"
         ],
-        "summary": "ดึงรายการ Members ของ Project",
+        "summary": "Get project members",
         "security": [
           {
             "BearerAuth": []
@@ -644,7 +644,7 @@
         "tags": [
           "Projects"
         ],
-        "summary": "ดึงข้อมูลการใช้งาน Resources ของ Project",
+        "summary": "Get project resource usage",
         "security": [
           {
             "BearerAuth": []
@@ -670,7 +670,7 @@
         "tags": [
           "Projects"
         ],
-        "summary": "เพิ่ม Members เข้า Project",
+        "summary": "Add members to project",
         "security": [
           {
             "BearerAuth": []
@@ -698,7 +698,7 @@
         "tags": [
           "Projects"
         ],
-        "summary": "ลบ Members ออกจาก Project",
+        "summary": "Remove members from project",
         "security": [
           {
             "BearerAuth": []
@@ -726,7 +726,7 @@
         "tags": [
           "Projects"
         ],
-        "summary": "เพิ่ม Admins เข้า Project",
+        "summary": "Add admins to project",
         "security": [
           {
             "BearerAuth": []
@@ -754,7 +754,7 @@
         "tags": [
           "Projects"
         ],
-        "summary": "ลบ Admins ออกจาก Project",
+        "summary": "Remove admins from project",
         "security": [
           {
             "BearerAuth": []
@@ -782,7 +782,7 @@
         "tags": [
           "Namespaces"
         ],
-        "summary": "ดึงรายการ Namespace ทั้งหมด (public)",
+        "summary": "Get all namespaces (public)",
         "responses": {
           "200": {
             "description": "Success"
@@ -793,7 +793,7 @@
         "tags": [
           "Namespaces"
         ],
-        "summary": "สร้าง Namespace ใหม่",
+        "summary": "Create namespace",
         "security": [
           {
             "BearerAuth": []
@@ -819,7 +819,7 @@
         "tags": [
           "Namespaces"
         ],
-        "summary": "แก้ไข Namespace",
+        "summary": "Update namespace",
         "security": [
           {
             "BearerAuth": []
@@ -847,7 +847,7 @@
         "tags": [
           "Namespaces"
         ],
-        "summary": "ดึงรายการ Namespace ทั้งหมดของ User",
+        "summary": "Get user namespaces",
         "security": [
           {
             "BearerAuth": []
@@ -873,7 +873,7 @@
         "tags": [
           "Namespaces"
         ],
-        "summary": "ดึงรายการ Namespace ตาม Project ID",
+        "summary": "Get namespaces by project ID",
         "security": [
           {
             "BearerAuth": []
@@ -899,7 +899,7 @@
         "tags": [
           "Namespaces"
         ],
-        "summary": "ดึงข้อมูล Namespace ตาม ID",
+        "summary": "Get namespace by ID",
         "security": [
           {
             "BearerAuth": []
@@ -923,7 +923,7 @@
         "tags": [
           "Namespaces"
         ],
-        "summary": "ลบ Namespace",
+        "summary": "Delete namespace",
         "security": [
           {
             "BearerAuth": []
@@ -949,7 +949,7 @@
         "tags": [
           "Namespaces"
         ],
-        "summary": "ดึงข้อมูลการใช้งาน Resources ของ Namespace",
+        "summary": "Get namespace resource usage",
         "security": [
           {
             "BearerAuth": []
@@ -975,7 +975,7 @@
         "tags": [
           "Namespaces"
         ],
-        "summary": "เพิ่ม Members เข้า Namespace",
+        "summary": "Add members to namespace",
         "security": [
           {
             "BearerAuth": []
@@ -1003,7 +1003,7 @@
         "tags": [
           "Namespaces"
         ],
-        "summary": "ลบ Members ออกจาก Namespace",
+        "summary": "Remove members from namespace",
         "security": [
           {
             "BearerAuth": []
@@ -1031,7 +1031,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "สร้าง Resource",
+        "summary": "Create resource",
         "parameters": [
           {
             "in": "body",
@@ -1054,7 +1054,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "ดึงข้อมูล Resource Property",
+        "summary": "Get resource properties",
         "parameters": [
           {
             "in": "path",
@@ -1073,7 +1073,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "แก้ไข Resource",
+        "summary": "Update resource",
         "parameters": [
           {
             "in": "path",
@@ -1100,7 +1100,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "ลบ Resource",
+        "summary": "Delete resource",
         "parameters": [
           {
             "in": "path",
@@ -1121,7 +1121,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "ดึงรายการ Resources ตาม Organization ID",
+        "summary": "Get resources by organization ID",
         "parameters": [
           {
             "in": "path",
@@ -1142,7 +1142,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "สร้าง Resource Type",
+        "summary": "Create resource type",
         "parameters": [
           {
             "in": "body",
@@ -1163,7 +1163,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "ดึงรายการ Resource Types ทั้งหมด",
+        "summary": "Get all resource types",
         "responses": {
           "200": {
             "description": "Success"
@@ -1176,7 +1176,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "สร้าง Resource Pool",
+        "summary": "Create resource pool",
         "parameters": [
           {
             "in": "body",
@@ -1199,7 +1199,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "ดึงข้อมูล Resource Pool",
+        "summary": "Get resource pool by ID",
         "parameters": [
           {
             "in": "path",
@@ -1218,7 +1218,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "แก้ไข Resource Pool",
+        "summary": "Update resource pool",
         "parameters": [
           {
             "in": "path",
@@ -1245,7 +1245,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "ลบ Resource Pool",
+        "summary": "Delete resource pool",
         "parameters": [
           {
             "in": "path",
@@ -1266,7 +1266,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "สร้าง Resource Node",
+        "summary": "Create resource node",
         "parameters": [
           {
             "in": "body",
@@ -1289,7 +1289,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "ดึงข้อมูล Resource Node",
+        "summary": "Get resource node by ID",
         "parameters": [
           {
             "in": "path",
@@ -1308,7 +1308,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "แก้ไข Resource Node",
+        "summary": "Update resource node",
         "parameters": [
           {
             "in": "path",
@@ -1335,7 +1335,7 @@
         "tags": [
           "Resources"
         ],
-        "summary": "ลบ Resource Node",
+        "summary": "Delete resource node",
         "parameters": [
           {
             "in": "path",
@@ -1356,7 +1356,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "สร้าง Organization Quota",
+        "summary": "Create organization quota",
         "security": [
           {
             "BearerAuth": []
@@ -1382,7 +1382,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "ดึงข้อมูล Organization Quota",
+        "summary": "Get organization quota",
         "security": [
           {
             "BearerAuth": []
@@ -1400,7 +1400,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "ดึงข้อมูล Organization Quotas ตาม Org ID",
+        "summary": "Get organization quotas by organization ID",
         "security": [
           {
             "BearerAuth": []
@@ -1426,7 +1426,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "ลบ Organization Quota",
+        "summary": "Delete organization quota",
         "security": [
           {
             "BearerAuth": []
@@ -1452,7 +1452,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "สร้าง Project Quota",
+        "summary": "Create project quota",
         "security": [
           {
             "BearerAuth": []
@@ -1480,7 +1480,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "สร้าง Internal Project Quota",
+        "summary": "Create internal project quota",
         "security": [
           {
             "BearerAuth": []
@@ -1508,7 +1508,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "ดึงข้อมูล Project Quotas",
+        "summary": "Get project quotas",
         "security": [
           {
             "BearerAuth": []
@@ -1534,7 +1534,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "ดึงข้อมูล Namespace Quota ใน Project",
+        "summary": "Get namespace quotas in project",
         "security": [
           {
             "BearerAuth": []
@@ -1560,7 +1560,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "ลบ Project Quota",
+        "summary": "Delete project quota",
         "security": [
           {
             "BearerAuth": []
@@ -1586,7 +1586,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "สร้าง Namespace Quota",
+        "summary": "Create namespace quota",
         "security": [
           {
             "BearerAuth": []
@@ -1614,7 +1614,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "ดึงข้อมูล Namespace Quota",
+        "summary": "Get namespace quota",
         "security": [
           {
             "BearerAuth": []
@@ -1640,7 +1640,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "แก้ไข Namespace Quota",
+        "summary": "Update namespace quota",
         "security": [
           {
             "BearerAuth": []
@@ -1672,7 +1672,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "ลบ Namespace Quota",
+        "summary": "Delete namespace quota",
         "security": [
           {
             "BearerAuth": []
@@ -1698,7 +1698,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "สร้าง Namespace Quota Template",
+        "summary": "Create namespace quota template",
         "security": [
           {
             "BearerAuth": []
@@ -1726,7 +1726,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "ดึงข้อมูล Namespace Quota Template",
+        "summary": "Get namespace quota template",
         "security": [
           {
             "BearerAuth": []
@@ -1750,7 +1750,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "แก้ไข Namespace Quota Template",
+        "summary": "Update namespace quota template",
         "security": [
           {
             "BearerAuth": []
@@ -1782,7 +1782,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "ลบ Namespace Quota Template",
+        "summary": "Delete namespace quota template",
         "security": [
           {
             "BearerAuth": []
@@ -1808,7 +1808,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "ดึงรายการ Quota Templates ตาม Project ID",
+        "summary": "Get quota templates by project ID",
         "security": [
           {
             "BearerAuth": []
@@ -1834,7 +1834,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "กำหนด Quota Template ให้กับ Namespace",
+        "summary": "Assign quota template to namespace",
         "security": [
           {
             "BearerAuth": []
@@ -1862,7 +1862,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "ยกเลิกการกำหนด Quota Template จาก Namespace",
+        "summary": "Unassign quota template from namespace",
         "security": [
           {
             "BearerAuth": []
@@ -1888,7 +1888,7 @@
         "tags": [
           "Quota"
         ],
-        "summary": "ดึงข้อมูลการใช้งาน Quota",
+        "summary": "Get quota usage",
         "security": [
           {
             "BearerAuth": []
@@ -1920,7 +1920,7 @@
         "tags": [
           "Tickets"
         ],
-        "summary": "สร้าง Ticket ใหม่",
+        "summary": "Create ticket",
         "security": [
           {
             "BearerAuth": []
@@ -1948,7 +1948,7 @@
         "tags": [
           "Tickets"
         ],
-        "summary": "ดึงข้อมูล Ticket ตาม ID",
+        "summary": "Get ticket by ID",
         "security": [
           {
             "BearerAuth": []
@@ -1972,7 +1972,7 @@
         "tags": [
           "Tickets"
         ],
-        "summary": "ลบ Ticket",
+        "summary": "Delete ticket",
         "security": [
           {
             "BearerAuth": []
@@ -1998,7 +1998,7 @@
         "tags": [
           "Tickets"
         ],
-        "summary": "ยกเลิก Ticket",
+        "summary": "Cancel ticket",
         "security": [
           {
             "BearerAuth": []
@@ -2024,7 +2024,7 @@
         "tags": [
           "Tickets"
         ],
-        "summary": "ดึงรายการ Tickets ของ Namespace",
+        "summary": "Get tickets by namespace",
         "security": [
           {
             "BearerAuth": []
@@ -2050,7 +2050,7 @@
         "tags": [
           "Tickets"
         ],
-        "summary": "ดึงรายการ Tickets ของ User",
+        "summary": "Get user tickets",
         "security": [
           {
             "BearerAuth": []
@@ -2068,7 +2068,7 @@
         "tags": [
           "Tickets"
         ],
-        "summary": "เริ่มต้น Ticket",
+        "summary": "Start ticket",
         "parameters": [
           {
             "in": "body",
@@ -2091,7 +2091,7 @@
         "tags": [
           "Tickets"
         ],
-        "summary": "หยุด Pending Ticket",
+        "summary": "Stop pending ticket",
         "parameters": [
           {
             "in": "body",
@@ -2114,7 +2114,7 @@
         "tags": [
           "Tickets"
         ],
-        "summary": "หยุด Ticket",
+        "summary": "Stop ticket",
         "parameters": [
           {
             "in": "body",
@@ -2137,7 +2137,7 @@
         "tags": [
           "Admin"
         ],
-        "summary": "กำหนด Super Admin",
+        "summary": "Assign super admin",
         "parameters": [
           {
             "in": "body",
@@ -2165,7 +2165,7 @@
         "tags": [
           "Admin"
         ],
-        "summary": "ยกเลิก Super Admin",
+        "summary": "Revoke super admin",
         "parameters": [
           {
             "in": "body",
