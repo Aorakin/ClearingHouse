@@ -1,1520 +1,2026 @@
-swagger: "2.0"
+swagger: '2.0'
 info:
-  title: "ClearingHouse API"
-  description: "API for managing organizations, projects, namespaces, resources, and quotas"
-  version: "1.0"
+  title: ClearingHouse API
+  description: API for managing organizations, projects, namespaces, resources, and
+    quotas
+  version: '1.0'
   contact: {}
-basePath: ""
+basePath: ''
 schemes:
-  - http
-  - https
+- http
+- https
 securityDefinitions:
   BearerAuth:
     type: apiKey
     name: Authorization
     in: header
-    description: "JWT token (format: 'Bearer {token}')"
+    description: 'JWT token (format: ''Bearer {token}'')'
   ApiKeyAuth:
     type: apiKey
     name: Authorization
     in: header
-    description: "JWT token (format: 'Bearer {token}')"
-
+    description: 'JWT token (format: ''Bearer {token}'')'
 paths:
-  # Home
-  /:
+  "/":
     get:
       tags:
-        - "Home"
-      summary: "Welcome endpoint"
-      description: "Check API health status"
+      - Home
+      summary: Welcome endpoint
+      description: Check API health status
       responses:
-        200:
-          description: "Success"
-
-  # ========== Authentication ==========
-  /auth/login/google:
-    get:
-      tags:
-        - "Authentication"
-      summary: "Start Google OAuth login"
-      responses:
-        302:
-          description: "Redirect to Google OAuth"
-
-  /auth/callback/google:
-    get:
-      tags:
-        - "Authentication"
-      summary: "Google OAuth callback for login"
-      responses:
-        200:
-          description: "Success"
-
-  /auth/register/google:
-    get:
-      tags:
-        - "Authentication"
-      summary: "Start Google OAuth registration"
-      responses:
-        302:
-          description: "Redirect to Google OAuth"
-
-  /auth/register/manual:
-    post:
-      tags:
-        - "Authentication"
-      summary: "Register with email and password"
-      parameters:
-        - in: body
-          name: body
-          required: true
+        '200':
+          description: Success
           schema:
-            type: object
-            properties:
-              email:
-                type: string
-              password:
-                type: string
-              first_name:
-                type: string
-              last_name:
-                type: string
-      responses:
-        201:
-          description: "Created"
-
-  /auth/logout:
-    get:
-      tags:
-        - "Authentication"
-      summary: "Logout"
-      responses:
-        200:
-          description: "Success"
-
-  /auth/refresh-token:
-    get:
-      tags:
-        - "Authentication"
-      summary: "Refresh JWT token"
-      responses:
-        200:
-          description: "Success"
-
-  /auth/me:
-    get:
-      tags:
-        - "Authentication"
-      summary: "Get authenticated user profile"
-      security:
-        - BearerAuth: []
-      responses:
-        200:
-          description: "Success"
-
-  # ========== Organizations ==========
-  /organizations/:
-    get:
-      tags:
-        - "Organizations"
-      summary: "Get all organizations"
-      responses:
-        200:
-          description: "Success"
-    post:
-      tags:
-        - "Organizations"
-      summary: "Create organization (super admin only)"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            properties:
-              name:
-                type: string
-              abbreviation:
-                type: string
-      responses:
-        201:
-          description: "Created"
-
-  /organizations/{org-id}:
-    get:
-      tags:
-        - "Organizations"
-      summary: "Get organization by ID"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: org-id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-    put:
-      tags:
-        - "Organizations"
-      summary: "Update organization (super admin only)"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: org-id
-          required: true
-          type: string
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-    delete:
-      tags:
-        - "Organizations"
-      summary: "Delete organization (super admin only)"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: org-id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /organizations/members:
-    post:
-      tags:
-        - "Organizations"
-      summary: "Add members to organization"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            properties:
-              organization_id:
-                type: string
-              user_ids:
-                type: array
-                items:
-                  type: string
-      responses:
-        200:
-          description: "Success"
-    get:
-      tags:
-        - "Organizations"
-      summary: "Get user memberships"
-      security:
-        - BearerAuth: []
-      responses:
-        200:
-          description: "Success"
-
-  /organizations/rm-members:
-    post:
-      tags:
-        - "Organizations"
-      summary: "Remove members from organization"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  /organizations/admins:
-    post:
-      tags:
-        - "Organizations"
-      summary: "Add admins to organization"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  /organizations/rm-admins:
-    post:
-      tags:
-        - "Organizations"
-      summary: "Remove admins from organization"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  /organizations/{org-id}/members:
-    get:
-      tags:
-        - "Organizations"
-      summary: "Get organization members"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: org-id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  # ========== Projects ==========
-  /projects/:
-    get:
-      tags:
-        - "Projects"
-      summary: "Get all projects (public)"
-      responses:
-        200:
-          description: "Success"
-    post:
-      tags:
-        - "Projects"
-      summary: "Create project"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        201:
-          description: "Created"
-    put:
-      tags:
-        - "Projects"
-      summary: "Update project"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  /projects/all:
-    get:
-      tags:
-        - "Projects"
-      summary: "Get user projects"
-      security:
-        - BearerAuth: []
-      responses:
-        200:
-          description: "Success"
-
-  /projects/organization/{orgId}:
-    get:
-      tags:
-        - "Projects"
-      summary: "Get projects by organization ID"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: orgId
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /projects/{id}:
-    get:
-      tags:
-        - "Projects"
-      summary: "Get project by ID"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-    delete:
-      tags:
-        - "Projects"
-      summary: "Delete project"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /projects/{id}/members:
-    get:
-      tags:
-        - "Projects"
-      summary: "Get project members"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /projects/{id}/usage:
-    get:
-      tags:
-        - "Projects"
-      summary: "Get project resource usage"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /projects/members:
-    post:
-      tags:
-        - "Projects"
-      summary: "Add members to project"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  /projects/rm-members:
-    post:
-      tags:
-        - "Projects"
-      summary: "Remove members from project"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  /projects/admins:
-    post:
-      tags:
-        - "Projects"
-      summary: "Add admins to project"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  /projects/rm-admins:
-    post:
-      tags:
-        - "Projects"
-      summary: "Remove admins from project"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  # ========== Namespaces ==========
-  /namespaces/:
-    get:
-      tags:
-        - "Namespaces"
-      summary: "Get all namespaces (public)"
-      responses:
-        200:
-          description: "Success"
-    post:
-      tags:
-        - "Namespaces"
-      summary: "Create namespace"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        201:
-          description: "Created"
-    put:
-      tags:
-        - "Namespaces"
-      summary: "Update namespace"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  /namespaces/all/{id}:
-    get:
-      tags:
-        - "Namespaces"
-      summary: "Get user namespaces"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /namespaces/project/{projectId}:
-    get:
-      tags:
-        - "Namespaces"
-      summary: "Get namespaces by project ID"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: projectId
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /namespaces/{id}:
-    get:
-      tags:
-        - "Namespaces"
-      summary: "Get namespace by ID"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-    delete:
-      tags:
-        - "Namespaces"
-      summary: "Delete namespace"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /namespaces/{id}/usage:
-    get:
-      tags:
-        - "Namespaces"
-      summary: "Get namespace resource usage"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /namespaces/members:
-    post:
-      tags:
-        - "Namespaces"
-      summary: "Add members to namespace"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  /namespaces/rm-members:
-    post:
-      tags:
-        - "Namespaces"
-      summary: "Remove members from namespace"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  # ========== Resources ==========
-  /resources/:
-    post:
-      tags:
-        - "Resources"
-      summary: "Create resource"
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        201:
-          description: "Created"
-
-  /resources/{resource_id}:
-    get:
-      tags:
-        - "Resources"
-      summary: "Get resource properties"
-      parameters:
-        - in: path
-          name: resource_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-    patch:
-      tags:
-        - "Resources"
-      summary: "Update resource"
-      parameters:
-        - in: path
-          name: resource_id
-          required: true
-          type: string
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-    delete:
-      tags:
-        - "Resources"
-      summary: "Delete resource"
-      parameters:
-        - in: path
-          name: resource_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /resources/org/{org_id}:
-    get:
-      tags:
-        - "Resources"
-      summary: "Get resources by organization ID"
-      parameters:
-        - in: path
-          name: org_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /resources/type:
-    post:
-      tags:
-        - "Resources"
-      summary: "Create resource type"
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        201:
-          description: "Created"
-    get:
-      tags:
-        - "Resources"
-      summary: "Get all resource types"
-      responses:
-        200:
-          description: "Success"
-
-  /resources/pool:
-    post:
-      tags:
-        - "Resources"
-      summary: "Create resource pool"
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        201:
-          description: "Created"
-
-  /resources/pool/{pool_id}:
-    get:
-      tags:
-        - "Resources"
-      summary: "Get resource pool by ID"
-      parameters:
-        - in: path
-          name: pool_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-    patch:
-      tags:
-        - "Resources"
-      summary: "Update resource pool"
-      parameters:
-        - in: path
-          name: pool_id
-          required: true
-          type: string
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-    delete:
-      tags:
-        - "Resources"
-      summary: "Delete resource pool"
-      parameters:
-        - in: path
-          name: pool_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /resources/node:
-    post:
-      tags:
-        - "Resources"
-      summary: "Create resource node"
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        201:
-          description: "Created"
-
-  /resources/node/{node_id}:
-    get:
-      tags:
-        - "Resources"
-      summary: "Get resource node by ID"
-      parameters:
-        - in: path
-          name: node_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-    patch:
-      tags:
-        - "Resources"
-      summary: "Update resource node"
-      parameters:
-        - in: path
-          name: node_id
-          required: true
-          type: string
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-    delete:
-      tags:
-        - "Resources"
-      summary: "Delete resource node"
-      parameters:
-        - in: path
-          name: node_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  # ========== Quota ==========
-  /quota/organization:
-    post:
-      tags:
-        - "Quota"
-      summary: "Create organization quota"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        201:
-          description: "Created"
-    get:
-      tags:
-        - "Quota"
-      summary: "Get organization quota"
-      security:
-        - BearerAuth: []
-      responses:
-        200:
-          description: "Success"
-
-  /quota/organization/{org_id}:
-    get:
-      tags:
-        - "Quota"
-      summary: "Get organization quotas by organization ID"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: org_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /quota/organization/{quota_id}:
-    delete:
-      tags:
-        - "Quota"
-      summary: "Delete organization quota"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: quota_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /quota/project:
-    post:
-      tags:
-        - "Quota"
-      summary: "Create project quota"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        201:
-          description: "Created"
-
-  /quota/project/internal:
-    post:
-      tags:
-        - "Quota"
-      summary: "Create internal project quota"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        201:
-          description: "Created"
-
-  /quota/project/{project_id}:
-    get:
-      tags:
-        - "Quota"
-      summary: "Get project quotas"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: project_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /quota/project/{project_id}/namespaces:
-    get:
-      tags:
-        - "Quota"
-      summary: "Get namespace quotas in project"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: project_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /quota/project/{quota_id}:
-    delete:
-      tags:
-        - "Quota"
-      summary: "Delete project quota"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: quota_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /quota/namespace:
-    post:
-      tags:
-        - "Quota"
-      summary: "Create namespace quota"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        201:
-          description: "Created"
-
-  /quota/namespace/{namespace_id}:
-    get:
-      tags:
-        - "Quota"
-      summary: "Get namespace quota"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: namespace_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /quota/namespace/{quota_id}:
-    put:
-      tags:
-        - "Quota"
-      summary: "Update namespace quota"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: quota_id
-          required: true
-          type: string
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-    delete:
-      tags:
-        - "Quota"
-      summary: "Delete namespace quota"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: quota_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /quota/namespace/template:
-    post:
-      tags:
-        - "Quota"
-      summary: "Create namespace quota template"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        201:
-          description: "Created"
-
-  /quota/namespace/template/{quota_template_id}:
-    get:
-      tags:
-        - "Quota"
-      summary: "Get namespace quota template"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: quota_template_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-    put:
-      tags:
-        - "Quota"
-      summary: "Update namespace quota template"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: quota_template_id
-          required: true
-          type: string
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-    delete:
-      tags:
-        - "Quota"
-      summary: "Delete namespace quota template"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: quota_template_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /quota/namespace/template/project/{project_id}:
-    get:
-      tags:
-        - "Quota"
-      summary: "Get quota templates by project ID"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: project_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /quota/namespace/template/assign:
-    post:
-      tags:
-        - "Quota"
-      summary: "Assign quota template to namespace"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  /quota/namespace/template/unassign/{namespace_id}:
-    delete:
-      tags:
-        - "Quota"
-      summary: "Unassign quota template from namespace"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: namespace_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /quota/{quota_id}/usage/{namespace_id}:
-    get:
-      tags:
-        - "Quota"
-      summary: "Get quota usage"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: quota_id
-          required: true
-          type: string
-        - in: path
-          name: namespace_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  # ========== Tickets ==========
-  /tickets/:
-    post:
-      tags:
-        - "Tickets"
-      summary: "Create ticket"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        201:
-          description: "Created"
-
-  /tickets/{ticket-id}:
-    get:
-      tags:
-        - "Tickets"
-      summary: "Get ticket by ID"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: ticket-id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-    delete:
-      tags:
-        - "Tickets"
-      summary: "Delete ticket"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: ticket-id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /tickets/{ticket-id}/cancel:
-    patch:
-      tags:
-        - "Tickets"
-      summary: "Cancel ticket"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: ticket-id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /tickets/namespace/{namespace_id}:
-    get:
-      tags:
-        - "Tickets"
-      summary: "Get tickets by namespace"
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: namespace_id
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Success"
-
-  /tickets/user:
-    get:
-      tags:
-        - "Tickets"
-      summary: "Get user tickets"
-      security:
-        - BearerAuth: []
-      responses:
-        200:
-          description: "Success"
-
-  /tickets/start:
-    patch:
-      tags:
-        - "Tickets"
-      summary: "Start ticket"
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  /tickets/stop-pending:
-    patch:
-      tags:
-        - "Tickets"
-      summary: "Stop pending ticket"
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  /tickets/stop:
-    patch:
-      tags:
-        - "Tickets"
-      summary: "Stop ticket"
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-      responses:
-        200:
-          description: "Success"
-
-  # ========== Admin ==========
-  /admin/super-admins:
-    post:
-      tags:
-        - "Admin"
-      summary: "Assign super admin"
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            properties:
-              user_id:
-                type: string
-      responses:
-        200:
-          description: "Success"
-
-  /admin/revoke-super-admins:
-    post:
-      tags:
-        - "Admin"
-      summary: "Revoke super admin"
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            properties:
-              user_id:
-                type: string
-      responses:
-        200:
-          description: "Success"
-
-  # ========== Users ==========
-  /users/access-token:
-    get:
-      description: "Exchange OAuth code via clearing house and set access/refresh token cookies"
+            "$ref": "#/definitions/response.HomeResponse"
       produces:
-        - "application/json"
+      - application/json
+  "/auth/login/google":
+    get:
       tags:
-        - "users"
-      summary: "Exchange Google callback code for tokens"
-      parameters:
-        - type: string
-          description: "Authorization code"
-          name: code
-          in: query
-          required: true
-        - type: string
-          description: "OAuth state"
-          name: state
-          in: query
+      - Authentication
+      summary: Start Google OAuth login
       responses:
-        200:
-          description: "Tokens set successfully"
+        '302':
+          description: Redirect to Google OAuth
+          schema:
+            type: string
+      produces:
+      - application/json
+  "/auth/callback/google":
+    get:
+      tags:
+      - Authentication
+      summary: Google OAuth callback for login
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.TokenPairResponse"
+        '201':
+          description: User registered and tokens issued
+          schema:
+            "$ref": "#/definitions/response.AuthRegisterResponse"
+        '400':
+          description: Bad request
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+        '500':
+          description: Internal server error
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+      produces:
+      - application/json
+  "/auth/register/google":
+    get:
+      tags:
+      - Authentication
+      summary: Start Google OAuth registration
+      responses:
+        '302':
+          description: Redirect to Google OAuth
+          schema:
+            type: string
+      produces:
+      - application/json
+  "/auth/register/manual":
+    post:
+      tags:
+      - Authentication
+      summary: Register with email and password
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/auth.ManualRegisterRequest"
+      responses:
+        '201':
+          description: Created
+          schema:
+            "$ref": "#/definitions/response.AuthRegisterResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/auth/logout":
+    get:
+      tags:
+      - Authentication
+      summary: Logout
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.MessageResponse"
+      produces:
+      - application/json
+  "/auth/refresh-token":
+    get:
+      tags:
+      - Authentication
+      summary: Refresh JWT token
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AccessTokenResponse"
+      produces:
+      - application/json
+  "/auth/me":
+    get:
+      tags:
+      - Authentication
+      summary: Get authenticated user profile
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+  "/organizations/":
+    get:
+      tags:
+      - Organizations
+      summary: Get all organizations
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+    post:
+      tags:
+      - Organizations
+      summary: Create organization (super admin only)
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/organizations.CreateOrganization"
+      responses:
+        '201':
+          description: Created
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/organizations/{org-id}":
+    get:
+      tags:
+      - Organizations
+      summary: Get organization by ID
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: org-id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+    put:
+      tags:
+      - Organizations
+      summary: Update organization (super admin only)
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: org-id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/organizations.UpdateOrganization"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+    delete:
+      tags:
+      - Organizations
+      summary: Delete organization (super admin only)
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: org-id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.StringMapResponse"
+      produces:
+      - application/json
+  "/organizations/members":
+    post:
+      tags:
+      - Organizations
+      summary: Add members to organization
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/organizations.AddMembersRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+    get:
+      tags:
+      - Organizations
+      summary: Get user memberships
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/organizations/rm-members":
+    post:
+      tags:
+      - Organizations
+      summary: Remove members from organization
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/organizations.RemoveMembersRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/organizations/admins":
+    post:
+      tags:
+      - Organizations
+      summary: Add admins to organization
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/organizations.AddAdminsRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/organizations/rm-admins":
+    post:
+      tags:
+      - Organizations
+      summary: Remove admins from organization
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/organizations.RemoveAdminsRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/organizations/{org-id}/members":
+    get:
+      tags:
+      - Organizations
+      summary: Get organization members
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: org-id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/projects/":
+    get:
+      tags:
+      - Projects
+      summary: Get all projects (public)
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+    post:
+      tags:
+      - Projects
+      summary: Create project
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/projects.CreateProjectRequest"
+      responses:
+        '201':
+          description: Created
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+    put:
+      tags:
+      - Projects
+      summary: Update project
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/projects.UpdateProjectRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/projects/all":
+    get:
+      tags:
+      - Projects
+      summary: Get user projects
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/projects/organization/{orgId}":
+    get:
+      tags:
+      - Projects
+      summary: Get projects by organization ID
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: orgId
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/projects/{id}":
+    get:
+      tags:
+      - Projects
+      summary: Get project by ID
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+    delete:
+      tags:
+      - Projects
+      summary: Delete project
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.StringMapResponse"
+      produces:
+      - application/json
+  "/projects/{id}/members":
+    get:
+      tags:
+      - Projects
+      summary: Get project members
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/projects/{id}/usage":
+    get:
+      tags:
+      - Projects
+      summary: Get project resource usage
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+  "/projects/members":
+    post:
+      tags:
+      - Projects
+      summary: Add members to project
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/projects.AddMembersRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/projects/rm-members":
+    post:
+      tags:
+      - Projects
+      summary: Remove members from project
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/projects.RemoveMembersRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/projects/admins":
+    post:
+      tags:
+      - Projects
+      summary: Add admins to project
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/projects.AddAdminsRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/projects/rm-admins":
+    post:
+      tags:
+      - Projects
+      summary: Remove admins from project
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/projects.RemoveAdminsRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/namespaces/":
+    get:
+      tags:
+      - Namespaces
+      summary: Get all namespaces (public)
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+    post:
+      tags:
+      - Namespaces
+      summary: Create namespace
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/namespaces.CreateNamespaceRequest"
+      responses:
+        '201':
+          description: Created
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+    put:
+      tags:
+      - Namespaces
+      summary: Update namespace
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/namespaces.UpdateNamespaceRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/namespaces/all/{id}":
+    get:
+      tags:
+      - Namespaces
+      summary: Get user namespaces
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/namespaces/project/{projectId}":
+    get:
+      tags:
+      - Namespaces
+      summary: Get namespaces by project ID
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: projectId
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/namespaces/{id}":
+    get:
+      tags:
+      - Namespaces
+      summary: Get namespace by ID
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+    delete:
+      tags:
+      - Namespaces
+      summary: Delete namespace
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.StringMapResponse"
+      produces:
+      - application/json
+  "/namespaces/{id}/usage":
+    get:
+      tags:
+      - Namespaces
+      summary: Get namespace resource usage
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/namespaces/members":
+    post:
+      tags:
+      - Namespaces
+      summary: Add members to namespace
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/namespaces.AddMembersRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/namespaces/rm-members":
+    post:
+      tags:
+      - Namespaces
+      summary: Remove members from namespace
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/namespaces.RemoveMembersRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/resources/":
+    post:
+      tags:
+      - Resources
+      summary: Create resource
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/resources.CreateResourceRequest"
+      responses:
+        '201':
+          description: Created
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/resources/{resource_id}":
+    get:
+      tags:
+      - Resources
+      summary: Get resource properties
+      parameters:
+      - in: path
+        name: resource_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+    patch:
+      tags:
+      - Resources
+      summary: Update resource
+      parameters:
+      - in: path
+        name: resource_id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/resources.UpdateResourceRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+    delete:
+      tags:
+      - Resources
+      summary: Delete resource
+      parameters:
+      - in: path
+        name: resource_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.StringMapResponse"
+      produces:
+      - application/json
+  "/resources/org/{org_id}":
+    get:
+      tags:
+      - Resources
+      summary: Get resources by organization ID
+      parameters:
+      - in: path
+        name: org_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/resources/type":
+    post:
+      tags:
+      - Resources
+      summary: Create resource type
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/resources.CreateResourceTypeRequest"
+      responses:
+        '201':
+          description: Created
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+    get:
+      tags:
+      - Resources
+      summary: Get all resource types
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/resources/pool":
+    post:
+      tags:
+      - Resources
+      summary: Create resource pool
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/resources.CreateResourcePoolRequest"
+      responses:
+        '201':
+          description: Created
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/resources/pool/{pool_id}":
+    get:
+      tags:
+      - Resources
+      summary: Get resource pool by ID
+      parameters:
+      - in: path
+        name: pool_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+    patch:
+      tags:
+      - Resources
+      summary: Update resource pool
+      parameters:
+      - in: path
+        name: pool_id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/resources.UpdateResourcePoolRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+    delete:
+      tags:
+      - Resources
+      summary: Delete resource pool
+      parameters:
+      - in: path
+        name: pool_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.StringMapResponse"
+      produces:
+      - application/json
+  "/resources/node":
+    post:
+      tags:
+      - Resources
+      summary: Create resource node
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/resources.CreateResourceNodeRequest"
+      responses:
+        '201':
+          description: Created
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/resources/node/{node_id}":
+    get:
+      tags:
+      - Resources
+      summary: Get resource node by ID
+      parameters:
+      - in: path
+        name: node_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+    patch:
+      tags:
+      - Resources
+      summary: Update resource node
+      parameters:
+      - in: path
+        name: node_id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/resources.UpdateResourceNodeRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+    delete:
+      tags:
+      - Resources
+      summary: Delete resource node
+      parameters:
+      - in: path
+        name: node_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.StringMapResponse"
+      produces:
+      - application/json
+  "/quota/organization":
+    post:
+      tags:
+      - Quota
+      summary: Create organization quota
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/quota.CreateOrganizationQuotaRequest"
+      responses:
+        '201':
+          description: Created
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+    get:
+      tags:
+      - Quota
+      summary: Get organization quota
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      parameters:
+      - in: query
+        name: from_organization_id
+        type: string
+        format: uuid
+        required: true
+        description: Source organization ID
+      - in: query
+        name: to_organization_id
+        type: string
+        format: uuid
+        required: true
+        description: Target organization ID
+      produces:
+      - application/json
+  "/quota/organization/{org_id}":
+    get:
+      tags:
+      - Quota
+      summary: Get organization quotas by organization ID
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: org_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/quota/organization/{quota_id}":
+    delete:
+      tags:
+      - Quota
+      summary: Delete organization quota
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: quota_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.StringMapResponse"
+      produces:
+      - application/json
+    put:
+      tags:
+      - Quota
+      summary: Update organization quota
+      description: Update organization quota by quota ID
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: quota_id
+        required: true
+        type: string
+        description: Quota ID
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/quota.UpdateOrganizationQuotaRequest"
+      responses:
+        '200':
+          description: Organization quota updated
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+        '400':
+          description: Bad request
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+        '401':
+          description: Unauthorized
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+        '500':
+          description: Internal server error
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+  "/quota/project":
+    post:
+      tags:
+      - Quota
+      summary: Create project quota
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/quota.CreateProjectQuotaRequest"
+      responses:
+        '201':
+          description: Created
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/quota/project/internal":
+    post:
+      tags:
+      - Quota
+      summary: Create internal project quota
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/quota.CreateInternalProjectQuotaRequest"
+      responses:
+        '201':
+          description: Created
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/quota/project/{project_id}":
+    get:
+      tags:
+      - Quota
+      summary: Get project quotas
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: project_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/quota/project/{project_id}/namespaces":
+    get:
+      tags:
+      - Quota
+      summary: Get namespace quotas in project
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: project_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/quota/project/{quota_id}":
+    delete:
+      tags:
+      - Quota
+      summary: Delete project quota
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: quota_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.StringMapResponse"
+      produces:
+      - application/json
+    put:
+      tags:
+      - Quota
+      summary: Update project quota
+      description: Update project quota by quota ID
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: quota_id
+        required: true
+        type: string
+        description: Quota ID
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/quota.UpdateProjectQuotaRequest"
+      responses:
+        '200':
+          description: Project quota updated
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+        '400':
+          description: Bad request
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+        '401':
+          description: Unauthorized
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+        '500':
+          description: Internal server error
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+  "/quota/namespace":
+    post:
+      tags:
+      - Quota
+      summary: Create namespace quota
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/quota.CreateNamespaceQuotaRequest"
+      responses:
+        '201':
+          description: Created
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/quota/namespace/{namespace_id}":
+    get:
+      tags:
+      - Quota
+      summary: Get namespace quota
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: namespace_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+  "/quota/namespace/{quota_id}":
+    put:
+      tags:
+      - Quota
+      summary: Update namespace quota
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: quota_id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/quota.UpdateNamespaceQuotaRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+    delete:
+      tags:
+      - Quota
+      summary: Delete namespace quota
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: quota_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.StringMapResponse"
+      produces:
+      - application/json
+  "/quota/namespace/template":
+    post:
+      tags:
+      - Quota
+      summary: Create namespace quota template
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/quota.CreateNamespaceQuotaTemplateRequest"
+      responses:
+        '201':
+          description: Created
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/quota/namespace/template/{quota_template_id}":
+    get:
+      tags:
+      - Quota
+      summary: Get namespace quota template
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: quota_template_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+    put:
+      tags:
+      - Quota
+      summary: Update namespace quota template
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: quota_template_id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/quota.UpdateNamespaceQuotaTemplateRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+    delete:
+      tags:
+      - Quota
+      summary: Delete namespace quota template
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: quota_template_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.StringMapResponse"
+      produces:
+      - application/json
+  "/quota/namespace/template/project/{project_id}":
+    get:
+      tags:
+      - Quota
+      summary: Get quota templates by project ID
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: project_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/quota/namespace/template/assign":
+    post:
+      tags:
+      - Quota
+      summary: Assign quota template to namespace
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/quota.AssignQuotaToNamespaceRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/quota/namespace/template/unassign/{namespace_id}":
+    delete:
+      tags:
+      - Quota
+      summary: Unassign quota template from namespace
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: namespace_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.StringMapResponse"
+      produces:
+      - application/json
+  "/quota/{quota_id}/usage/{namespace_id}":
+    get:
+      tags:
+      - Quota
+      summary: Get quota usage
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: quota_id
+        required: true
+        type: string
+      - in: path
+        name: namespace_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+  "/tickets/":
+    post:
+      tags:
+      - Tickets
+      summary: Create ticket
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/tickets.CreateTicketRequest"
+      responses:
+        '201':
+          description: Created
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/tickets/{ticket-id}":
+    get:
+      tags:
+      - Tickets
+      summary: Get ticket by ID
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: ticket-id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+    delete:
+      tags:
+      - Tickets
+      summary: Delete ticket
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: ticket-id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.MessageResponse"
+      produces:
+      - application/json
+  "/tickets/{ticket-id}/cancel":
+    patch:
+      tags:
+      - Tickets
+      summary: Cancel ticket
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: ticket-id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.MessageResponse"
+      produces:
+      - application/json
+      description: Cancel ticket by ticket ID (no request body)
+  "/tickets/namespace/{namespace_id}":
+    get:
+      tags:
+      - Tickets
+      summary: Get tickets by namespace
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: namespace_id
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/tickets/user":
+    get:
+      tags:
+      - Tickets
+      summary: Get user tickets
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+  "/tickets/start":
+    patch:
+      tags:
+      - Tickets
+      summary: Start ticket
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/tickets.StartTicketsRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/tickets/stop-pending":
+    patch:
+      tags:
+      - Tickets
+      summary: Stop pending ticket
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/tickets.StopPendingTicketsRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/tickets/stop":
+    patch:
+      tags:
+      - Tickets
+      summary: Stop ticket
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/tickets.StopTicketsRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/response.AnyArrayResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/admin/super-admins":
+    post:
+      tags:
+      - Admin
+      summary: Assign super admin
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/admin.AssignSuperAdminRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/admin.SuperAdminResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/admin/revoke-super-admins":
+    post:
+      tags:
+      - Admin
+      summary: Revoke super admin
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/admin.RevokeSuperAdminRequest"
+      responses:
+        '200':
+          description: Success
+          schema:
+            "$ref": "#/definitions/admin.SuperAdminResponse"
+      produces:
+      - application/json
+      consumes:
+      - application/json
+  "/users/access-token":
+    get:
+      description: Exchange OAuth code via clearing house and set access/refresh token
+        cookies
+      produces:
+      - application/json
+      tags:
+      - users
+      summary: Exchange Google callback code for tokens
+      parameters:
+      - type: string
+        description: Authorization code
+        name: code
+        in: query
+        required: true
+      - type: string
+        description: OAuth state
+        name: state
+        in: query
+      responses:
+        '200':
+          description: Tokens set successfully
           schema:
             type: object
             additionalProperties:
               type: string
-        500:
-          description: "Internal server error"
+        '500':
+          description: Internal server error
           schema:
-            $ref: "#/definitions/response.ErrorResponse"
-
-  /users/auth/google:
+            "$ref": "#/definitions/response.ErrorResponse"
+  "/users/auth/google":
     get:
-      description: "Redirect user to Google OAuth authorization page"
+      description: Redirect user to Google OAuth authorization page
       produces:
-        - "application/json"
+      - application/json
       tags:
-        - "users"
-      summary: "Start Google OAuth login"
+      - users
+      summary: Start Google OAuth login
       responses:
-        307:
-          description: "Temporary redirect"
+        '307':
+          description: Temporary redirect
           schema:
             type: string
-
-  /users/auth/callback/google:
+  "/users/auth/callback/google":
     get:
-      description: "Handle Google OAuth callback with authorization code"
+      description: Handle Google OAuth callback with authorization code
       produces:
-        - "application/json"
+      - application/json
       tags:
-        - "users"
-      summary: "Google OAuth callback"
+      - users
+      summary: Google OAuth callback
       parameters:
-        - type: string
-          description: "Authorization code"
-          name: code
-          in: query
-          required: true
+      - type: string
+        description: Authorization code
+        name: code
+        in: query
+        required: true
       responses:
-        200:
-          description: "Authentication response"
+        '200':
+          description: Authentication response
           schema:
             type: object
             additionalProperties: true
-        302:
-          description: "Redirect after successful login"
+        '302':
+          description: Redirect after successful login
           schema:
             type: string
-        400:
-          description: "Bad request"
+        '400':
+          description: Bad request
           schema:
-            $ref: "#/definitions/response.ErrorResponse"
-        500:
-          description: "Internal server error"
+            "$ref": "#/definitions/response.ErrorResponse"
+        '500':
+          description: Internal server error
           schema:
-            $ref: "#/definitions/response.ErrorResponse"
-
-  /users/auth/logout:
+            "$ref": "#/definitions/response.ErrorResponse"
+  "/users/auth/logout":
     get:
       security:
-        - ApiKeyAuth: []
-      description: "Logout user and clear session"
+      - ApiKeyAuth: []
+      description: Logout user and clear session
       produces:
-        - "application/json"
+      - application/json
       tags:
-        - "users"
-      summary: "User logout"
+      - users
+      summary: User logout
       responses:
-        200:
-          description: "Logout successful"
+        '200':
+          description: Logout successful
           schema:
-            type: object
-            additionalProperties:
-              type: string
-        401:
-          description: "Unauthorized"
+            "$ref": "#/definitions/response.MessageResponse"
+        '401':
+          description: Unauthorized
           schema:
-            $ref: "#/definitions/response.ErrorResponse"
-
-  /users/auth/refresh-token:
+            "$ref": "#/definitions/response.ErrorResponse"
+  "/users/auth/refresh-token":
     get:
-      description: "Refresh access token using refresh token cookie"
+      description: Refresh access token using refresh token cookie
       produces:
-        - "application/json"
+      - application/json
       tags:
-        - "users"
-      summary: "Refresh access token"
+      - users
+      summary: Refresh access token
       responses:
-        200:
-          description: "Tokens refreshed successfully"
+        '200':
+          description: Tokens refreshed successfully
           schema:
             type: object
             additionalProperties:
               type: string
-        401:
-          description: "Unauthorized"
+        '401':
+          description: Unauthorized
           schema:
-            $ref: "#/definitions/response.ErrorResponse"
-        500:
-          description: "Internal server error"
+            "$ref": "#/definitions/response.ErrorResponse"
+        '500':
+          description: Internal server error
           schema:
-            $ref: "#/definitions/response.ErrorResponse"
-
-tags:
-  - name: "Home"
-    description: "Home endpoints"
-  - name: "Authentication"
-    description: "Authentication and authorization endpoints"
-  - name: "Organizations"
-    description: "Organization and membership endpoints"
-  - name: "Projects"
-    description: "Project and membership endpoints"
-  - name: "Namespaces"
-    description: "Namespace and membership endpoints"
-  - name: "Resources"
-    description: "Resource, resource type, pool, and node endpoints"
-  - name: "Quota"
-    description: "Quota endpoints for organizations, projects, and namespaces"
-  - name: "Tickets"
-    description: "Ticket lifecycle endpoints"
-  - name: "Admin"
-    description: "Super admin management endpoints"
-  - name: "users"
-    description: "User authentication endpoints"
-
+            "$ref": "#/definitions/response.ErrorResponse"
+  "/tickets/reset":
+    patch:
+      tags:
+      - Tickets
+      summary: Reset tickets
+      description: Reset selected tickets to initial state
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/tickets.ResetTicketsRequest"
+      responses:
+        '200':
+          description: Tickets reset successfully
+          schema:
+            "$ref": "#/definitions/response.MessageResponse"
+        '400':
+          description: Bad request
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+        '500':
+          description: Internal server error
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+  "/quota/project/internal/{quota_id}":
+    put:
+      tags:
+      - Quota
+      summary: Update internal project quota
+      description: Update internal project quota by quota ID
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: quota_id
+        required: true
+        type: string
+        description: Quota ID
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/quota.UpdateInternalProjectQuotaRequest"
+      responses:
+        '200':
+          description: Internal project quota updated
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+        '400':
+          description: Bad request
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+        '401':
+          description: Unauthorized
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+        '500':
+          description: Internal server error
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+  "/quota/project/{project_id}/total":
+    get:
+      tags:
+      - Quota
+      summary: Get project quota total
+      description: Get total project quota by project ID
+      produces:
+      - application/json
+      security:
+      - BearerAuth: []
+      parameters:
+      - in: path
+        name: project_id
+        required: true
+        type: string
+        description: Project ID
+      responses:
+        '200':
+          description: Project quota total
+          schema:
+            "$ref": "#/definitions/response.AnyMapResponse"
+        '400':
+          description: Bad request
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+        '401':
+          description: Unauthorized
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
+        '500':
+          description: Internal server error
+          schema:
+            "$ref": "#/definitions/response.ErrorResponse"
 definitions:
   response.ErrorResponse:
     type: object
@@ -1525,3 +2031,1199 @@ definitions:
         type: string
       error:
         type: string
+  response.StringMapResponse:
+    type: object
+    additionalProperties:
+      type: string
+  response.AnyMapResponse:
+    type: object
+    additionalProperties: true
+  response.AnyArrayResponse:
+    type: array
+    items:
+      type: object
+      additionalProperties: true
+  response.HomeResponse:
+    type: object
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+      version:
+        type: string
+      time:
+        type: string
+        format: date-time
+  response.AccessTokenResponse:
+    type: object
+    properties:
+      access_token:
+        type: string
+  response.TokenPairResponse:
+    type: object
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+  response.AuthRegisterResponse:
+    type: object
+    properties:
+      message:
+        type: string
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        type: object
+        additionalProperties: true
+  organizations.RemoveAdminsRequest:
+    type: object
+    properties:
+      organization_id:
+        type: string
+        format: uuid
+      admins:
+        type: array
+        items:
+          type: string
+          format: uuid
+    required:
+    - admins
+    - organization_id
+  organizations.AddAdminsRequest:
+    type: object
+    properties:
+      organization_id:
+        type: string
+        format: uuid
+      admins:
+        type: array
+        items:
+          type: string
+          format: uuid
+    required:
+    - admins
+    - organization_id
+  organizations.OrganizationResponse:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+      name:
+        type: string
+      description:
+        type: string
+      domain:
+        type: string
+      members:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+      admins:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+      resource_quotas:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+  organizations.AddMembersRequest:
+    type: object
+    properties:
+      organization_id:
+        type: string
+        format: uuid
+      members:
+        type: array
+        items:
+          type: string
+          format: uuid
+    required:
+    - members
+    - organization_id
+  organizations.CreateOrganization:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      domain:
+        type: string
+    required:
+    - name
+  organizations.OrganizationURI:
+    type: object
+    properties: {}
+  organizations.UpdateOrganization:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      domain:
+        type: string
+    required:
+    - description
+    - name
+  organizations.RemoveMembersRequest:
+    type: object
+    properties:
+      organization_id:
+        type: string
+        format: uuid
+      members:
+        type: array
+        items:
+          type: string
+          format: uuid
+    required:
+    - members
+    - organization_id
+  tickets.StartTicketsRequest:
+    type: object
+    properties:
+      tickets:
+        type: array
+        items:
+          "$ref": "#/definitions/tickets.StartTicketRequest"
+    required:
+    - tickets
+  tickets.StartTicketRequest:
+    type: object
+    properties:
+      ticket_id:
+        type: string
+        format: uuid
+      start_time:
+        type: string
+        format: date-time
+    required:
+    - start_time
+    - ticket_id
+  tickets.StopTicketsRequest:
+    type: object
+    properties:
+      tickets:
+        type: array
+        items:
+          type: string
+          format: uuid
+      stop_time:
+        type: string
+        format: date-time
+    required:
+    - stop_time
+    - tickets
+  tickets.StopPendingTicketsRequest:
+    type: object
+    properties:
+      tickets:
+        type: array
+        items:
+          type: string
+          format: uuid
+    required:
+    - tickets
+  tickets.GliderTicketResponse:
+    type: object
+    properties:
+      ticket:
+        "$ref": "#/definitions/tickets.GliderTicket"
+      signature:
+        type: string
+  tickets.GliderTicket:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      namespace_id:
+        type: string
+        format: uuid
+      namespace_name:
+        type: string
+      resource_pool_id:
+        type: string
+        format: uuid
+      resource_pool_name:
+        type: string
+      project_id:
+        type: string
+        format: uuid
+      project_name:
+        type: string
+      node_id:
+        type: string
+        format: uuid
+      node_name:
+        type: string
+      node_display_name:
+        type: string
+      glidelet_urn:
+        type: string
+      glidelet_name:
+        type: string
+      organization_name:
+        type: string
+      spec:
+        "$ref": "#/definitions/tickets.GliderSpec"
+      reference_ticket_id:
+        type: string
+        format: uuid
+      redeem_timeout:
+        type: integer
+      lease:
+        type: integer
+      created_at:
+        type: string
+        format: date-time
+  tickets.GliderSpec:
+    type: object
+    properties:
+      type:
+        type: object
+        additionalProperties: true
+      pool_id:
+        type: string
+      resource:
+        type: array
+        items:
+          "$ref": "#/definitions/tickets.SpecResource"
+  tickets.SpecResource:
+    type: object
+    properties:
+      resource_id:
+        type: string
+      name:
+        type: string
+      quantity:
+        type: integer
+      unit:
+        type: string
+  tickets.TicketTransaction:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      status:
+        type: object
+        additionalProperties: true
+      ticket:
+        type: string
+      signature:
+        type: string
+  tickets.Task:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      tickets:
+        type: array
+        items:
+          "$ref": "#/definitions/tickets.TicketTransaction"
+  tickets.ResetTicketsRequest:
+    type: object
+    properties:
+      ticket_ids:
+        type: array
+        items:
+          type: string
+          format: uuid
+    required:
+    - ticket_ids
+  tickets.TicketResponse:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+      start_time:
+        type: string
+        format: date-time
+      end_time:
+        type: string
+        format: date-time
+      cancel_time:
+        type: string
+        format: date-time
+      duration:
+        type: integer
+      price:
+        type: number
+      owner_id:
+        type: string
+      namespace_id:
+        type: string
+      namespace_name:
+        type: string
+      project_id:
+        type: string
+      project_name:
+        type: string
+      node_id:
+        type: string
+        format: uuid
+      resource_pool_id:
+        type: string
+      glidelet_urn:
+        type: string
+      quota_id:
+        type: string
+      resources:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+      redeem_timeout:
+        type: integer
+  tickets.CreateTicketRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      namespace_id:
+        type: string
+        format: uuid
+      quota_id:
+        type: string
+        format: uuid
+      resources:
+        type: array
+        items:
+          "$ref": "#/definitions/tickets.Resources"
+      duration:
+        type: integer
+    required:
+    - duration
+    - name
+    - namespace_id
+    - quota_id
+    - resources
+  tickets.Resources:
+    type: object
+    properties:
+      quantity:
+        type: integer
+      resource_id:
+        type: string
+        format: uuid
+    required:
+    - quantity
+    - resource_id
+  auth.ManualRegisterRequest:
+    type: object
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+  projects.RemoveAdminsRequest:
+    type: object
+    properties:
+      project_id:
+        type: string
+        format: uuid
+      admins:
+        type: array
+        items:
+          type: string
+          format: uuid
+    required:
+    - admins
+    - project_id
+  projects.ResourceQuota:
+    type: object
+    properties:
+      type_id:
+        type: string
+      type:
+        type: string
+      quota:
+        type: number
+  projects.ResourceQuotaResponse:
+    type: object
+    properties:
+      resource_quotas:
+        type: array
+        items:
+          "$ref": "#/definitions/projects.ResourceQuota"
+  projects.ResourceUsage:
+    type: object
+    properties:
+      type_id:
+        type: string
+      type:
+        type: string
+      usage:
+        type: number
+  projects.ResourceUsageResponse:
+    type: object
+    properties:
+      resource_usages:
+        type: array
+        items:
+          "$ref": "#/definitions/projects.ResourceUsage"
+  projects.ProjectUsage:
+    type: object
+    properties:
+      type_id:
+        type: string
+      type:
+        type: string
+      quota:
+        type: number
+      usage:
+        type: number
+  projects.ProjectUsageResponse:
+    type: object
+    properties:
+      usage:
+        type: array
+        items:
+          "$ref": "#/definitions/projects.ProjectUsage"
+  projects.AddAdminsRequest:
+    type: object
+    properties:
+      project_id:
+        type: string
+        format: uuid
+      admins:
+        type: array
+        items:
+          type: string
+          format: uuid
+    required:
+    - admins
+    - project_id
+  projects.ProjectResponse:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+      name:
+        type: string
+      description:
+        type: string
+      organization_id:
+        type: string
+        format: uuid
+      members:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+      admins:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+      resource_quotas:
+        type: array
+        items:
+          "$ref": "#/definitions/projects.ResourceQuota"
+  projects.AddMembersRequest:
+    type: object
+    properties:
+      project_id:
+        type: string
+        format: uuid
+      members:
+        type: array
+        items:
+          type: string
+          format: uuid
+    required:
+    - members
+    - project_id
+  projects.ProjectQuotaResponse:
+    type: object
+    properties:
+      project_id:
+        type: string
+        format: uuid
+      quota:
+        type: integer
+  projects.CreateProjectRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      organization_id:
+        type: string
+        format: uuid
+    required:
+    - name
+    - organization_id
+  projects.UpdateProjectRequest:
+    type: object
+    properties:
+      project_id:
+        type: string
+        format: uuid
+      name:
+        type: string
+      description:
+        type: string
+    required:
+    - project_id
+  projects.RemoveMembersRequest:
+    type: object
+    properties:
+      project_id:
+        type: string
+        format: uuid
+      members:
+        type: array
+        items:
+          type: string
+          format: uuid
+    required:
+    - members
+    - project_id
+  resources.UpdateResourceRequest:
+    type: object
+    properties:
+      quantity:
+        type: integer
+      name:
+        type: string
+    required:
+    - name
+    - quantity
+  resources.UpdateResourcePoolRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      glidelet_urn:
+        type: string
+    required:
+    - glidelet_urn
+    - name
+  resources.UpdateResourceNodeRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      display_name:
+        type: string
+    required:
+    - name
+  resources.CreateResourcePoolRequest:
+    type: object
+    properties:
+      organization_id:
+        type: string
+        format: uuid
+      name:
+        type: string
+      glidelet_urn:
+        type: string
+    required:
+    - glidelet_urn
+    - name
+    - organization_id
+  resources.CreateResourceNodeRequest:
+    type: object
+    properties:
+      resource_pool_id:
+        type: string
+        format: uuid
+      name:
+        type: string
+      display_name:
+        type: string
+    required:
+    - name
+    - resource_pool_id
+  resources.CreateResourceTypeRequest:
+    type: object
+    properties:
+      unit:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    - unit
+  resources.CreateResourceRequest:
+    type: object
+    properties:
+      resource_node_id:
+        type: string
+        format: uuid
+      resource_type_id:
+        type: string
+        format: uuid
+      quantity:
+        type: integer
+      name:
+        type: string
+    required:
+    - name
+    - quantity
+    - resource_node_id
+    - resource_type_id
+  resources.IDUri:
+    type: object
+    properties: {}
+  resources.ResourcePoolResponse:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      resources:
+        type: array
+        items:
+          "$ref": "#/definitions/resources.ResourceResponse"
+  resources.ResourceResponse:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      resource_type:
+        type: string
+      unit:
+        type: string
+      quantity:
+        type: integer
+  admin.AssignSuperAdminRequest:
+    type: object
+    properties:
+      email:
+        type: string
+    required:
+    - email
+  admin.RevokeSuperAdminRequest:
+    type: object
+    properties:
+      email:
+        type: string
+    required:
+    - email
+  admin.SuperAdminResponse:
+    type: object
+    properties:
+      message:
+        type: string
+      email:
+        type: string
+  namespaces.CreateNamespaceRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      credit:
+        type: number
+      project_id:
+        type: string
+        format: uuid
+      members:
+        type: array
+        items:
+          type: string
+          format: uuid
+    required:
+    - credit
+    - description
+    - name
+    - project_id
+  namespaces.ResourceUsageDetail:
+    type: object
+    properties:
+      resource_id:
+        type: string
+        format: uuid
+      used:
+        type: integer
+      total:
+        type: integer
+  namespaces.QuotaUsageQuery:
+    type: object
+    properties: {}
+  namespaces.QuotaUsageRequest:
+    type: object
+    properties:
+      resource_pool_id:
+        type: string
+        format: uuid
+      quota_id:
+        type: string
+        format: uuid
+  namespaces.ResourceQuota:
+    type: object
+    properties:
+      type_id:
+        type: string
+        format: uuid
+      type:
+        type: string
+      quota:
+        type: number
+  namespaces.ResourceQuotaResponse:
+    type: object
+    properties:
+      resource_quotas:
+        type: array
+        items:
+          "$ref": "#/definitions/namespaces.ResourceQuota"
+  namespaces.ResourceUsage:
+    type: object
+    properties:
+      type_id:
+        type: string
+        format: uuid
+      type:
+        type: string
+      usage:
+        type: number
+  namespaces.ResourceUsageResponse:
+    type: object
+    properties:
+      resource_usages:
+        type: array
+        items:
+          "$ref": "#/definitions/namespaces.ResourceUsage"
+  namespaces.NamespaceUsage:
+    type: object
+    properties:
+      type_id:
+        type: string
+        format: uuid
+      type:
+        type: string
+      quota:
+        type: number
+      usage:
+        type: number
+  namespaces.NamespaceUsageResponse:
+    type: object
+    properties:
+      usage:
+        type: array
+        items:
+          "$ref": "#/definitions/namespaces.NamespaceUsage"
+  namespaces.AddMembersRequest:
+    type: object
+    properties:
+      namespace_id:
+        type: string
+        format: uuid
+      members:
+        type: array
+        items:
+          type: string
+          format: uuid
+    required:
+    - members
+    - namespace_id
+  namespaces.UpdateNamespaceRequest:
+    type: object
+    properties:
+      namespace_id:
+        type: string
+        format: uuid
+      name:
+        type: string
+      description:
+        type: string
+      credit:
+        type: number
+    required:
+    - namespace_id
+  namespaces.RemoveMembersRequest:
+    type: object
+    properties:
+      namespace_id:
+        type: string
+        format: uuid
+      members:
+        type: array
+        items:
+          type: string
+          format: uuid
+    required:
+    - members
+    - namespace_id
+  users.RegisterInput:
+    type: object
+    properties:
+      username:
+        type: string
+      password:
+        type: string
+  users.LoginInput:
+    type: object
+    properties:
+      username:
+        type: string
+      password:
+        type: string
+  quota.CreateOrganizationQuotaRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      from_organization_id:
+        type: string
+        format: uuid
+      to_organization_id:
+        type: string
+        format: uuid
+      node_id:
+        type: string
+        format: uuid
+      resources:
+        type: array
+        items:
+          "$ref": "#/definitions/quota.OrganizationResources"
+    required:
+    - from_organization_id
+    - name
+    - node_id
+    - resources
+    - to_organization_id
+  quota.OrganizationResources:
+    type: object
+    properties:
+      resource_id:
+        type: string
+        format: uuid
+      quantity:
+        type: integer
+      price:
+        type: number
+      duration:
+        type: integer
+    required:
+    - price
+    - quantity
+    - resource_id
+  quota.CreateProjectQuotaRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      project_id:
+        type: string
+        format: uuid
+      org_quota_id:
+        type: string
+        format: uuid
+      org_id:
+        type: string
+        format: uuid
+      node_id:
+        type: string
+        format: uuid
+      resources:
+        type: array
+        items:
+          "$ref": "#/definitions/quota.Resource"
+    required:
+    - name
+    - node_id
+    - org_id
+    - org_quota_id
+    - project_id
+    - resources
+  quota.CreateNamespaceQuotaRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      project_id:
+        type: string
+        format: uuid
+      project_quota_id:
+        type: string
+        format: uuid
+      node_id:
+        type: string
+        format: uuid
+      resources:
+        type: array
+        items:
+          "$ref": "#/definitions/quota.Resource"
+    required:
+    - name
+    - node_id
+    - project_id
+    - project_quota_id
+    - resources
+  quota.Resource:
+    type: object
+    properties:
+      quantity:
+        type: integer
+      resource_id:
+        type: string
+        format: uuid
+    required:
+    - quantity
+    - resource_id
+  quota.CreateInternalProjectQuotaRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      org_id:
+        type: string
+        format: uuid
+      node_id:
+        type: string
+        format: uuid
+      project_id:
+        type: string
+        format: uuid
+      resources:
+        type: array
+        items:
+          "$ref": "#/definitions/quota.ResourceWithProperty"
+    required:
+    - name
+    - node_id
+    - org_id
+    - project_id
+    - resources
+  quota.ResourceWithProperty:
+    type: object
+    properties:
+      quantity:
+        type: integer
+      resource_id:
+        type: string
+        format: uuid
+      price:
+        type: number
+      duration:
+        type: integer
+    required:
+    - price
+    - quantity
+    - resource_id
+  quota.UpdateNamespaceQuotaRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      resources:
+        type: array
+        items:
+          "$ref": "#/definitions/quota.Resource"
+  quota.UpdateOrganizationQuotaRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      resources:
+        type: array
+        items:
+          "$ref": "#/definitions/quota.OrganizationResources"
+  quota.UpdateProjectQuotaRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      resources:
+        type: array
+        items:
+          "$ref": "#/definitions/quota.Resource"
+  quota.UpdateInternalProjectQuotaRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      resources:
+        type: array
+        items:
+          "$ref": "#/definitions/quota.ResourceWithProperty"
+  quota.UpdateResourcePropertyRequest:
+    type: object
+    properties:
+      resource_property_id:
+        type: string
+        format: uuid
+      price:
+        type: number
+      max_duration:
+        type: integer
+    required:
+    - resource_property_id
+  quota.CreateNamespaceQuotaTemplateRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      project_id:
+        type: string
+        format: uuid
+      quota_ids:
+        type: array
+        items:
+          type: string
+          format: uuid
+    required:
+    - name
+    - project_id
+    - quota_ids
+  quota.UpdateNamespaceQuotaTemplateRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      quota_ids:
+        type: array
+        items:
+          type: string
+          format: uuid
+  quota.FindOrganizationQuotaGroupRequest:
+    type: object
+    properties: {}
+  quota.NamespaceQuotaResponse:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      name:
+        type: string
+      node_id:
+        type: string
+        format: uuid
+      node_name:
+        type: string
+      node_display_name:
+        type: string
+      organization_name:
+        type: string
+      project_id:
+        type: string
+        format: uuid
+      resources:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+  quota.Usage:
+    type: object
+    properties:
+      type_id:
+        type: string
+        format: uuid
+      type:
+        type: string
+      quota:
+        type: number
+      usage:
+        type: number
+  quota.UsageResponse:
+    type: object
+    properties:
+      usage:
+        type: array
+        items:
+          "$ref": "#/definitions/quota.Usage"
+  quota.AssignQuotaToNamespaceRequest:
+    type: object
+    properties:
+      namespaces:
+        type: object
+        additionalProperties: true
+      project_id:
+        type: string
+        format: uuid
+      quota_template_id:
+        type: string
+        format: uuid
+    required:
+    - namespaces
+    - project_id
+    - quota_template_id
+  response.MessageResponse:
+    type: object
+    properties:
+      message:
+        type: string
+tags:
+- name: Home
+  description: Home endpoints
+- name: Authentication
+  description: Authentication and authorization endpoints
+- name: Organizations
+  description: Organization and membership endpoints
+- name: Projects
+  description: Project and membership endpoints
+- name: Namespaces
+  description: Namespace and membership endpoints
+- name: Resources
+  description: Resource, resource type, pool, and node endpoints
+- name: Quota
+  description: Quota endpoints for organizations, projects, and namespaces
+- name: Tickets
+  description: Ticket lifecycle endpoints
+- name: Admin
+  description: Super admin management endpoints
+- name: users
+  description: User authentication endpoints
