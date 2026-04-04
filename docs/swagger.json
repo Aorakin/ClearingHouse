@@ -2181,63 +2181,6 @@
           }
         }
       }
-    },
-    "/users/auth/google": {
-      "get": {
-        "tags": [
-          "Users (Legacy)"
-        ],
-        "summary": "[เก่า] Login ด้วย Google",
-        "responses": {
-          "302": {
-            "description": "Redirect"
-          }
-        }
-      }
-    },
-    "/users/auth/callback/google": {
-      "get": {
-        "tags": [
-          "Users (Legacy)"
-        ],
-        "summary": "[เก่า] Google OAuth callback",
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
-    "/users/logout": {
-      "post": {
-        "tags": [
-          "Users (Legacy)"
-        ],
-        "summary": "[เก่า] Logout",
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
-    "/users/testsession": {
-      "get": {
-        "tags": [
-          "Users (Legacy)"
-        ],
-        "summary": "[เก่า] ทดสอบ Session",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
     }
   },
   "tags": [
@@ -2276,10 +2219,6 @@
     {
       "name": "Admin",
       "description": "การจัดการ Super Admin"
-    },
-    {
-      "name": "Users (Legacy)",
-      "description": "Endpoints เก่าที่อาจจะถูกแทนที่ด้วย /auth"
     }
   ]
 }
